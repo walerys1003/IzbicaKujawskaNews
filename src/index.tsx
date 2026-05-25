@@ -1,4 +1,7 @@
 import { Hono } from 'hono'
+import aiRouter from './routes/ai'
+import ragRouter from './routes/rag'
+import type { AppBindings } from './types/cloudflare'
 import { renderer } from './renderer'
 import { SuperHeader, MainNav, DemoStrip, Footer } from './components/layout'
 import {
@@ -26,12 +29,14 @@ import {
 } from './seo'
 import apiV1 from './api/v1'
 
-const app = new Hono()
+const app = new Hono<{ Bindings: AppBindings }>()
 
 app.use(renderer)
 
 // ============ API v1 — sub-app mounted at /api/v1 ============
 app.route('/api/v1', apiV1)
+app.route('/api/ai', aiRouter)
+app.route('/api/rag', ragRouter)
 
 // ============ STRONA GŁÓWNA — PEŁNA MAKIETA PORTALU (25 modułów) ============
 //
