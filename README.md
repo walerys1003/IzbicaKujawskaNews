@@ -2,6 +2,67 @@
 
 **Działający prototyp** kompletnego portalu informacyjnego z silnikiem AI-newsroom + baza wiedzy projektu (RAG).
 
+## 🚀 90-task parallel build — Articles + REST API + D1 + SEO (2026-05-25, commit `fff685b`)
+
+Ultra-szybkie budowanie wielomodułowe w 3 strefach równolegle (Sandbox A/B/C, 30+ zadań każda):
+
+### 🎨 Sandbox A — Frontend/UX/UI (30+ tasks)
+- **`src/components/article.tsx`** — Strona artykułu Reuters-tier: breadcrumb · dateline „IZBICA —" · byline z avatarem · hero z podpisem · **sticky share** (64px column) · body z **dropcap 4.2em #fa6400** · tagi · author card · related grid (3-col) · komentarze stub
+- **`src/components/category.tsx`** — Listing kategorii: hero z opisem · filter pills (podkategorie) · 3-col card grid · paginacja
+- **`src/components/search.tsx`** — `SearchPage` (formularz, suggestion pills, wyniki z `<mark>` highlight) + `NotFoundPage` (404 z code 120px serif, helpful links)
+- **`public/static/article-v2.css`** (15 KB) — `.article-container` max-1080px, `.cat-grid` 3-col responsive, `.notfound-code` 120px serif, scroll-top-btn, reading-progress bar
+
+### ⚙️ Sandbox B — Backend / REST API (30+ tasks)
+- **`src/data-articles.ts`** — 12 mock artykułów PL + 13 kategorii (`CATEGORIES_MAP`) + helpery `findArticle()`, `articlesByCategory()`, `searchArticles()`
+- **`src/api/v1.ts`** — Hono sub-app `/api/v1/*` z **17 endpointami REST**:
+
+| Metoda | Endpoint | Funkcja |
+|--------|----------|---------|
+| GET | `/api/v1/health` | Status API |
+| GET | `/api/v1/articles?limit&offset&category` | Lista artykułów (paginacja, filter) |
+| GET | `/api/v1/articles/:slug` | Szczegóły artykułu |
+| GET | `/api/v1/categories` | Lista kategorii |
+| GET | `/api/v1/categories/:slug` | Kategoria + jej artykuły |
+| GET | `/api/v1/search?q=` | Wyszukiwanie |
+| GET | `/api/v1/alerts` | Aktywne alerty |
+| GET | `/api/v1/roads` | Stan dróg |
+| GET | `/api/v1/weather` | Pogoda |
+| GET | `/api/v1/fuel` | Ceny paliw |
+| GET | `/api/v1/events?week=` | Kalendarz wydarzeń |
+| GET | `/api/v1/duty` | Dyżury (apteka/lekarz) |
+| GET | `/api/v1/rag/search?q=` | Wyszukiwanie semantyczne RAG |
+| POST | `/api/v1/newsletter/subscribe` | Subskrypcja (email regex + GDPR consent) |
+| GET | `/api/v1/newsletter/unsubscribe?token=` | Wypisanie |
+| POST | `/api/v1/articles/:slug/comments` | Komentarz (moderowany) |
+| POST | `/api/v1/articles/:slug/share` | Telemetria share |
+| POST | `/api/v1/incoming` | Bridge dla n8n (Bearer auth) |
+
+### 🗄️ Sandbox C — Database / SEO (30+ tasks)
+- **`migrations/0001_initial_schema.sql`** — **10 tabel produkcyjnych** Cloudflare D1: `users`, `categories`, `articles`, `tags`, `article_tags` (M2M), `comments` (z moderacją + IP hash), `newsletter_subscribers` (z `consent_version`), `alerts`, `events`, `incoming_queue` (z dedup hash), `api_tokens`. FOREIGN KEY + CHECK + INDEX.
+- **`migrations/0002_indexes_and_views.sql`** — 3 VIEWs (`published_articles_view`, `active_alerts_view`, `top_week_view`) + 5 TRIGGERów (auto `updated_at`, tag `usage_count` inc/dec, `comment_count` inc/dec na zmianę statusu)
+- **`seed.sql`** — 5 użytkowników, 13 kategorii, 10 tagów, 4 alerty, 7 eventów (tydzień 25–31 maja 2026), 2 tokeny API z sha256
+- **`src/seo.ts`** — generatory:
+  - **`/sitemap.xml`** — kompletna mapa strony
+  - **`/news-sitemap.xml`** — Google News (artykuły z ostatnich 48h)
+  - **`/rss.xml`** — RSS 2.0 z enclosures
+  - **`/robots.txt`** — GPTBot blocked, ClaudeBot allowed, Googlebot allowed
+  - **`/manifest.json`** — PWA manifest
+  - **`/humans.txt`** + **`/.well-known/security.txt`**
+  - `buildOgTags()` (Open Graph), `buildArticleJsonLd()` (schema.org NewsArticle), `buildOrganizationJsonLd()`
+
+### 🔗 Krytyczny fix: routing order
+`/:cat` jako catch-all wymagał reorganizacji — wszystkie konkretne route'y (`/szukaj`, SEO endpoints) **MUSZĄ** być zarejestrowane przed `/:cat`, bo Hono dopasowuje w kolejności rejestracji. Skip-list dla `/:cat`: `['api', 'static', 'downloads', 'szukaj', 'plan', 'wiedza', 'rss.xml', 'sitemap.xml', 'news-sitemap.xml', 'robots.txt', 'manifest.json', 'humans.txt', '_debug-layout.js']`.
+
+### ✅ Walidacja końcowa (wszystko 200 OK)
+- 9/9 SEO/szukaj endpoints ✓
+- 9/9 stron + kategorii ✓
+- 5/5 artykułów (real slugs) + 1/1 404 dla nieistniejącego ✓
+- 13/13 endpointów API v1 + POST newsletter ✓
+- Playwright: zero JS errors, correct titles, `OK_ZERO_MARGINS`
+- Build: **65 modułów, 177.12 kB worker bundle w 1.19s**
+
+---
+
 ## 🆕 Layout v2 + 11 nowych modułów rezydenckich (2026-05-25)
 
 **Cel:** zero marginesów po bokach + dynamiczna kompozycja zaplanowana strategicznie.
