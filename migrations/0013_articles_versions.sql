@@ -1,0 +1,11 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS article_versions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  article_id INTEGER NOT NULL,
+  body_md TEXT NOT NULL,
+  edited_by INTEGER,
+  edited_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
+  FOREIGN KEY (edited_by) REFERENCES users(id) ON DELETE SET NULL
+);

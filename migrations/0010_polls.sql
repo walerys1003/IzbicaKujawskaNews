@@ -1,0 +1,10 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS polls (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  question TEXT NOT NULL,
+  options_json TEXT NOT NULL,
+  votes_json TEXT NOT NULL DEFAULT '{}',
+  ends_at DATETIME,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

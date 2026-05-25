@@ -5,30 +5,22 @@
   "pages_build_output_dir": "./dist",
   "compatibility_flags": [
     "nodejs_compat"
+  ],
+  "kv_namespaces": [
+    { "binding": "WEATHER_KV", "id": "replace-weather-kv", "preview_id": "local-dev" },
+    { "binding": "FUEL_KV", "id": "replace-fuel-kv", "preview_id": "local-dev" },
+    { "binding": "AIR_KV", "id": "replace-air-kv", "preview_id": "local-dev" },
+    { "binding": "SESSION_KV", "id": "replace-session-kv", "preview_id": "local-dev" },
+    { "binding": "RATE_LIMIT_KV", "id": "replace-rate-limit-kv", "preview_id": "local-dev" },
+    { "binding": "PAGES_CACHE_KV", "id": "replace-pages-cache-kv", "preview_id": "local-dev" },
+    { "binding": "FEATURE_FLAGS_KV", "id": "replace-feature-flags-kv", "preview_id": "local-dev" },
+    { "binding": "AB_TESTS_KV", "id": "replace-ab-tests-kv", "preview_id": "local-dev" },
+    { "binding": "RUNTIME_CONFIG_KV", "id": "replace-runtime-config-kv", "preview_id": "local-dev" },
+    { "binding": "USER_PREFS_KV", "id": "replace-user-prefs-kv", "preview_id": "local-dev" },
+    { "binding": "ANALYTICS_BUFFER_KV", "id": "replace-analytics-buffer-kv", "preview_id": "local-dev" },
+    { "binding": "NOTIFICATIONS_KV", "id": "replace-notifications-kv", "preview_id": "local-dev" },
+    { "binding": "CAPTCHA_KV", "id": "replace-captcha-kv", "preview_id": "local-dev" },
+    { "binding": "SEARCH_SUGGESTIONS_KV", "id": "replace-search-suggestions-kv", "preview_id": "local-dev" },
+    { "binding": "BACKUP_SNAPSHOTS_KV", "id": "replace-backup-snapshots-kv", "preview_id": "local-dev" }
   ]
-  // "vars": {
-  //   "MY_VAR": "my-variable"
-  // },
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "MY_KV_NAMESPACE",
-  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  //   }
-  // ],
-  // "r2_buckets": [
-  //   {
-  //     "binding": "MY_BUCKET",
-  //     "bucket_name": "my-bucket"
-  //   }
-  // ],
-  // "d1_databases": [
-  //   {
-  //     "binding": "MY_DB",
-  //     "database_name": "my-database",
-  //     "database_id": ""
-  //   }
-  // ],
-  // "ai": {
-  //   "binding": "AI"
-  // }
 }

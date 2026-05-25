@@ -1,0 +1,9 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL UNIQUE,
+  name TEXT,
+  opt_in_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  unsubscribed_at DATETIME
+);
