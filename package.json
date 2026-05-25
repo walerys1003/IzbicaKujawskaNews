@@ -8,7 +8,10 @@
     "deploy": "npm run build && wrangler pages deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "lint": "node scripts/ci-lint.mjs",
-    "test": "node scripts/ci-test.mjs",
+    "test": "vitest run --coverage && playwright test",
+    "test:ci": "node scripts/ci-test.mjs",
+    "test:unit": "vitest run --coverage",
+    "test:e2e": "playwright test",
     "deploy:staging": "bash scripts/deploy.sh staging",
     "deploy:prod": "bash scripts/deploy.sh prod",
     "migrate": "bash scripts/migrate.sh",
@@ -22,7 +25,10 @@
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
     "@hono/vite-dev-server": "^0.25.2",
+    "@playwright/test": "^1.60.0",
+    "@vitest/coverage-v8": "^4.1.7",
     "vite": "^6.3.5",
+    "vitest": "^4.1.7",
     "wrangler": "^4.4.0"
   }
 }

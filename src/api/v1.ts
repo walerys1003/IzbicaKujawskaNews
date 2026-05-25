@@ -2,6 +2,7 @@
 // Hono sub-app mounted at /api/v1 — articles, categories, search, newsletter,
 // incoming (n8n bridge), alerts, weather, fuel, comments, share-count
 import { Hono } from 'hono'
+import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory, searchArticles } from '../data-articles'
 import type { AppEnv } from '../types/env'
 import registerRoute from '../routes/auth/register'
 import loginRoute from '../routes/auth/login'

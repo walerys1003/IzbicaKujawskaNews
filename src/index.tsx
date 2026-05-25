@@ -42,15 +42,34 @@ import {
 import apiV1 from './api/v1'
 import adminRoutes from './routes/admin'
 import aiNewsroomRoutes from './routes/ai-newsroom'
+// Sandbox 9: monitoring + observability
+import healthRoutes from './routes/v1/health'
+import metricsRoutes from './routes/v1/metrics'
+import versionRoutes from './routes/v1/version'
+import adminLogsRoutes from './routes/admin/logs'
+import adminErrorsRoutes from './routes/admin/errors'
+import adminSlowQueriesRoutes from './routes/admin/slow-queries'
+import adminBackupListRoutes from './routes/admin/backup-list'
+import adminBackupCreateRoutes from './routes/admin/backup-create'
+import adminBackupRestoreRoutes from './routes/admin/backup-restore'
+import adminBackupDownloadRoutes from './routes/admin/backup-download'
+import adminBackupVerifyRoutes from './routes/admin/backup-verify'
+import { requestIdMiddleware } from './middleware/request-id'
+import { requestLoggerMiddleware } from './middleware/request-logger'
+import { errorHandler as monitoringErrorHandler } from './middleware/error-handler'
 
 const app = new Hono<AppEnv>()
 
+app.onError(errorHandler)
+app.use('*', requestIdMiddleware)
+app.use('*', requestLoggerMiddleware)
 app.use(renderer)
 
 // ============ API v1 — sub-app mounted at /api/v1 ============
 app.route('/api/v1', apiV1)
 app.route('/api/ai', aiRouter)
 app.route('/api/rag', ragRouter)
+// Public pages (HEAD)
 app.route('/', aboutRoute)
 app.route('/', contactRoute)
 app.route('/', regulaminRoute)
@@ -61,6 +80,18 @@ app.route('/', reklamaRoute)
 app.route('/', karieraRoute)
 app.route('/', dlaPrasyRoute)
 app.route('/', dostepnoscRoute)
+// Sandbox 9: monitoring + admin observability routes
+app.route('/', healthRoutes)
+app.route('/', metricsRoutes)
+app.route('/', versionRoutes)
+app.route('/admin', adminLogsRoutes)
+app.route('/admin', adminErrorsRoutes)
+app.route('/admin', adminSlowQueriesRoutes)
+app.route('/admin', adminBackupListRoutes)
+app.route('/admin', adminBackupCreateRoutes)
+app.route('/admin', adminBackupRestoreRoutes)
+app.route('/admin', adminBackupDownloadRoutes)
+app.route('/admin', adminBackupVerifyRoutes)
 
 // ============ STRONA GŁÓWNA — PEŁNA MAKIETA PORTALU (25 modułów) ============
 //
