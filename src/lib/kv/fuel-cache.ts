@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const FUEL_CACHE_DEFAULT_TTL = 3600
 
@@ -13,7 +13,7 @@ export interface FuelCacheValue {
 
 const PREFIX = 'fuel:'
 
-type EnvWithBinding = Pick<AppEnv, 'FUEL_KV'>
+type EnvWithBinding = Pick<Bindings, 'FUEL_KV'>
 
 /**
  * FuelCacheValue wrapper for Cloudflare KV.

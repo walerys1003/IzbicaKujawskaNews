@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const SEARCH_SUGGESTIONS_DEFAULT_TTL = 86400
 
@@ -11,7 +11,7 @@ export interface SearchSuggestionsValue {
 
 const PREFIX = 'search-suggestions:'
 
-type EnvWithBinding = Pick<AppEnv, 'SEARCH_SUGGESTIONS_KV'>
+type EnvWithBinding = Pick<Bindings, 'SEARCH_SUGGESTIONS_KV'>
 
 /**
  * SearchSuggestionsValue wrapper for Cloudflare KV.

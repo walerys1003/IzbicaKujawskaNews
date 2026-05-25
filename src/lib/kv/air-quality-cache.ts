@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const AIR_QUALITY_CACHE_DEFAULT_TTL = 1800
 
@@ -13,7 +13,7 @@ export interface AirQualityCacheValue {
 
 const PREFIX = 'air:'
 
-type EnvWithBinding = Pick<AppEnv, 'AIR_KV'>
+type EnvWithBinding = Pick<Bindings, 'AIR_KV'>
 
 /**
  * AirQualityCacheValue wrapper for Cloudflare KV.

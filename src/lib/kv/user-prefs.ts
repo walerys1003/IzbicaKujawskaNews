@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const USER_PREFS_DEFAULT_TTL = 31536000
 
@@ -12,7 +12,7 @@ export interface UserPrefsValue {
 
 const PREFIX = 'user-prefs:'
 
-type EnvWithBinding = Pick<AppEnv, 'USER_PREFS_KV'>
+type EnvWithBinding = Pick<Bindings, 'USER_PREFS_KV'>
 
 /**
  * UserPrefsValue wrapper for Cloudflare KV.

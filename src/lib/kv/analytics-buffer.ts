@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const ANALYTICS_BUFFER_DEFAULT_TTL = 60
 
@@ -12,7 +12,7 @@ export interface AnalyticsBufferValue {
 
 const PREFIX = 'analytics-buffer:'
 
-type EnvWithBinding = Pick<AppEnv, 'ANALYTICS_BUFFER_KV'>
+type EnvWithBinding = Pick<Bindings, 'ANALYTICS_BUFFER_KV'>
 
 /**
  * AnalyticsBufferValue wrapper for Cloudflare KV.

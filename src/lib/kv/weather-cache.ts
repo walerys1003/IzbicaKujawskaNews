@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const WEATHER_CACHE_DEFAULT_TTL = 900
 
@@ -13,7 +13,7 @@ export interface WeatherCacheValue {
 
 const PREFIX = 'weather:'
 
-type EnvWithBinding = Pick<AppEnv, 'WEATHER_KV'>
+type EnvWithBinding = Pick<Bindings, 'WEATHER_KV'>
 
 /**
  * WeatherCacheValue wrapper for Cloudflare KV.

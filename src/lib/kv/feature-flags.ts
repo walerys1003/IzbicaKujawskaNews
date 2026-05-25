@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const FEATURE_FLAGS_DEFAULT_TTL = 3600
 
@@ -12,7 +12,7 @@ export interface FeatureFlagsValue {
 
 const PREFIX = 'feature-flags:'
 
-type EnvWithBinding = Pick<AppEnv, 'FEATURE_FLAGS_KV'>
+type EnvWithBinding = Pick<Bindings, 'FEATURE_FLAGS_KV'>
 
 /**
  * FeatureFlagsValue wrapper for Cloudflare KV.

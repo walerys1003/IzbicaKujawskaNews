@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const RATE_LIMIT_STORE_DEFAULT_TTL = 300
 
@@ -12,7 +12,7 @@ export interface RateLimitStoreValue {
 
 const PREFIX = 'rate-limit:'
 
-type EnvWithBinding = Pick<AppEnv, 'RATE_LIMIT_KV'>
+type EnvWithBinding = Pick<Bindings, 'RATE_LIMIT_KV'>
 
 /**
  * RateLimitStoreValue wrapper for Cloudflare KV.

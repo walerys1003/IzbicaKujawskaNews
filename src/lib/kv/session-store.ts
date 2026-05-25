@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const SESSION_STORE_DEFAULT_TTL = 604800
 
@@ -13,7 +13,7 @@ export interface SessionStoreValue {
 
 const PREFIX = 'session:'
 
-type EnvWithBinding = Pick<AppEnv, 'SESSION_KV'>
+type EnvWithBinding = Pick<Bindings, 'SESSION_KV'>
 
 /**
  * SessionStoreValue wrapper for Cloudflare KV.

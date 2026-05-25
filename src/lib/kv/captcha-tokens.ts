@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const CAPTCHA_TOKENS_DEFAULT_TTL = 300
 
@@ -12,7 +12,7 @@ export interface CaptchaTokensValue {
 
 const PREFIX = 'captcha:'
 
-type EnvWithBinding = Pick<AppEnv, 'CAPTCHA_KV'>
+type EnvWithBinding = Pick<Bindings, 'CAPTCHA_KV'>
 
 /**
  * CaptchaTokensValue wrapper for Cloudflare KV.

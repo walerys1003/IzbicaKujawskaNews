@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const CACHE_PAGES_DEFAULT_TTL = 300
 
@@ -12,7 +12,7 @@ export interface CachePagesValue {
 
 const PREFIX = 'page-cache:'
 
-type EnvWithBinding = Pick<AppEnv, 'PAGES_CACHE_KV'>
+type EnvWithBinding = Pick<Bindings, 'PAGES_CACHE_KV'>
 
 /**
  * CachePagesValue wrapper for Cloudflare KV.

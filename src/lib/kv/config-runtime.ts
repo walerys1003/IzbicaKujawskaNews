@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const CONFIG_RUNTIME_DEFAULT_TTL = 3600
 
@@ -12,7 +12,7 @@ export interface ConfigRuntimeValue {
 
 const PREFIX = 'runtime-config:'
 
-type EnvWithBinding = Pick<AppEnv, 'RUNTIME_CONFIG_KV'>
+type EnvWithBinding = Pick<Bindings, 'RUNTIME_CONFIG_KV'>
 
 /**
  * ConfigRuntimeValue wrapper for Cloudflare KV.

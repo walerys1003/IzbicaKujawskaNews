@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const AB_TESTS_DEFAULT_TTL = 2592000
 
@@ -12,7 +12,7 @@ export interface AbTestsValue {
 
 const PREFIX = 'ab-tests:'
 
-type EnvWithBinding = Pick<AppEnv, 'AB_TESTS_KV'>
+type EnvWithBinding = Pick<Bindings, 'AB_TESTS_KV'>
 
 /**
  * AbTestsValue wrapper for Cloudflare KV.

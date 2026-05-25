@@ -27,7 +27,7 @@ import {
 import apiV1 from './api/v1'
 import type { AppEnv } from './types/env'
 
-const app = new Hono<{ Bindings: AppEnv }>()
+const app = new Hono<AppEnv>()
 
 app.use(renderer)
 

@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const BACKUP_SNAPSHOTS_DEFAULT_TTL = 604800
 
@@ -12,7 +12,7 @@ export interface BackupSnapshotsValue {
 
 const PREFIX = 'backup-snapshots:'
 
-type EnvWithBinding = Pick<AppEnv, 'BACKUP_SNAPSHOTS_KV'>
+type EnvWithBinding = Pick<Bindings, 'BACKUP_SNAPSHOTS_KV'>
 
 /**
  * BackupSnapshotsValue wrapper for Cloudflare KV.

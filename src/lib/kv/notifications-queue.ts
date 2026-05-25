@@ -1,4 +1,4 @@
-import type { AppEnv } from '../../types/env'
+import type { Bindings } from '../../types/env'
 
 export const NOTIFICATIONS_QUEUE_DEFAULT_TTL = 86400
 
@@ -12,7 +12,7 @@ export interface NotificationsQueueValue {
 
 const PREFIX = 'notifications:'
 
-type EnvWithBinding = Pick<AppEnv, 'NOTIFICATIONS_KV'>
+type EnvWithBinding = Pick<Bindings, 'NOTIFICATIONS_KV'>
 
 /**
  * NotificationsQueueValue wrapper for Cloudflare KV.
