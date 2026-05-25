@@ -3,8 +3,41 @@
 // incoming (n8n bridge), alerts, weather, fuel, comments, share-count
 import { Hono } from 'hono'
 import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory, searchArticles } from '../data-articles'
+import registerRoute from '../routes/auth/register'
+import loginRoute from '../routes/auth/login'
+import logoutRoute from '../routes/auth/logout'
+import refreshRoute from '../routes/auth/refresh'
+import magicLinkRoute from '../routes/auth/magic-link'
+import verifyEmailRoute from '../routes/auth/verify-email'
+import resetPasswordRoute from '../routes/auth/reset-password'
+import changePasswordRoute from '../routes/auth/change-password'
+import profileRoute from '../routes/auth/profile'
+import deleteAccountRoute from '../routes/auth/delete-account'
+import twoFactorEnableRoute from '../routes/auth/2fa-enable'
+import twoFactorVerifyRoute from '../routes/auth/2fa-verify'
+import socialGoogleRoute from '../routes/auth/social-google'
+import socialFacebookRoute from '../routes/auth/social-facebook'
+import apiKeysRoute from '../routes/auth/api-keys'
+import sessionsRoute from '../routes/auth/sessions'
 
 const api = new Hono()
+
+api.route('/auth', registerRoute)
+api.route('/auth', loginRoute)
+api.route('/auth', logoutRoute)
+api.route('/auth', refreshRoute)
+api.route('/auth', magicLinkRoute)
+api.route('/auth', verifyEmailRoute)
+api.route('/auth', resetPasswordRoute)
+api.route('/auth', changePasswordRoute)
+api.route('/auth', profileRoute)
+api.route('/auth', deleteAccountRoute)
+api.route('/auth', twoFactorEnableRoute)
+api.route('/auth', twoFactorVerifyRoute)
+api.route('/auth', socialGoogleRoute)
+api.route('/auth', socialFacebookRoute)
+api.route('/auth', apiKeysRoute)
+api.route('/auth', sessionsRoute)
 
 // ============ B7: HEALTH ============
 api.get('/health', (c) =>
