@@ -6,7 +6,15 @@
     "build": "vite build",
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "lint": "node scripts/ci-lint.mjs",
+    "test": "node scripts/ci-test.mjs",
+    "deploy:staging": "bash scripts/deploy.sh staging",
+    "deploy:prod": "bash scripts/deploy.sh prod",
+    "migrate": "bash scripts/migrate.sh",
+    "seed": "bash scripts/seed.sh",
+    "rollback": "bash scripts/rollback.sh",
+    "health-check": "bash scripts/health-check.sh"
   },
   "dependencies": {
     "hono": "^4.12.23"
