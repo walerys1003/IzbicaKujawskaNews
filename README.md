@@ -71,10 +71,48 @@
 - **Python CLI** do wyszukiwania: `python3 knowledge_base/retrieve.py "twoje pytanie"`
 - **Client-side JS** RAG na stronie `/wiedza` — odpowiedzi w &lt; 100 ms
 
-### 3. Szata graficzna portalu (PRIORYTET)
-Implementacja **1:1 wg specyfikacji UI/UX** z dostarczonych dokumentów:
+### 3. Szata graficzna portalu (PRIORYTET) — **v2: ZERO MARGIN + 11 NOWYCH MODUŁÓW**
 
-#### 14 modułów strony głównej:
+#### 🆕 Update v2 (25 maja 2026, commit `14adf8d`):
+
+**LAYOUT FIX — zero marginesów bocznych:**
+- `public/static/layout-v2.css` (7908 znaków) — universal `.full-bleed` pattern
+  `width: 100vw; margin-left: calc(50% - 50vw)`
+- Wymusza pełną szerokość na: `#super-header`, `#main-nav`, `#breaking-bar`,
+  `#hero`, `#na-sygnale`, `.skrot-dnia`, `.newsletter-inline`, `footer`
+- Nowy `--max-w: 1440px` (zamiast 1200px w reuters.css)
+- Asymetryczny `.main-grid` (1fr + 320px sticky sidebar, breakpoint @1280→360px, @1600→400px)
+- Mobile breakpoints @1080/768/480 px
+- **Walidacja Playwright**: `verdict: OK_ZERO_MARGINS`, 11/11 modułów, `hScroll: false`
+
+**11 NOWYCH MODUŁÓW STRATEGICZNYCH (Reuters-tier):**
+
+| # | Moduł | Cel UX/Pain Point |
+|---|-------|-------------------|
+| 1 | **SkrotDnia** (6-KPI strip full-bleed) | Pogoda / awarie / drogi / dyżur / sesja / zbiórki w 5 sek. |
+| 2 | **AwarieIUtrudnienia** | Prąd/Woda/Ciepło/Internet — status dots ok/warn/high |
+| 3 | **DrogiKomunikacja** | DK62/S10/DW270/PKS z severity bars |
+| 4 | **DyzuryGodziny** | apteka / lekarz / urząd / MGOPS / policja / OSP z tel: links |
+| 5 | **CenyPaliw** | Ranking 4 stacji + trend arrows (↓ green / ↑ red) |
+| 6 | **PomagamyRazem** | 3 zbiórki OSP/MGOPS/siepomaga z progress bars |
+| 7 | **KronikaRodzinna** | Narodziny / śluby / jubileusze / nekrologi |
+| 8 | **KalendarzTygodnia** | 7-dniowy event-grid PN-ND |
+| 9 | **TopTygodnia** | Top-5 najczęściej czytane (rank numerals serif #fa6400) |
+| 10 | **MowiaMieszkancy** | Cytaty z FB/email z border-left orange |
+| 11 | **NewsletterInline** | Full-bleed CTA: czarny bg + orange 6px stripe |
+
+**STRATEGIA UKŁADU (7-pass jak w głównych portalach informacyjnych):**
+1. Orientacja w dniu — Hero + SkrotDnia (full-bleed top)
+2. Twarde informacje — Wiadomości + Awarie/Drogi (cards-grid-2)
+3. Społeczność — Kujawianka + Samorząd + NaSygnaleFull (full-bleed)
+4. Usługi praktyczne — Dyżury + CenyPaliw (.section-zebra)
+5. Kultura+Ludzie+Codzienność — w `.main-grid` z TopTygodnia/Pomagamy/Kronika w sticky sidebar
+6. Ogłoszenia + Multimedia
+7. NewsletterInline (full-bleed bottom)
+
+**Łącznie: 25 modułów na stronie głównej** (14 oryginalnych + 11 v2).
+
+#### 14 oryginalnych modułów (v1):
 1. **Super-header** (sticky, hide-on-scroll, data + pogoda + newsletter)
 2. **Main Nav** (12 kategorii z dropdownami, sticky compaction)
 3. **Breaking bar** (ticker z animacją CSS, pause-on-hover)
