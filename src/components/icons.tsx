@@ -270,6 +270,11 @@ export const Icon = {
       <circle cx="12" cy="10" r="3" />
     </svg>
   ),
+  Power: (p: IconProps = {}) => (
+    <svg {...base(p.size, p.className)}>
+      <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+    </svg>
+  ),
   PlayCircle: (p: IconProps = {}) => (
     <svg {...base(p.size, p.className)}>
       <circle cx="12" cy="12" r="10" />

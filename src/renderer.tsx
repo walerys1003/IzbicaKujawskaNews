@@ -24,6 +24,9 @@ export const renderer = jsxRenderer(({ children, title }) => {
         <link href="/static/v3-header.css" rel="stylesheet" />
         <link href="/static/v3-hero.css" rel="stylesheet" />
         <link href="/static/v3-modules.css" rel="stylesheet" />
+        <link href="/static/v3-modules-ext.css" rel="stylesheet" />
+        <link href="/static/v3-modules-ext2.css" rel="stylesheet" />
+        <link href="/static/v3-modules-ext3.css" rel="stylesheet" />
         <link href="/static/v3-footer.css" rel="stylesheet" />
 
         {/* === Legacy CSS (article/category/search pages still use article-v2) === */}

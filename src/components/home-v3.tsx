@@ -5,6 +5,29 @@
 
 import { Icon } from './icons'
 import { ARTICLES, CATEGORIES_MAP } from '../data-articles'
+import {
+  NaSygnaleStrip,
+  WiadomosciModule,
+  SamorzadModule,
+  InwestycjeModule,
+  SportModule,
+  KulturaModule,
+  EdukacjaModule,
+  ZdrowieModule,
+  SrodowiskoRolnictwoModule,
+  LudzieModule,
+  HistoriaModule,
+  SolectwaModule,
+  KalendarzModule,
+  MultimediaModule,
+  MieszkaniecPytaModule,
+  OpinieModule,
+  NewsletterBleed,
+  OgloszeniaModule,
+  PartnerzyBar,
+  Top10Module,
+  ArchiwumBar,
+} from './home-v3-modules'
 
 /* ================== HERB IZBICY (inline SVG, uproszczony) ================== */
 export const HerbIzbica = ({ size = 56 }: { size?: number }) => (
@@ -259,6 +282,20 @@ const TopStrip = () => (
           <span class="v3-strip-text">
             <span class="v3-strip-label">Apteka dyżurna</span>
             <span class="v3-strip-value">Medikus · Rynek</span>
+          </span>
+        </a>
+        <a href="/samorzad" class="v3-strip-card">
+          <span class="v3-strip-icon"><Icon.Building size={22} /></span>
+          <span class="v3-strip-text">
+            <span class="v3-strip-label">Sesja Rady</span>
+            <span class="v3-strip-value">XLVII · 28.05 · 13:00</span>
+          </span>
+        </a>
+        <a href="/inwestycje" class="v3-strip-card v3-strip-card-gold">
+          <span class="v3-strip-icon"><Icon.Wrench size={22} /></span>
+          <span class="v3-strip-text">
+            <span class="v3-strip-label">Inwestycje 2026</span>
+            <span class="v3-strip-value">5 projektów · 38,2 mln zł</span>
           </span>
         </a>
       </div>
@@ -676,12 +713,52 @@ export const HomeV3 = () => (
     <Nav />
     <BreakingTicker />
     <main id="page-main">
+      {/* [01] HERO + [02] TopStrip (6 KPI) */}
       <HeroSection />
       <TopStrip />
-      <TopStories />
+      {/* [03] Na Sygnale — alert strip (waga ↑↑↑) */}
+      <NaSygnaleStrip />
+      {/* [04] Wiadomości — feature 2x2 + 6 small + chips */}
+      <WiadomosciModule />
+      {/* [05] Samorząd — lead + sub-widget Sesja Rady + sub-widget Budżet donut (waga ↑↑) */}
+      <SamorzadModule />
+      {/* [06] Inwestycje — 5 projektów progress (waga ↑↑) */}
+      <InwestycjeModule />
+      {/* [07] Kujawianka + Sport — match + scorers + amatorzy */}
       <KujawiankaSection />
-      <MagazineGrid />
-      <MainLayout />
+      <SportModule />
+      {/* [08] Kultura (przed Historią — user request) */}
+      <KulturaModule />
+      {/* [09] Edukacja */}
+      <EdukacjaModule />
+      {/* [10] Zdrowie — apteka + SPZOZ + profilaktyka */}
+      <ZdrowieModule />
+      {/* [11] Środowisko + Rolnictwo */}
+      <SrodowiskoRolnictwoModule />
+      {/* [12] Ludzie — wywiad + 3 portrety */}
+      <LudzieModule />
+      {/* [13] Historia (niżej — user request: "Historię niżej daj") */}
+      <HistoriaModule />
+      {/* [14] Sołectwa — SVG minimapa + chipy + ostatnia aktywność */}
+      <SolectwaModule />
+      {/* [15] Kalendarz 7 dni */}
+      <KalendarzModule />
+      {/* [16] Multimedia — video featured + 4 thumbs + podcast banner */}
+      <MultimediaModule />
+      {/* [17] Mieszkaniec Pyta — Q&A feed */}
+      <MieszkaniecPytaModule />
+      {/* [18] Opinie + naj komentowane */}
+      <OpinieModule />
+      {/* [19] Newsletter — full-bleed navy + gold radial */}
+      <NewsletterBleed />
+      {/* [20] Ogłoszenia — nekrologi/praca/nieruchomości */}
+      <OgloszeniaModule />
+      {/* [21] Top 10 tygodnia */}
+      <Top10Module />
+      {/* [22] Partnerzy — 7 instytucji (urząd, MGCK, biblioteka, Caritas, OSP, Orioniści, parafia) */}
+      <PartnerzyBar />
+      {/* [23] Archiwum — rok + miesiąc + kategoria chipy */}
+      <ArchiwumBar />
     </main>
     <Footer />
     <button class="v3-scroll-top" id="scrollTopBtn" aria-label="Do góry">

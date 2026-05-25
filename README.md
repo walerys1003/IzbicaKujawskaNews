@@ -4,6 +4,69 @@
 
 ---
 
+## 🚀 v3.5 — 24 MODUŁY MAGAZYNOWE (2026-05-25, sesja wieczorna)
+
+### Krytyczne rozszerzenie: z 6 → 24 modułów na home
+
+Po krytycznej samoocenie ("6 modułów to zdecydowanie za mało dla portalu informacyjnego klasy premium z setkami tysięcy odwiedzin"), wykonano **drugą falę** redesignu w **3 równoległych sandboxach × 30 zadań = 90 zadań**:
+
+### 🗺️ Plan informacyjny (decyzje wagi)
+- **Waga ↑↑↑**: NaSygnale (alerty), Wiadomości (lead newsroom), Samorząd, Inwestycje
+- **Waga ↑↑**: Kujawianka+Sport, Kultura, Edukacja, Zdrowie
+- **Waga ↑**: Środowisko+Rolnictwo, Ludzie, Sołectwa (mapa), Mieszkaniec Pyta
+- **Waga ↓** (niżej): Historia, Kalendarz, Multimedia, Opinie, Top10, Archiwum
+- **Chrome**: Newsletter, Ogłoszenia, Partnerzy
+
+### 📐 Kolejność 24 modułów (zgodnie z user request: „Historię niżej, submoduły wewnątrz kategorii")
+1. **[01] Hero** (asymetryczny grid)
+2. **[02] TopStrip 6 KPI** — Pogoda · Paliwa · Alerty · Apteka · **Sesja Rady** · **Inwestycje 2026** (rozszerzono z 4 do 6)
+3. **[03] NaSygnale** — alert strip (burgundy full-bleed, 3 cards: prąd/wypadek/zaginiona osoba)
+4. **[04] Wiadomości** — feature 2×2 + 6 small + chip filters
+5. **[05] Samorząd** — lead + sub-widget „Sesja Rady XLVII" (navy) + sub-widget „Budżet 2026 donut" (inline SVG 6-segment)
+6. **[06] Inwestycje** — 5 projektów progress (modernizacja dróg, kanalizacja, świetlica, fotowoltaika, OSP)
+7. **[07] Kujawianka + Sport** — match + next + scorers + amatorzy
+8. **[08] Kultura** — events list (5) + featured cards (przed Historią — user request)
+9. **[09] Edukacja** — feature ZS + lista 4
+10. **[10] Zdrowie** — apteka dyżurna + SPZOZ info + profilaktyka
+11. **[11] Środowisko + Rolnictwo** — kanał Zgłowiączki + 3 programy
+12. **[12] Ludzie** — wywiad featured + 3 portrety
+13. **[13] Historia** (niżej!) — Polskie Piramidy + 3 mini cards
+14. **[14] Sołectwa** — **interaktywna SVG minimapa gminy** z 15 pinezkami activity-color (high/medium/low) + chipy + ostatnia aktywność
+15. **[15] Kalendarz 7-dni** — 7-col grid z color-coded events per kategoria
+16. **[16] Multimedia** — video featured 16:9 + 4 thumbs + podcast banner
+17. **[17] Mieszkaniec Pyta** — Q&A feed 2-col
+18. **[18] Opinie** — 3 felietony + naj komentowane (2fr/1fr)
+19. **[19] Newsletter** — full-bleed navy + gold radial
+20. **[20] Ogłoszenia** — 3-col (nekrologi/praca/nieruchomości)
+21. **[21] Top 10 tygodnia** — numbered list 2-col
+22. **[22] Partnerzy** — 7 instytucji z inline SVG icons: **Urząd, MGCK, Biblioteka, Caritas, OSP, Dom Orionistów, parafia Izbica Kujawska** (user verbatim)
+23. **[23] Archiwum** — rok + miesiąc + kategoria chip bar
+
+### 🎨 Decyzje design (user verbatim)
+- ✅ **Usunięto WSZYSTKIE animacje tekstu hover** (gold underline, scale transform, letter-spacing) — `v3-modules-ext3.css` ma blok CLEAN-UP z `!important` overrides
+- ✅ **Zostały tylko**: color transition, box-shadow deepening, smooth scroll, ticker marquee, fade-in lazy load (user: „subtelny kolor, change, box shadow, smooth, scroll")
+- ✅ **Sub-widgety WEWNĄTRZ kategorii** (Samorząd = lead + sesja + budżet, Sport = match + scorers + amateur — nie osobne sekcje)
+- ✅ **SVG minimapa sołectw** — schematyczna „octagonal blob" + grid pattern + symbol Izbicy w centrum + rzeka Zgłowiączka + 15 pinezek z kolorami activity
+- ✅ **Inline SVG dla 7 partnerów** — własne ikony PartnerIcon per slug
+
+### 📦 Pliki utworzone w v3.5
+- **`src/data-modules.ts`** (16.5 KB) — mock data dla 24 modułów: SOLECTWA × 15, PARTNERS × 7, SESJA_RADY, BUDZET_2026 (38.2 mln zł, 6 segmentów), INWESTYCJE × 5, NEXT_MATCH/TOP_SCORERS/SPORT_AMATORSKI, HISTORIA_CARDS, KULTURA_EVENTS, EDUKACJA_NEWS, APTEKA_DYZUR, SPZOZ_INFO, KANAL_ZGLOWIACZKI, ROLNICTWO_PROGRAMY, LUDZIE_PORTRETY + WYWIAD_FEATURED, MIESZKANIEC_FEED, OPINIE, NAJ_KOMENTOWANE, VIDEO_FEATURED + VIDEO_THUMBS, PODCAST_LATEST, KALENDARZ_7DNI, NEKROLOGI/PRACA/NIERUCHOMOSCI, TOP10_TYDZIEN, ARCHIWUM
+- **`public/static/v3-modules-ext.css`** (15.8 KB) — moduły [03]-[08]
+- **`public/static/v3-modules-ext2.css`** (21.0 KB) — moduły [09]-[17]
+- **`public/static/v3-modules-ext3.css`** (13.0 KB) — moduły [18]-[23] + **CLEAN-UP block** z `!important` overrides + 6-col TopStrip override
+- **`src/components/home-v3-modules.tsx`** (45.0 KB) — 22 komponenty modułów + `ModuleHead` reusable + `BudzetDonut` SVG + `SolectwaMapa` SVG + `PartnerIcon` SVG (per slug)
+- **`src/components/icons.tsx`** — dodano `Icon.Power` (lightning bolt) dla NaSygnale „wyłączenia prądu" (łącznie 52 ikony)
+- **`src/renderer.tsx`** — dodane 3 linki CSS (ext, ext2, ext3) przed article-v2.css
+- **`src/components/home-v3.tsx`** — `HomeV3` zaimportował 22 moduły, zastąpił TopStories/MagazineGrid/MainLayout 22 nowymi sekcjami w nowej kolejności, TopStrip rozszerzony z 4 do 6 KPI
+
+### 📊 Metryki v3.5
+- **Build**: 68 modules transformed (było 66), worker 243 KB (było 203 KB)
+- **HTML size**: 93 KB (było ~40 KB) — 22 moduły + dane + SVG icons
+- **CSS total**: 96.5 KB (poprzednio 47 KB) — dodano 49.8 KB w 3 plikach ext
+- **Zadania**: 90/90 ukończone (Sandbox G + H + I)
+
+---
+
 ## 🎨 v3 REDESIGN — „Magazyn Kujawski Premium" (2026-05-25)
 
 ### Totalny redesign inspirowany Interia.pl + The Guardian + NYT Magazine
