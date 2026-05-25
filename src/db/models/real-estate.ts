@@ -40,13 +40,13 @@ export interface RealEstateUpdateInput extends Partial<RealEstateRow> {
 }
 
 const TABLE = 'real_estate'
-const COLUMNS = ["id", "slug", "title", "type", "transaction", "price", "area_m2", "rooms", "location", "photo_r2_keys", "description", "contact", "expires_at", "published", "created_at", "updated_at", "deleted_at", "archived_at"] as const
+const COLUMNS = ["id", "slug", "title", "type", "\"transaction\" AS transaction", "price", "area_m2", "rooms", "location", "photo_r2_keys", "description", "contact", "expires_at", "published", "created_at", "updated_at", "deleted_at", "archived_at"] as const
 const SELECT_COLUMNS = COLUMNS.join(', ')
 const FILTER_MAP: Record<string, string> = {
   "id": "id",
   "slug": "slug",
   "type": "type",
-  "transaction": "transaction",
+  "transaction": "\"transaction\"",
   "published": "published",
 }
 
@@ -66,7 +66,7 @@ export async function insert(c: DbContext, input: RealEstateInsertInput): Promis
     "slug": input.slug,
     "title": input.title,
     "type": input.type,
-    "transaction": input.transaction,
+    "\"transaction\"": input.transaction,
     "price": input.price,
     "area_m2": input.area_m2,
     "rooms": input.rooms,
@@ -92,7 +92,7 @@ export async function update(c: DbContext, input: RealEstateUpdateInput): Promis
     "slug": input.slug,
     "title": input.title,
     "type": input.type,
-    "transaction": input.transaction,
+    "\"transaction\"": input.transaction,
     "price": input.price,
     "area_m2": input.area_m2,
     "rooms": input.rooms,

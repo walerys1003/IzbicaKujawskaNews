@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS real_estate (
   slug TEXT NOT NULL UNIQUE,
   title TEXT NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('dom', 'mieszkanie', 'dzialka', 'lokal')),
-  transaction TEXT NOT NULL CHECK (transaction IN ('sprzedaz', 'wynajem')),
+  "transaction" TEXT NOT NULL CHECK ("transaction" IN ('sprzedaz', 'wynajem')),
   price INTEGER,
   area_m2 REAL,
   rooms INTEGER,
@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS real_estate (
 );
 CREATE INDEX IF NOT EXISTS idx_real_estate_slug ON real_estate(slug);
 CREATE INDEX IF NOT EXISTS idx_real_estate_type ON real_estate(type);
-CREATE INDEX IF NOT EXISTS idx_real_estate_transaction ON real_estate(transaction);
+CREATE INDEX IF NOT EXISTS idx_real_estate_transaction ON real_estate("transaction");
 CREATE INDEX IF NOT EXISTS idx_real_estate_published ON real_estate(published);
 CREATE INDEX IF NOT EXISTS idx_real_estate_expires_at ON real_estate(expires_at);
 
