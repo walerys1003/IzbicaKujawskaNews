@@ -4,6 +4,74 @@
 
 ---
 
+## 🛠️ v3.6 — FIX-PACK (2026-05-25, krytyka użytkownika → jedna duża fala)
+
+### Naprawa 12 problemów zgłoszonych po v3.5
+
+Po krytycznej analizie wizualnej (12 punktów: kontrast, brak zdjęć, brak struktury, mapa, duplikaty), wykonano kompleksową falę napraw w **6 falach równoległych**:
+
+**FALA A — KONTRAST** (5 sekcji)
+- Sesja Rady widget: gradient navy + cream tekst (było: białe na cream — niewidoczne)
+- Wywiad burmistrza: cream cytat + gold border-left
+- Top strzelcy: ciemne nazwiska
+- Naj komentowane + Newsletter: wzmocniony kontrast tekstu
+- Historia feature: uspokojona paleta (#1a1410→#2d2418→#3d3018, cream tekst)
+
+**FALA B — HERO**
+- Tytuł: `clamp(1.5rem, 2.5vw + 0.5rem, 2.5rem)` zamiast statycznych 5rem (był nieproporcjonalny)
+
+**FALA C — STRUKTURA**
+- Samorząd: **4 podserwisy** (Burmistrz, Rada Miejska, Komisje, Konsultacje)
+- Kultura: **3 podserwisy** z prawdziwymi obrazami (MGCK, Biblioteka Publiczna, 15 KGW)
+- Usunięto duplikat `<KujawiankaSection/>` — pozostaje tylko rozbudowany `SportModule`
+
+**FALA D — ZDJĘCIA** (48 stockowych zdjęć)
+- Źródła: Unsplash, Pexels, Picsum (CC0/free for commercial)
+- 11 podkatalogów: inwestycje/historia/kultura/edukacja/zdrowie/opinie/ludzie/mieszkaniec/kalendarz/wiadomosci/solectwa
+- **IMG mapping** — TypeScript lookup table `slug → /static/img/...`
+- Refactoring 11 modułów: Inwestycje (z excerpts + status), Kultura (kafelki + podserwisy), Edukacja (feature + miniatury), Zdrowie (image headers), Historia (feature + mini), Opinie (round photo avatars), Ludzie (burmistrz feature + portrety), Mieszkaniec Pyta (real avatars), Kalendarz (thumbnails per event), Wiadomości (featured + 6 cards)
+
+**FALA E — MAPA SOŁECTW**
+- Pre-renderowana **PNG mapa OpenStreetMap** 1200×900 (`mapa-gminy-izbica.png`)
+- Wygenerowana via `staticmap` + `PIL` (Python pipeline w `/tmp/gen-map.py`)
+- 16 markerów (Izbica center navy + 15 sołectw kolory wg aktywności high/medium/low)
+- Białe pill-labels z nazwami sołectw + legenda + atrybucja ODbL
+- Zastąpiła paskudną SVG z nakładającymi się labelami
+
+**FALA F — CSS POLISH**
+- `public/static/v3-fix.css` (966 linii) — wszystkie override w jednym pliku, `!important` dla pewnej precedencji
+- Załadowany jako ostatni stylesheet (po v3-footer.css)
+- 6 nowych klas image wrap (aspect-ratio + object-fit:cover + border-radius)
+
+### 📊 Weryfikacja v3.6
+- ✅ Build OK: 68 modułów, `dist/_worker.js` 246.7 KB
+- ✅ HTTP 200, 97 KB HTML (vs 93 KB w v3.5 — +4 KB z `<img>` tagów)
+- ✅ **44 obrazy aktywnie używane** + mapa PNG
+- ✅ Screenshot AI verification: 11/12 GOOD, mapa + opinie potwierdzone GOOD przez `understand_images`
+- ✅ Wszystkie 16/16 markerów obecności w HTML (curl + grep)
+- ✅ Push do GitHub: `0a0b5f7..32fda1c main`
+
+### 🎯 Mapowanie 12 napraw → kommit
+| # | Problem | Naprawa | Status |
+|---|---------|---------|--------|
+| 1 | Hero tytuł za duży | clamp(1.5rem...) | ✅ |
+| 2 | Samorząd brak pod-serwisów | 4 podserwisy (Burmistrz/Rada/Komisje/Konsultacje) | ✅ |
+| 3 | Sesja Rady biały na cream | navy gradient + cream tekst | ✅ |
+| 4 | Inwestycje brak zdjęć i zajawek | 5 stock photos + excerpts | ✅ |
+| 5 | Duplikat Kujawianka | Usunięto `<KujawiankaSection/>` | ✅ |
+| 6 | Kultura "AI-generated" | 3 podserwisy z obrazami + struktura MGCK/Biblioteka/KGW | ✅ |
+| 7 | Edukacja brak zdjęć | feature + miniatury news | ✅ |
+| 8 | Zdrowie brak wizualizacji | image headers per karta | ✅ |
+| 9 | Historia biały/czerwony kicz | uspokojona paleta + feature image | ✅ |
+| 10 | Sołectwa SVG paskudna | PNG OSM mapa 1200×900 | ✅ |
+| 11 | Kalendarz brak zdjęć | thumbnail per event | ✅ |
+| 12 | Mieszkaniec słaba forma | real photo avatars | ✅ |
+| 13 | Opinie brak zdjęć | round photo avatars (3 felietonistów) | ✅ |
+| 14 | Naj komentowane kontrast | wzmocniony kontrast | ✅ |
+| 15 | Newsletter czarny słabo | cream tekst + gold akcenty | ✅ |
+
+---
+
 ## 🚀 v3.5 — 24 MODUŁY MAGAZYNOWE (2026-05-25, sesja wieczorna)
 
 ### Krytyczne rozszerzenie: z 6 → 24 modułów na home
