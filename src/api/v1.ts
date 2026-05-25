@@ -3,8 +3,9 @@
 // incoming (n8n bridge), alerts, weather, fuel, comments, share-count
 import { Hono } from 'hono'
 import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory, searchArticles } from '../data-articles'
+import type { AppEnv } from '../types/env'
 
-const api = new Hono()
+const api = new Hono<{ Bindings: AppEnv }>()
 
 // ============ B7: HEALTH ============
 api.get('/health', (c) =>
