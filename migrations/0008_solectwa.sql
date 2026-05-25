@@ -1,0 +1,9 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS solectwa (
+  slug TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  soltys TEXT,
+  news_count INTEGER NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

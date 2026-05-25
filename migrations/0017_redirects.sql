@@ -1,0 +1,8 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS redirects (
+  old_path TEXT PRIMARY KEY,
+  new_path TEXT NOT NULL,
+  status_code INTEGER NOT NULL DEFAULT 301 CHECK (status_code IN (301, 302)),
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
