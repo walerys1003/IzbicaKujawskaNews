@@ -40,29 +40,12 @@ import {
   generateManifest, generateHumansTxt, generateSecurityTxt,
 } from './seo'
 import apiV1 from './api/v1'
-import adminRoutes from './routes/admin'
-import aiNewsroomRoutes from './routes/ai-newsroom'
-// Sandbox 9: monitoring + observability
-import healthRoutes from './routes/v1/health'
-import metricsRoutes from './routes/v1/metrics'
-import versionRoutes from './routes/v1/version'
-import adminLogsRoutes from './routes/admin/logs'
-import adminErrorsRoutes from './routes/admin/errors'
-import adminSlowQueriesRoutes from './routes/admin/slow-queries'
-import adminBackupListRoutes from './routes/admin/backup-list'
-import adminBackupCreateRoutes from './routes/admin/backup-create'
-import adminBackupRestoreRoutes from './routes/admin/backup-restore'
-import adminBackupDownloadRoutes from './routes/admin/backup-download'
-import adminBackupVerifyRoutes from './routes/admin/backup-verify'
-import { requestIdMiddleware } from './middleware/request-id'
-import { requestLoggerMiddleware } from './middleware/request-logger'
-import { errorHandler as monitoringErrorHandler } from './middleware/error-handler'
+import { responsePerformanceMiddleware } from './lib/performance'
+import type { AppEnv } from './types/env'
 
 const app = new Hono<AppEnv>()
 
-app.onError(errorHandler)
-app.use('*', requestIdMiddleware)
-app.use('*', requestLoggerMiddleware)
+app.use('*', responsePerformanceMiddleware)
 app.use(renderer)
 
 // ============ API v1 — sub-app mounted at /api/v1 ============
@@ -395,6 +378,31 @@ app.get('/:cat', (c) => {
 })
 
 // ============ LEGACY: API STATS + HEALTH ============
+app.post('/api/analytics/vitals', async (c) => {
+  try {
+    const payload = await c.req.json<Record<string, unknown>>()
+    const name = String(payload.name || '').trim()
+    const pathname = String(payload.pathname || '/').trim() || '/'
+    const value = Number(payload.value || 0)
+
+    if (!name || Number.isNaN(value)) {
+      return c.json({ error: 'invalid_vitals_payload' }, 400)
+    }
+
+    if (c.env.ANALYTICS_BUFFER_KV) {
+      const key = `vitals:${pathname}:${name}:${Date.now()}`
+      await c.env.ANALYTICS_BUFFER_KV.put(
+        key,
+        JSON.stringify({ ...payload, pathname, name, value, receivedAt: new Date().toISOString() }),
+        { expirationTtl: 60 * 60 * 24 * 30 }
+      )
+    }
+
+    return c.json({ ok: true, metric: name, pathname, stored: Boolean(c.env.ANALYTICS_BUFFER_KV) })
+  } catch {
+    return c.json({ error: 'invalid_json_body' }, 400)
+  }
+})
 app.get('/api/stats', (c) => c.json(ragStats))
 app.get('/api/health', (c) => c.json({ ok: true, time: new Date().toISOString() }))
 

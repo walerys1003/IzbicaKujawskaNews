@@ -1,43 +1,57 @@
 import { jsxRenderer } from 'hono/jsx-renderer'
+import { criticalCss } from './critical-css'
+
+const asyncStylesheet = (href: string) => (
+  <>
+    <link rel="preload" href={href} as="style" />
+    <link rel="stylesheet" href={href} media="print" onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href={href} />
+    </noscript>
+  </>
+)
 
 export const renderer = jsxRenderer(({ children, title }) => {
   return (
     <html lang="pl">
       <head>
-        <meta charset="UTF-8" />
+        <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-        <meta name="description" content="izbica24.pl — Magazyn Gminy Izbica Kujawska. Wiadomości, samorząd, Kujawianka, kultura, historia, ludzie." />
+        <meta
+          name="description"
+          content="izbica24.pl — Magazyn Gminy Izbica Kujawska. Wiadomości, samorząd, Kujawianka, kultura, historia, ludzie."
+        />
         <meta name="theme-color" content="#0a2540" />
+        <meta name="color-scheme" content="light" />
         <title>{title || 'izbica24.pl — Magazyn Gminy Izbica Kujawska'}</title>
 
-        {/* === FONTY: Playfair Display (display serif) + Lora (body serif) + Inter (UI sans) === */}
+        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+        <link rel="dns-prefetch" href="//picsum.photos" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="preconnect" href="https://picsum.photos" crossOrigin="" />
         <link
           href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
           rel="stylesheet"
         />
 
-        {/* === DESIGN SYSTEM v3 — Magazyn Kujawski Premium === */}
-        <link href="/static/design-tokens.css" rel="stylesheet" />
-        <link href="/static/v3-base.css" rel="stylesheet" />
-        <link href="/static/v3-header.css" rel="stylesheet" />
-        <link href="/static/v3-hero.css" rel="stylesheet" />
-        <link href="/static/v3-modules.css" rel="stylesheet" />
-        <link href="/static/v3-modules-ext.css" rel="stylesheet" />
-        <link href="/static/v3-modules-ext2.css" rel="stylesheet" />
-        <link href="/static/v3-modules-ext3.css" rel="stylesheet" />
-        <link href="/static/v3-footer.css" rel="stylesheet" />
-        <link href="/static/v3-fix.css" rel="stylesheet" />
+        <style>{criticalCss}</style>
+        {asyncStylesheet('/static/design-tokens.css')}
+        {asyncStylesheet('/static/v3-base.css')}
+        {asyncStylesheet('/static/v3-header.css')}
+        {asyncStylesheet('/static/v3-hero.css')}
+        {asyncStylesheet('/static/v3-modules.css')}
+        {asyncStylesheet('/static/v3-modules-ext.css')}
+        {asyncStylesheet('/static/v3-modules-ext2.css')}
+        {asyncStylesheet('/static/v3-modules-ext3.css')}
+        {asyncStylesheet('/static/v3-footer.css')}
+        {asyncStylesheet('/static/v3-fix.css')}
+        {asyncStylesheet('/static/article-v2.css')}
 
-        {/* === Legacy CSS (article/category/search pages still use article-v2) === */}
-        <link href="/static/article-v2.css" rel="stylesheet" />
-
-        {/* === PWA + SEO === */}
         <link rel="manifest" href="/manifest.json" />
         <link rel="alternate" type="application/rss+xml" title="izbica24.pl — RSS" href="/rss.xml" />
 
-        {/* === Favicon: tarcza herbu (czerwień z krzyżem) === */}
         <link
           rel="icon"
           type="image/svg+xml"
@@ -46,10 +60,12 @@ export const renderer = jsxRenderer(({ children, title }) => {
       </head>
       <body>
         {children}
+        <script>
+          {`if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/static/sw.js').catch(() => undefined)) }`}
+        </script>
         <script src="/static/app.js" defer></script>
         <script src="/static/v3-app.js" defer></script>
-        <script src="/static/push-client.js" defer></script>
-        <script src="/static/search.js" defer></script>
+        <script src="/static/vitals.js" defer></script>
         <script src="/static/js/search-autocomplete.js" defer></script>
         <script src="/static/js/infinite-scroll.js" defer></script>
         <script src="/static/js/lazy-img.js" defer></script>
