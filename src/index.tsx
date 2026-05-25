@@ -26,6 +26,7 @@ import {
 } from './seo'
 import apiV1 from './api/v1'
 import adminRoutes from './routes/admin'
+import aiNewsroomRoutes from './routes/ai-newsroom'
 
 const app = new Hono()
 
@@ -345,5 +346,7 @@ app.notFound((c) => {
 })
 
 app.route('/admin', adminRoutes)
+
+app.route('/api/newsroom', aiNewsroomRoutes)
 
 export default app
