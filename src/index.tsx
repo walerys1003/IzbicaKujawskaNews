@@ -17,17 +17,21 @@ import {
 import { HomeV3 } from './components/home-v3'
 import { ArticlePage } from './components/article'
 import { CategoryPage } from './components/category'
-import { SearchPage, NotFoundPage } from './components/search'
+import { SearchPage } from './components/search-page'
+import { NotFoundPage } from './components/search'
 import { PlanPage } from './components/plan'
 import { WiedzaPage } from './components/wiedza'
 import { ragStats } from './rag'
-import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory, searchArticles } from './data-articles'
+import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory } from './data-articles'
 import {
   generateSitemap, generateNewsSitemap, generateRss, generateRobots,
   generateManifest, generateHumansTxt, generateSecurityTxt,
 } from './seo'
 import apiV1 from './api/v1'
-import type { AppEnv } from './types/env'
+import pushRouter, { processScheduledPushMessages } from './routes/push'
+import analyticsRouter, { flushAnalyticsBuffer } from './routes/analytics'
+import searchRouter, { getAutocompleteSuggestions, runSearchQuery } from './routes/search'
+import type { AppEnv, Bindings } from './types/env'
 
 const app = new Hono<AppEnv>()
 
@@ -37,6 +41,9 @@ app.use(renderer)
 app.route('/api/v1', apiV1)
 app.route('/api/ai', aiRouter)
 app.route('/api/rag', ragRouter)
+app.route('/api/push', pushRouter)
+app.route('/api/analytics', analyticsRouter)
+app.route('/api/search', searchRouter)
 
 // ============ STRONA GŁÓWNA — PEŁNA MAKIETA PORTALU (25 modułów) ============
 //
@@ -220,35 +227,30 @@ app.get('/wiadomosci/:slug', (c) => {
 })
 
 // ============ STRONA: SZUKAJ (MUSI BYĆ PRZED /:cat) ============
-app.get('/szukaj', (c) => {
+app.get('/szukaj', async (c) => {
   const q = c.req.query('q') || ''
-  const results = q ? searchArticles(q).map(a => ({
-    url: `/wiadomosci/${a.slug}`,
-    category: a.category,
-    title: a.title,
-    snippet: highlightSnippet(a.lede, q),
-    publishedAt: a.publishedAt,
-  })) : []
+  const filters = {
+    filter: c.req.query('filter') || 'all',
+    author: c.req.query('author') || undefined,
+    tag: c.req.query('tag') || undefined,
+    sort: (c.req.query('sort') as 'relevance' | 'latest' | 'oldest' | undefined) || 'relevance',
+  }
+  const result = q ? await runSearchQuery(c.env, q, filters) : { total: 0, items: [] }
+  const suggestions = q ? getAutocompleteSuggestions(q) : ['kujawianka', 'sesja rady', 'wietrzychowice', 'mgck', 'inwestycje', 'osp']
+  const trending = ['kujawianka', 'mgck', 'dopłaty', 'spzoz', 'sesja rady'].map((item, index) => ({ query: item, hits: 10 - index }))
   return c.render(
     <>
       <DemoStrip />
       <SuperHeader />
       <MainNav />
       <main id="page-main" class="main-wrap">
-        <SearchPage query={q} results={results} total={results.length} />
+        <SearchPage query={q} results={result.items} total={result.total} filters={filters} suggestions={suggestions} trending={trending} spellSuggestion={null} />
       </main>
       <Footer />
     </>,
     { title: q ? `Szukaj: ${q} — izbica24.pl` : 'Wyszukiwarka — izbica24.pl' }
   )
 })
-
-function highlightSnippet(text: string, q: string): string {
-  if (!q) return text
-  const safe = text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
-  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
-  return safe.replace(re, '<mark>$1</mark>')
-}
 
 // ============ SEO: sitemap, RSS, robots, manifest (PRZED /:cat) ============
 app.get('/sitemap.xml', (c) => {
@@ -348,4 +350,14 @@ app.notFound((c) => {
   )
 })
 
-export default app
+const worker = {
+  fetch: app.fetch,
+  scheduled: async (_controller: unknown, env: Bindings) => {
+    await Promise.all([
+      flushAnalyticsBuffer(env),
+      processScheduledPushMessages(env),
+    ])
+  },
+}
+
+export default worker
