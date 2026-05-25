@@ -11,6 +11,8 @@ import {
   CenyPaliw, PomagamyRazem, KronikaRodzinna, KalendarzTygodnia,
   TopTygodnia, MowiaMieszkancy, NewsletterInline,
 } from './components/home-v2'
+// ============ v3 REDESIGN — "Magazyn Kujawski Premium" ============
+import { HomeV3 } from './components/home-v3'
 import { ArticlePage } from './components/article'
 import { CategoryPage } from './components/category'
 import { SearchPage, NotFoundPage } from './components/search'
@@ -70,22 +72,32 @@ app.route('/api/v1', apiV1)
 //   • Ogloszenia + Multimedia
 //   • TopTygodnia (ranking najczęściej czytanych)
 //
+// ┌─────────────────────────────────────────────────────────────────┐
+// │  v3 REDESIGN — "Magazyn Kujawski Premium"                       │
+// │  Inspirowane: Interia.pl + The Guardian + NYT Magazine          │
+// │  Paleta: Navy #0a2540 + Burgundy #8b1d2a + Gold #c8a951 + Cream │
+// │  Typografia: Playfair Display + Lora + Inter                    │
+// │  Layout: asymetryczny hero grid, magazine cards, sticky sidebar │
+// └─────────────────────────────────────────────────────────────────┘
 app.get('/', (c) => {
+  return c.render(
+    <HomeV3 />,
+    { title: 'izbica24.pl — Magazyn Gminy Izbica Kujawska' }
+  )
+})
+
+// ============ LEGACY: stara wersja v2 (do porównania) ============
+app.get('/v2', (c) => {
   return c.render(
     <>
       <DemoStrip active="home" />
       <SuperHeader />
       <MainNav />
       <BreakingBar />
-
-      {/* ┌──── FULL-BLEED #1: SkrotDnia (6 KPI strip — pełna szer.) ────┐ */}
       <SkrotDnia />
-
-      {/* ┌──── STREFA A: HERO + WIADOMOŚCI + UTRUDNIENIA (grid) ────────┐ */}
       <main id="page-main" class="main-wrap">
         <div class="main-grid">
           <div id="content-col">
-            {/* PASS 1+2 — Orientacja + twarde informacje */}
             <Hero />
             <Wiadomosci />
             <div class="cards-grid-2 modv2-band">
@@ -98,11 +110,7 @@ app.get('/', (c) => {
           <Sidebar />
         </div>
       </main>
-
-      {/* ┌──── FULL-BLEED #2: Na sygnale (czarny pas alertów) ──────────┐ */}
       <NaSygnaleFull />
-
-      {/* ┌──── STREFA B: USŁUGI PRAKTYCZNE (zebra, 2-kolumny) ──────────┐ */}
       <section class="main-wrap section-zebra">
         <div class="cont">
           <div class="cards-grid-2">
@@ -111,8 +119,6 @@ app.get('/', (c) => {
           </div>
         </div>
       </section>
-
-      {/* ┌──── STREFA C: KULTURA + LUDZIE + SPOŁECZNOŚĆ (grid) ─────────┐ */}
       <section class="main-wrap">
         <div class="main-grid">
           <div id="content-col">
@@ -132,21 +138,16 @@ app.get('/', (c) => {
           </aside>
         </div>
       </section>
-
-      {/* ┌──── STREFA D: OGŁOSZENIA + MULTIMEDIA (full-width content) ──┐ */}
       <section class="main-wrap">
         <div class="cont">
           <Ogloszenia />
           <Multimedia />
         </div>
       </section>
-
-      {/* ┌──── FULL-BLEED #3: Newsletter (czarny + orange CTA) ─────────┐ */}
       <NewsletterInline />
-
       <Footer />
     </>,
-    { title: 'izbica24.pl — Portal Gminy Izbica Kujawska' }
+    { title: 'izbica24.pl v2 (archiwum) — Portal Gminy Izbica Kujawska' }
   )
 })
 
@@ -278,7 +279,7 @@ app.get('/.well-known/security.txt', (c) => {
 app.get('/:cat', (c) => {
   const cat = c.req.param('cat')
   // Skip routes that don't look like categories
-  if (['api', 'static', 'downloads', 'szukaj', 'plan', 'wiedza', 'rss.xml', 'sitemap.xml', 'news-sitemap.xml', 'robots.txt', 'manifest.json', 'humans.txt', '_debug-layout.js'].includes(cat)) {
+  if (['api', 'static', 'downloads', 'szukaj', 'plan', 'wiedza', 'v2', 'rss.xml', 'sitemap.xml', 'news-sitemap.xml', 'robots.txt', 'manifest.json', 'humans.txt', '_debug-layout.js'].includes(cat)) {
     return c.notFound()
   }
   const meta = CATEGORIES_MAP[cat]

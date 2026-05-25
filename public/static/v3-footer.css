@@ -1,0 +1,367 @@
+/* ===================================================================
+   IZBICA24.PL v3 — FOOTER + EXTRAS (SANDBOX F zadania 26-40)
+   Stopka magazynowa: kremowa, premium, multi-column
+   =================================================================== */
+
+/* ===== F.31-F.35 FOOTER MAIN — kremowy nie czarny! ===== */
+.v3-footer {
+  background: var(--c-paper-warm);
+  color: var(--c-text-body);
+  border-top: 1px solid var(--c-divider);
+  margin-top: var(--sp-16);
+}
+.v3-footer-top {
+  background: var(--c-navy-deep);
+  color: var(--c-paper);
+  padding: var(--sp-12) 0;
+}
+.v3-footer-top-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-8);
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .v3-footer-top-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-12);
+  }
+}
+.v3-footer-top-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+.v3-footer-top-brand img,
+.v3-footer-top-brand svg {
+  width: 64px;
+  height: auto;
+  flex-shrink: 0;
+}
+.v3-footer-top-mission {
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-snug);
+  color: var(--c-paper);
+  font-style: italic;
+}
+.v3-footer-top-mission .accent {
+  color: var(--c-gold-bright);
+  font-style: normal;
+  font-weight: var(--fw-bold);
+}
+.v3-footer-top-cta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  align-items: flex-start;
+}
+@media (min-width: 768px) {
+  .v3-footer-top-cta { align-items: flex-end; text-align: right; }
+}
+.v3-footer-top-stats {
+  display: flex;
+  gap: var(--sp-6);
+  flex-wrap: wrap;
+}
+@media (min-width: 768px) {
+  .v3-footer-top-stats { justify-content: flex-end; }
+}
+.v3-footer-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.v3-footer-stat-val {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: var(--fw-black);
+  color: var(--c-gold-bright);
+  line-height: 1;
+  letter-spacing: var(--ls-tight);
+}
+.v3-footer-stat-label {
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: rgba(250,247,242,0.7);
+}
+
+/* ===== F.36 FOOTER MAIN GRID ===== */
+.v3-footer-main {
+  padding: var(--sp-12) 0 var(--sp-8);
+}
+.v3-footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-8);
+}
+@media (min-width: 600px) {
+  .v3-footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .v3-footer-grid {
+    grid-template-columns: 1.6fr repeat(3, 1fr);
+  }
+}
+.v3-footer-col h4 {
+  font-family: var(--font-ui);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--c-burgundy);
+  margin-bottom: var(--sp-4);
+  padding-bottom: var(--sp-2);
+  border-bottom: 2px solid var(--c-burgundy);
+  display: inline-block;
+}
+.v3-footer-col ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.v3-footer-col li a {
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  color: var(--c-text-soft);
+  transition: color var(--t-fast);
+}
+.v3-footer-col li a:hover { color: var(--c-burgundy); padding-left: 4px; }
+
+/* Footer brand column */
+.v3-footer-brand-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.v3-footer-brand-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.v3-footer-brand-herb {
+  width: 56px;
+  height: 62px;
+  flex-shrink: 0;
+}
+.v3-footer-brand-name {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: var(--fw-black);
+  color: var(--c-navy-deep);
+  line-height: 1;
+}
+.v3-footer-brand-name .num { color: var(--c-burgundy); }
+.v3-footer-brand-desc {
+  font-family: var(--font-body);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-relaxed);
+  color: var(--c-text-soft);
+  font-style: italic;
+}
+.v3-footer-socials {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+.v3-footer-social {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--c-paper);
+  border: 1px solid var(--c-divider);
+  color: var(--c-text-strong);
+  transition: all var(--t-fast);
+}
+.v3-footer-social:hover {
+  background: var(--c-burgundy);
+  border-color: var(--c-burgundy);
+  color: var(--c-paper);
+  transform: translateY(-2px);
+}
+.v3-footer-social svg { width: 16px; height: 16px; }
+
+/* Footer contact card */
+.v3-footer-contact-card {
+  background: var(--c-paper);
+  padding: var(--sp-4);
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-divider);
+  margin-top: var(--sp-3);
+}
+.v3-footer-contact-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  color: var(--c-text-body);
+  padding: 6px 0;
+}
+.v3-footer-contact-row svg {
+  width: 16px;
+  height: 16px;
+  color: var(--c-burgundy);
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+/* ===== F.37 FOOTER BOTTOM ===== */
+.v3-footer-bottom {
+  background: var(--c-paper-cold);
+  border-top: 1px solid var(--c-divider);
+  padding: var(--sp-4) 0;
+}
+.v3-footer-bottom-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  align-items: center;
+  text-align: center;
+}
+@media (min-width: 768px) {
+  .v3-footer-bottom-inner {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+.v3-footer-legal {
+  display: flex;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.v3-footer-legal a {
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  color: var(--c-text-muted);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+.v3-footer-legal a:hover { color: var(--c-burgundy); }
+.v3-footer-copyright {
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  color: var(--c-text-muted);
+}
+.v3-footer-ai-badge {
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  color: var(--c-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--c-cream);
+  border-radius: var(--r-full);
+}
+.v3-footer-ai-badge::before {
+  content: "✦";
+  color: var(--c-gold);
+  font-weight: bold;
+}
+
+/* ===== F.38 SCROLL TO TOP BUTTON ===== */
+.v3-scroll-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  background: var(--c-navy-deep);
+  color: var(--c-paper);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: all var(--t-normal);
+  z-index: var(--z-fixed);
+}
+.v3-scroll-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.v3-scroll-top:hover {
+  background: var(--c-burgundy);
+  transform: translateY(-2px);
+}
+
+/* ===== F.39 PLACEHOLDERS — różne style obrazków ===== */
+.v3-ph-news {
+  background:
+    repeating-linear-gradient(45deg, #f2ede4 0, #f2ede4 12px, #e8e3d6 12px, #e8e3d6 13px);
+  position: relative;
+}
+.v3-ph-news::after {
+  content: "IZBICA24";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: var(--fw-black);
+  font-size: clamp(1rem, 4vw, 2.5rem);
+  color: rgba(10,37,64,0.1);
+  letter-spacing: 0.2em;
+}
+.v3-ph-news-sport {
+  background:
+    radial-gradient(circle at 30% 40%, #2d5a3d 0%, #1e4530 100%);
+}
+.v3-ph-news-sport::after {
+  content: "⚽ KUJAWIANKA";
+  color: rgba(200,169,81,0.3);
+}
+.v3-ph-news-history {
+  background:
+    repeating-linear-gradient(135deg, #efe8d8 0, #efe8d8 8px, #e0d5b8 8px, #e0d5b8 9px);
+}
+.v3-ph-news-history::after {
+  content: "❧ HISTORIA";
+  color: rgba(138,109,42,0.3);
+  font-family: var(--font-display);
+  font-style: italic;
+}
+.v3-ph-news-culture {
+  background:
+    linear-gradient(135deg, #efe8d8 0%, #d8c8b0 100%);
+}
+.v3-ph-news-culture::after {
+  content: "❀ KULTURA";
+  color: rgba(107,61,110,0.3);
+}
+.v3-ph-news-samorzad {
+  background:
+    linear-gradient(180deg, #143456 0%, #0a2540 100%);
+}
+.v3-ph-news-samorzad::after {
+  content: "⚖ SAMORZĄD";
+  color: rgba(200,169,81,0.3);
+}
+
+/* ===== F.40 RESPONSIVE PRINT ===== */
+@media print {
+  .v3-utility-bar, .v3-nav, .v3-breaking, .v3-scroll-top,
+  .v3-newsletter-widget, .v3-cta-btn, .v3-icon-btn, .v3-hamburger {
+    display: none !important;
+  }
+  body { background: white; color: black; }
+}

@@ -1,0 +1,598 @@
+/* ===================================================================
+   IZBICA24.PL v3 — MODUŁY TEMATYCZNE (SANDBOX F zadania 1-25)
+   Sekcje: Kujawianka, Samorząd, Kultura, Historia, Sidebar widgets
+   =================================================================== */
+
+/* ===== F.1-F.3 GENERIC SECTION ===== */
+.v3-section {
+  padding: var(--sp-12) 0;
+}
+.v3-section-alt {
+  background: var(--c-paper-warm);
+}
+.v3-section-dark {
+  background: var(--c-navy-deep);
+  color: var(--c-paper);
+}
+.v3-section-dark .v3-section-title,
+.v3-section-dark h2, .v3-section-dark h3 { color: var(--c-paper); }
+.v3-section-dark .v3-section-subtitle { color: rgba(250,247,242,0.7); }
+.v3-section-dark .v3-section-head { border-bottom-color: rgba(255,255,255,0.1); }
+.v3-section-dark .v3-section-head::after { background: var(--c-gold); }
+
+/* ===== F.4-F.10 LAYOUT 2-KOLUMNOWY (Content + Sidebar) ===== */
+.v3-main-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-10);
+}
+@media (min-width: 1024px) {
+  .v3-main-layout {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: var(--sp-10);
+  }
+}
+@media (min-width: 1280px) {
+  .v3-main-layout {
+    grid-template-columns: minmax(0, 1fr) 380px;
+  }
+}
+.v3-main-content { min-width: 0; }
+.v3-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+@media (min-width: 1024px) {
+  .v3-sidebar-sticky {
+    position: sticky;
+    top: 80px;
+    align-self: start;
+  }
+}
+
+/* ===== F.11-F.15 KUJAWIANKA — sport section z heraldic green ===== */
+.v3-kujawianka {
+  background: linear-gradient(135deg, #2d5a3d 0%, #1e4530 100%);
+  color: var(--c-paper);
+  padding: var(--sp-12) 0;
+  position: relative;
+  overflow: hidden;
+}
+.v3-kujawianka::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 60%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(200,169,81,0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+.v3-kujawianka-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-6);
+  position: relative;
+}
+@media (min-width: 768px) {
+  .v3-kujawianka-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-8);
+  }
+}
+.v3-match-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(200,169,81,0.2);
+  border-radius: var(--r-lg);
+  padding: var(--sp-6);
+  backdrop-filter: blur(10px);
+}
+.v3-match-meta {
+  font-family: var(--font-ui);
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--c-gold-bright);
+  margin-bottom: var(--sp-3);
+}
+.v3-match-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-4) 0;
+}
+.v3-match-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1;
+  text-align: center;
+}
+.v3-match-team-name {
+  font-family: var(--font-display);
+  font-size: clamp(1.125rem, 2vw, 1.5rem);
+  font-weight: var(--fw-bold);
+  color: var(--c-paper);
+  letter-spacing: var(--ls-snug);
+}
+.v3-match-team-logo {
+  width: 56px;
+  height: 56px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: var(--fw-black);
+  color: var(--c-gold-bright);
+  font-size: 1.5rem;
+}
+.v3-match-score {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-weight: var(--fw-black);
+  color: var(--c-gold-bright);
+  letter-spacing: var(--ls-tight);
+  line-height: 1;
+}
+.v3-match-vs {
+  font-family: var(--font-ui);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-widest);
+  color: rgba(255,255,255,0.5);
+}
+.v3-table-mini {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(200,169,81,0.2);
+  border-radius: var(--r-lg);
+  padding: var(--sp-4);
+}
+.v3-table-mini-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 48px 48px;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+}
+.v3-table-mini-row:last-child { border-bottom: 0; }
+.v3-table-mini-row.is-kujawianka {
+  background: rgba(200,169,81,0.08);
+  margin: 0 -8px;
+  padding: 8px;
+  border-radius: var(--r-sm);
+}
+.v3-table-mini-pos {
+  color: rgba(255,255,255,0.5);
+  font-weight: var(--fw-semibold);
+}
+.v3-table-mini-team {
+  color: var(--c-paper);
+  font-weight: var(--fw-medium);
+}
+.v3-table-mini-pts {
+  color: var(--c-gold-bright);
+  font-weight: var(--fw-bold);
+  text-align: right;
+}
+
+/* ===== F.16-F.20 NEWS CARDS LIST (kategorie sekcje) ===== */
+.v3-news-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-6);
+}
+@media (min-width: 600px) {
+  .v3-news-list { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .v3-news-list { grid-template-columns: repeat(4, 1fr); }
+}
+
+.v3-news-list-large {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-6);
+}
+@media (min-width: 768px) {
+  .v3-news-list-large {
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: var(--sp-6);
+  }
+}
+.v3-news-list-large .v3-story-card:first-child .v3-story-card-img {
+  aspect-ratio: 4 / 3;
+}
+.v3-news-list-large .v3-story-card:first-child .v3-story-card-title {
+  font-size: var(--fs-h3);
+}
+
+/* ===== F.21-F.25 HISTORIA/KULTURA — magazine layout ===== */
+.v3-magazine-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-8);
+}
+@media (min-width: 768px) {
+  .v3-magazine-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (min-width: 1024px) {
+  .v3-magazine-grid {
+    grid-template-columns: 1.2fr 1fr 1fr;
+  }
+}
+.v3-mag-feature {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--c-navy-deep);
+  min-height: 400px;
+  display: flex;
+  align-items: flex-end;
+}
+.v3-mag-feature::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    var(--grad-overlay),
+    repeating-linear-gradient(135deg, transparent 0, transparent 40px, rgba(200,169,81,0.05) 40px, rgba(200,169,81,0.05) 41px);
+  z-index: 1;
+}
+.v3-mag-feature-content {
+  position: relative;
+  z-index: 2;
+  padding: var(--sp-6);
+  color: var(--c-paper);
+}
+.v3-mag-feature-eyebrow {
+  font-family: var(--font-ui);
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--c-gold-bright);
+  margin-bottom: var(--sp-2);
+}
+.v3-mag-feature-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  color: var(--c-paper);
+  margin-bottom: var(--sp-2);
+}
+.v3-mag-feature-lede {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-relaxed);
+  color: rgba(250,247,242,0.85);
+}
+.v3-mag-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--c-paper);
+  border: 1px solid var(--c-divider);
+  border-radius: var(--r-md);
+  transition: all var(--t-normal);
+}
+.v3-mag-item:hover {
+  border-color: var(--c-burgundy);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.v3-mag-item-img {
+  aspect-ratio: 16 / 10;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--c-paper-warm);
+}
+.v3-mag-item-cat {
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--cat-color, var(--c-burgundy));
+}
+.v3-mag-item-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-snug);
+  color: var(--c-text-strong);
+}
+
+/* ===== F.26-F.30 SIDEBAR WIDGETS ===== */
+.v3-widget {
+  background: var(--c-paper);
+  border: 1px solid var(--c-divider);
+  border-radius: var(--r-md);
+  padding: var(--sp-5);
+}
+.v3-widget-gold {
+  background: var(--grad-gold);
+  color: var(--c-navy-deep);
+  border-color: var(--c-gold-dim);
+}
+.v3-widget-dark {
+  background: var(--c-navy-deep);
+  color: var(--c-paper);
+  border-color: var(--c-navy-soft);
+}
+.v3-widget-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-bold);
+  color: inherit;
+  margin-bottom: var(--sp-4);
+  padding-bottom: var(--sp-3);
+  border-bottom: 2px solid var(--c-burgundy);
+  display: inline-block;
+  width: 100%;
+}
+.v3-widget-dark .v3-widget-title { border-bottom-color: var(--c-gold); }
+.v3-widget-gold .v3-widget-title { border-bottom-color: var(--c-navy-deep); }
+
+/* Top tygodnia w sidebar */
+.v3-top-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  counter-reset: top-counter;
+}
+.v3-top-list-item {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--c-divider-soft);
+  counter-increment: top-counter;
+}
+.v3-top-list-item:last-child { border-bottom: 0; padding-bottom: 0; }
+.v3-top-list-item::before {
+  content: counter(top-counter);
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: var(--fw-black);
+  color: var(--c-burgundy);
+  line-height: 0.9;
+  flex-shrink: 0;
+  width: 36px;
+  opacity: 0.4;
+}
+.v3-top-list-content {
+  min-width: 0;
+}
+.v3-top-list-title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  color: var(--c-text-strong);
+  margin-bottom: 4px;
+}
+.v3-top-list-title:hover { color: var(--c-burgundy); }
+.v3-top-list-meta {
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  color: var(--c-text-muted);
+  letter-spacing: var(--ls-wide);
+}
+
+/* Newsletter widget */
+.v3-newsletter-widget {
+  background: linear-gradient(135deg, #143456 0%, #0a2540 100%);
+  color: var(--c-paper);
+  border-radius: var(--r-lg);
+  padding: var(--sp-6);
+  position: relative;
+  overflow: hidden;
+}
+.v3-newsletter-widget::before {
+  content: "";
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, var(--c-gold) 0%, transparent 70%);
+  opacity: 0.3;
+  pointer-events: none;
+}
+.v3-newsletter-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--c-gold);
+  color: var(--c-navy-deep);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--sp-3);
+}
+.v3-newsletter-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-bold);
+  color: var(--c-paper);
+  margin-bottom: var(--sp-2);
+  position: relative;
+}
+.v3-newsletter-desc {
+  font-family: var(--font-body);
+  font-size: var(--fs-body-sm);
+  color: rgba(250,247,242,0.85);
+  margin-bottom: var(--sp-4);
+  line-height: var(--lh-relaxed);
+}
+.v3-newsletter-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.v3-newsletter-input {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: var(--r-md);
+  color: var(--c-paper);
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  transition: all var(--t-fast);
+}
+.v3-newsletter-input::placeholder { color: rgba(255,255,255,0.5); }
+.v3-newsletter-input:focus {
+  background: rgba(255,255,255,0.15);
+  border-color: var(--c-gold);
+}
+.v3-newsletter-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--c-gold);
+  color: var(--c-navy-deep);
+  font-family: var(--font-ui);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  border-radius: var(--r-md);
+  transition: all var(--t-fast);
+}
+.v3-newsletter-btn:hover {
+  background: var(--c-gold-bright);
+  transform: translateY(-1px);
+}
+
+/* Alerts widget — gminne ostrzeżenia */
+.v3-alerts-widget {
+  background: var(--c-paper);
+  border: 1px solid var(--c-divider);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.v3-alerts-header {
+  background: var(--c-burgundy);
+  color: var(--c-paper);
+  padding: 12px var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+.v3-alerts-list {
+  display: flex;
+  flex-direction: column;
+}
+.v3-alert-item {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--c-divider-soft);
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+}
+.v3-alert-item:last-child { border-bottom: 0; }
+.v3-alert-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-burgundy);
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+.v3-alert-content {
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-snug);
+  min-width: 0;
+}
+.v3-alert-title {
+  font-weight: var(--fw-semibold);
+  color: var(--c-text-strong);
+}
+.v3-alert-meta {
+  font-size: var(--fs-micro);
+  color: var(--c-text-muted);
+  margin-top: 2px;
+}
+
+/* Weather widget — duża pogodowa karta */
+.v3-weather-widget {
+  background: linear-gradient(135deg, #2c4a6e 0%, #143456 100%);
+  color: var(--c-paper);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  position: relative;
+  overflow: hidden;
+}
+.v3-weather-widget::before {
+  content: "";
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(200,169,81,0.4) 0%, transparent 70%);
+  pointer-events: none;
+}
+.v3-weather-temp {
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: var(--fw-black);
+  line-height: 1;
+  letter-spacing: var(--ls-tight);
+  color: var(--c-paper);
+  position: relative;
+}
+.v3-weather-temp sup {
+  font-size: 0.4em;
+  vertical-align: super;
+  color: var(--c-gold-bright);
+}
+.v3-weather-desc {
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  color: rgba(250,247,242,0.85);
+  margin-top: 4px;
+}
+.v3-weather-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid rgba(255,255,255,0.15);
+}
+.v3-weather-meta-item {
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+}
+.v3-weather-meta-label {
+  color: rgba(255,255,255,0.6);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+.v3-weather-meta-val {
+  color: var(--c-paper);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-body-sm);
+  margin-top: 2px;
+}

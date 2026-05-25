@@ -242,6 +242,63 @@ export const Icon = {
       <path d="M14 16a4 4 0 1 1 1-7.9A5 5 0 0 1 23 11a3 3 0 0 1-3 5z" />
     </svg>
   ),
+  // === v3 dodatki ===
+  Alert: (p: IconProps = {}) => (
+    <svg {...base(p.size, p.className)}>
+      <path d="M12 9v4M12 17h.01" />
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    </svg>
+  ),
+  ArrowUp: (p: IconProps = {}) => (
+    <svg {...base(p.size, p.className)}>
+      <path d="M12 19V5M5 12l7-7 7 7" />
+    </svg>
+  ),
+  Bell: (p: IconProps = {}) => (
+    <svg {...base(p.size, p.className)}>
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  ),
+  Heart: (p: IconProps = {}) => (
+    <svg {...base(p.size, p.className)}>
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  ),
+  MapPin: (p: IconProps = {}) => (
+    <svg {...base(p.size, p.className)}>
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  ),
+  PlayCircle: (p: IconProps = {}) => (
+    <svg {...base(p.size, p.className)}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m10 8 6 4-6 4V8z" />
+    </svg>
+  ),
+  Plus: (p: IconProps = {}) => (
+    <svg {...base(p.size, p.className)}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  ),
+  Rss: (p: IconProps = {}) => (
+    <svg {...base(p.size, p.className)}>
+      <path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16" />
+      <circle cx="5" cy="19" r="1" />
+    </svg>
+  ),
+  Send: (p: IconProps = {}) => (
+    <svg {...base(p.size, p.className)}>
+      <path d="m22 2-7 20-4-9-9-4 20-7z" />
+      <path d="M22 2 11 13" />
+    </svg>
+  ),
+  User: (p: IconProps = {}) => (
+    <svg {...base(p.size, p.className)}>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
 }
 
 // Map dla emoji → ikona (do użycia w danych)

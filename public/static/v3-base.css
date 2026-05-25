@@ -1,0 +1,340 @@
+/* ===================================================================
+   IZBICA24.PL v3 — BASE LAYER (reset + typography + globals)
+   SANDBOX D continued — fundament całego designu
+   =================================================================== */
+
+/* === Reset === */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; tab-size: 4; }
+body, h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd, ul, ol { margin: 0; padding: 0; }
+ul[role="list"], ol[role="list"] { list-style: none; }
+img, picture, video, canvas, svg { display: block; max-width: 100%; height: auto; }
+input, button, textarea, select { font: inherit; color: inherit; }
+button { background: none; border: 0; cursor: pointer; padding: 0; }
+a { color: inherit; text-decoration: none; }
+
+/* === Html/Body === */
+html {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: var(--lh-normal);
+  scroll-behavior: smooth;
+}
+body {
+  background: var(--c-paper);
+  color: var(--c-text-body);
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  line-height: var(--lh-relaxed);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* === Selection === */
+::selection {
+  background: var(--c-burgundy);
+  color: var(--c-paper);
+}
+
+/* === Headings — display serif === */
+h1, h2, h3, .display, .headline {
+  font-family: var(--font-display);
+  color: var(--c-text-strong);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+}
+h4, h5, h6 {
+  font-family: var(--font-ui);
+  color: var(--c-text-strong);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-snug);
+}
+
+/* === Links === */
+a {
+  color: inherit;
+  transition: color var(--t-fast);
+}
+a:hover { color: var(--c-burgundy); }
+a:focus-visible {
+  outline: 2px solid var(--c-burgundy);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* === Container === */
+.v3-container {
+  width: 100%;
+  max-width: var(--max-w);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--gutter-mobile);
+  padding-right: var(--gutter-mobile);
+}
+@media (min-width: 768px) {
+  .v3-container {
+    padding-left: var(--gutter-tablet);
+    padding-right: var(--gutter-tablet);
+  }
+}
+@media (min-width: 1200px) {
+  .v3-container {
+    padding-left: var(--gutter-desktop);
+    padding-right: var(--gutter-desktop);
+  }
+}
+
+.v3-container-narrow {
+  max-width: var(--max-w-narrow);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--gutter-mobile);
+  padding-right: var(--gutter-mobile);
+}
+
+/* === Utility — eyebrow (małe nagłówki kategorii) === */
+.v3-eyebrow {
+  font-family: var(--font-ui);
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--c-burgundy);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.v3-eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 24px;
+  height: 2px;
+  background: currentColor;
+}
+
+/* === Utility — section title === */
+.v3-section-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  color: var(--c-text-strong);
+  letter-spacing: var(--ls-tight);
+  margin-bottom: var(--sp-2);
+}
+.v3-section-subtitle {
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  color: var(--c-text-soft);
+  margin-bottom: var(--sp-8);
+}
+
+/* === Section dividers === */
+.v3-section-rule {
+  border: 0;
+  height: 1px;
+  background: var(--c-divider);
+  margin: var(--sp-12) 0;
+}
+.v3-section-rule-gold {
+  border: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, var(--c-gold) 20%, var(--c-gold) 80%, transparent 100%);
+  margin: var(--sp-8) 0;
+}
+
+/* === Section header (eyebrow + title + "see more") === */
+.v3-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-6);
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--c-divider);
+  position: relative;
+}
+.v3-section-head::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 80px;
+  height: 3px;
+  background: var(--c-burgundy);
+}
+.v3-section-head .v3-section-title {
+  margin-bottom: 0;
+}
+.v3-section-head .head-link {
+  font-family: var(--font-ui);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--c-burgundy);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: gap var(--t-fast);
+}
+.v3-section-head .head-link:hover {
+  gap: 8px;
+}
+
+/* === Button base === */
+.v3-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--t-normal);
+  white-space: nowrap;
+}
+.v3-btn-primary {
+  background: var(--c-burgundy);
+  color: var(--c-paper);
+}
+.v3-btn-primary:hover {
+  background: var(--c-burgundy-dim);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  color: var(--c-paper);
+}
+.v3-btn-secondary {
+  background: var(--c-paper);
+  color: var(--c-navy-deep);
+  border-color: var(--c-divider);
+}
+.v3-btn-secondary:hover {
+  border-color: var(--c-burgundy);
+  color: var(--c-burgundy);
+}
+.v3-btn-gold {
+  background: var(--grad-gold);
+  color: var(--c-navy-deep);
+  border: 1px solid var(--c-gold-dim);
+}
+.v3-btn-ghost {
+  background: transparent;
+  color: var(--c-text-strong);
+  border-color: var(--c-divider);
+}
+.v3-btn-ghost:hover {
+  background: var(--c-paper-warm);
+  border-color: var(--c-burgundy);
+}
+
+/* === Tag chip === */
+.v3-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--c-text-soft);
+  background: var(--c-paper-warm);
+  border: 1px solid var(--c-divider);
+  border-radius: var(--r-full);
+  transition: all var(--t-fast);
+}
+.v3-chip:hover {
+  border-color: var(--c-burgundy);
+  color: var(--c-burgundy);
+  background: var(--c-cream);
+}
+.v3-chip-cat {
+  color: var(--c-paper);
+  background: var(--c-burgundy);
+  border-color: transparent;
+}
+
+/* === Time meta === */
+.v3-meta {
+  font-family: var(--font-ui);
+  font-size: var(--fs-meta);
+  color: var(--c-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.v3-meta-sep {
+  width: 3px;
+  height: 3px;
+  background: var(--c-text-muted);
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+/* === Skeleton loader === */
+@keyframes v3-skeleton {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.v3-skeleton {
+  background: linear-gradient(90deg, var(--c-divider-soft) 25%, var(--c-paper-warm) 50%, var(--c-divider-soft) 75%);
+  background-size: 200% 100%;
+  animation: v3-skeleton 1.5s infinite;
+  border-radius: var(--r-sm);
+}
+
+/* === Img placeholder w stylu papierowym === */
+.v3-img-placeholder {
+  position: relative;
+  overflow: hidden;
+  background: var(--c-paper-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.v3-img-placeholder::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg, transparent 0, transparent 10px, rgba(10,37,64,0.03) 10px, rgba(10,37,64,0.03) 11px);
+}
+.v3-img-placeholder svg {
+  width: 32%;
+  max-width: 80px;
+  opacity: 0.18;
+  color: var(--c-navy-deep);
+  position: relative;
+}
+
+/* === Focus visible globalny === */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--c-burgundy);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* === Reduced motion === */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* === Hide v1/v2 stuff that's now redundant === */
+.demo-pages-strip { display: none !important; }

@@ -1,6 +1,64 @@
-# izbica24.pl — Portal Gminy Izbica Kujawska
+# izbica24.pl — Magazyn Gminy Izbica Kujawska
 
 **Działający prototyp** kompletnego portalu informacyjnego z silnikiem AI-newsroom + baza wiedzy projektu (RAG).
+
+---
+
+## 🎨 v3 REDESIGN — „Magazyn Kujawski Premium" (2026-05-25)
+
+### Totalny redesign inspirowany Interia.pl + The Guardian + NYT Magazine
+
+Po decyzji użytkownika o **całkowitym redesignie** ("kiczowate jak z lat 90", marginesy zbyt duże, hero źle rozmieszczony, brak optymalizacji mobile), wykonano kompleksową refaktoryzację warstwy prezentacji w **3 równoległych sandboxach po 40 zadań każdy + orchestrator** (łącznie 120+ zadań projektowych).
+
+### 🎨 Sandbox D — Design System (40 tasks)
+- **`public/static/design-tokens.css`** (6.5 KB) — pełna paleta tokenów: `--c-navy: #0a2540`, `--c-burgundy: #8b1d2a`, `--c-gold: #c8a951`, `--c-heraldic-green: #2d5a3d`, `--c-cream: #faf7f2` (zastępuje stary `#fa6400`)
+- **`public/static/v3-base.css`** (8.3 KB) — reset + body z `font-feature-settings`, fluid typography przez `clamp()`, container responsywny (var(--max-w)), `.v3-eyebrow`, `.v3-section-head` z burgundowym ::after, btn-primary/gold/ghost, img-placeholder z diagonalnymi paskami
+- **Typografia v3**: Playfair Display (display serif h1-h3) + Lora (body serif) + Inter (UI sans) — koniec Source Serif 4
+- **Dark mode** przygotowany przez `[data-theme="dark"]`
+
+### 🏛️ Sandbox E — Layout & Hero (40 tasks)
+- **`public/static/v3-header.css`** (10.5 KB) — utility bar (navy), header z herbem (cream), sticky nav z backdrop-blur, mega-menu hover, breaking ticker z marquee + pulse "NA ŻYWO" badge
+- **`public/static/v3-hero.css`** (9.1 KB) — hero asymetryczny grid 2fr/1fr, hero-main-title z `clamp(2.5rem, 5vw+1rem, 5rem)` + złota animowana podkreślenie na hover, 3 stacked aside cards, top-strip 4 KPI (Pogoda/Paliwo/Alerty/Apteka), stories-grid z featured card span-2
+- **Herb Izbicy** jako **inline SVG component** (`HerbIzbica`): tarcza heraldyczna ze złotą obwódką + czerwone pole z gradientem (`#b8302a→#8b1d2a`) + zielone wzgórze (`#3d6e4f→#2d5a3d`) + czarny krzyż łaciński — uproszczona wersja z opisu heraldycznego z 1534 r.
+
+### 📰 Sandbox F — Modules & Footer (40 tasks)
+- **`public/static/v3-modules.css`** (14.5 KB) — main-layout 2-col (content + sticky 340-380px sidebar), Kujawianka section (heraldic green gradient + score 3:1 + Top 5 mini-table), magazine-grid z feature card (dark navy + texture), sidebar widgets: weather (gradient navy), top-list (numbered counter), alerts (burgundy header), newsletter (navy + gold radial)
+- **`public/static/v3-footer.css`** (8.5 KB) — footer-top mission band NAVY (NIE czarny!) z herbem + statystykami (5400 mieszkańców · 137 km² · 1394 prawa miejskie), footer-main 4-col grid (Brand/Kategorie/Portal/Gmina), footer-bottom z AI badge + legal, scroll-top fixed circular button
+- **`public/static/v3-app.js`** (8.5 KB) — scroll-top toggle >400px, mobile hamburger menu z ESC + click-outside, smooth scroll dla anchorów, **⌘K shortcut** dla szukania, dark mode toggle + localStorage, ticker pause on hover, intersection observer lazy placeholders, live clock
+
+### 🧩 Orchestrator (12 tasks)
+- **`src/components/home-v3.tsx`** (29.9 KB) — pełny HomeV3 component: HerbIzbica SVG + UtilityBar + Header + Nav (10 kategorii × subs) + BreakingTicker + HeroSection + TopStrip + TopStories + KujawiankaSection + MagazineGrid + MainLayout + Footer + ScrollTopBtn
+- **`src/components/icons.tsx`** — dodano 10 nowych ikon: Alert, ArrowUp, Bell, Heart, MapPin, PlayCircle, Plus, Rss, Send, User (łącznie 51 ikon w namespace)
+- **`src/renderer.tsx`** — przepisany: nowy font-stack (Playfair Display 400-900 + Lora 400-700 + Inter 300-900), v3 CSS chain (design-tokens → base → header → hero → modules → footer), favicon SVG inline z herbem, `theme-color="#0a2540"`, viewport-fit=cover dla PWA
+- **`src/index.tsx`** — route `/` używa `<HomeV3 />`, stara wersja zachowana pod `/v2` (archiwum, dodane do reserved paths w catch-all `/:cat`)
+
+### 🎯 Co zostało rozwiązane (lista feedback'u użytkownika)
+
+| Problem (przed) | Rozwiązanie (po) |
+|---|---|
+| ❌ Pomarańczowy `#fa6400` kiczowaty | ✅ Paleta Premium: Navy + Burgundy + Gold + Heraldic Green + Cream |
+| ❌ Czarna stopka średnia | ✅ Navy mission-band z herbem + statystyki gminy + cream paper main 4-col |
+| ❌ Ciemna górna belka nieciekawa | ✅ Cream header z herbem + brand "izbica**24**.pl" + utility bar navy thin |
+| ❌ Układy kanciaste, kwadratowe | ✅ Asymetryczny hero 2fr/1fr, magazine grid 1.2fr/1fr/1fr, sticky sidebar, rounded radii |
+| ❌ Marginesy lewa/prawa za duże | ✅ Container `var(--max-w: 1380px)` z fluid padding `clamp(1rem, 4vw, 2.5rem)` |
+| ❌ Hero źle rozstawione, puste miejsca | ✅ Hero main + 3 aside cards stacked, fluid clamp() title, no empty gaps |
+| ❌ Brak optymalizacji mobile/tablet | ✅ Mobile-first: hamburger <1024px, top-strip 1col→4col, hero 1col→2col, magazine 1col→3col |
+| ❌ Brak loga gminy | ✅ Inline SVG **HerbIzbica** (red shield + black Latin cross + green hill + gold border) — w headerze + footerze + favicon |
+| ❌ Standardowa typografia | ✅ Playfair Display dla h1-h3 (display serif), Lora dla body, Inter dla UI |
+
+### 📊 Metryki redesignu
+- **Pliki utworzone**: 7 (6 CSS + 1 JSX + 1 JS = 47 KB CSS + 30 KB JSX + 8.5 KB JS)
+- **Pliki zmodyfikowane**: 3 (icons.tsx, renderer.tsx, index.tsx)
+- **Build**: 66 modułów, 203 KB worker, 1.47s
+- **HTTP test**: home 45 KB / 0.02s, wszystkie endpointy (/, /v2, /wiadomosci/:slug, /szukaj, /samorzad, /sitemap.xml, /rss.xml, /manifest.json) zwracają 200 OK
+- **Wszystkie 7 zasobów v3 (CSS+JS)**: 200 OK, łącznie ~66 KB
+- **Konsola browser**: ZERO błędów JS, `[izbica24 v3] "Magazyn Kujawski Premium" zainicjalizowany ✓`
+
+### 🌐 URL produkcyjny prototypu
+- **Główna v3**: https://3000-ilphadxwtch7dg25penfb-ecea8f22.sandbox.novita.ai/
+- **Archiwum v2**: https://3000-ilphadxwtch7dg25penfb-ecea8f22.sandbox.novita.ai/v2
+
+---
 
 ## 🚀 90-task parallel build — Articles + REST API + D1 + SEO (2026-05-25, commit `fff685b`)
 
