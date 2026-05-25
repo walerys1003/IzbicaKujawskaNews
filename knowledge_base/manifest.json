@@ -1,0 +1,72 @@
+[
+  {
+    "source": "01_struktura_kategorii.docx",
+    "slug": "01-struktura-kategorii",
+    "md_path": "/home/user/webapp/knowledge_base/docs/01-struktura-kategorii.md",
+    "chars": 23353,
+    "lines": 272
+  },
+  {
+    "source": "02_koncepcja_szaty_graficznej.docx",
+    "slug": "02-koncepcja-szaty-graficznej",
+    "md_path": "/home/user/webapp/knowledge_base/docs/02-koncepcja-szaty-graficznej.md",
+    "chars": 15938,
+    "lines": 159
+  },
+  {
+    "source": "03_specyfikacja_ui_ux.docx",
+    "slug": "03-specyfikacja-ui-ux",
+    "md_path": "/home/user/webapp/knowledge_base/docs/03-specyfikacja-ui-ux.md",
+    "chars": 29698,
+    "lines": 1088
+  },
+  {
+    "source": "04_workflow_portalu.docx",
+    "slug": "04-workflow-portalu",
+    "md_path": "/home/user/webapp/knowledge_base/docs/04-workflow-portalu.md",
+    "chars": 56629,
+    "lines": 726
+  },
+  {
+    "source": "05_sesja_N1_wtyczka_newsroom.docx",
+    "slug": "05-sesja-n1-wtyczka-newsroom",
+    "md_path": "/home/user/webapp/knowledge_base/docs/05-sesja-n1-wtyczka-newsroom.md",
+    "chars": 17723,
+    "lines": 335
+  },
+  {
+    "source": "06_sesja_N2_newsroom_queue.docx",
+    "slug": "06-sesja-n2-newsroom-queue",
+    "md_path": "/home/user/webapp/knowledge_base/docs/06-sesja-n2-newsroom-queue.md",
+    "chars": 22061,
+    "lines": 426
+  },
+  {
+    "source": "07_sesja_N3_publishpress.docx",
+    "slug": "07-sesja-n3-publishpress",
+    "md_path": "/home/user/webapp/knowledge_base/docs/07-sesja-n3-publishpress.md",
+    "chars": 27510,
+    "lines": 550
+  },
+  {
+    "source": "08_sesja_N4_prompt_templates.docx",
+    "slug": "08-sesja-n4-prompt-templates",
+    "md_path": "/home/user/webapp/knowledge_base/docs/08-sesja-n4-prompt-templates.md",
+    "chars": 30682,
+    "lines": 699
+  },
+  {
+    "source": "09_sesja_N5_n8n_import.docx",
+    "slug": "09-sesja-n5-n8n-import",
+    "md_path": "/home/user/webapp/knowledge_base/docs/09-sesja-n5-n8n-import.md",
+    "chars": 33882,
+    "lines": 953
+  },
+  {
+    "source": "10_sesja_N6_monitoring.docx",
+    "slug": "10-sesja-n6-monitoring",
+    "md_path": "/home/user/webapp/knowledge_base/docs/10-sesja-n6-monitoring.md",
+    "chars": 43100,
+    "lines": 1020
+  }
+]

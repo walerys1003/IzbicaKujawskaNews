@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+.env
+.env.local
+*.log
+.pm2/
+pids/
+logs/
+.DS_Store
+*.tar.gz

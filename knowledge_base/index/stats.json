@@ -1,0 +1,52 @@
+{
+  "total_chunks": 459,
+  "total_chars": 326361,
+  "total_tokens_est": 81590,
+  "vocab_size": 6389,
+  "sources": {
+    "STRUKTURA_KATEGORII": {
+      "chunks": 20,
+      "chars": 23565
+    },
+    "SZATA_GRAFICZNA": {
+      "chunks": 24,
+      "chars": 15891
+    },
+    "SPEC_UI_UX": {
+      "chunks": 25,
+      "chars": 29640
+    },
+    "WORKFLOW_PORTALU": {
+      "chunks": 77,
+      "chars": 56773
+    },
+    "SESJA_N1_WTYCZKA": {
+      "chunks": 33,
+      "chars": 17910
+    },
+    "SESJA_N2_QUEUE": {
+      "chunks": 27,
+      "chars": 22008
+    },
+    "SESJA_N3_PUBLISHPRESS": {
+      "chunks": 30,
+      "chars": 27955
+    },
+    "SESJA_N4_PROMPTS": {
+      "chunks": 38,
+      "chars": 30860
+    },
+    "SESJA_N5_N8N": {
+      "chunks": 112,
+      "chars": 34186
+    },
+    "SESJA_N6_MONITORING": {
+      "chunks": 53,
+      "chars": 44008
+    },
+    "portal-izbica24-pl-finalna-struktura-kategorii-i-podkategorii": {
+      "chunks": 20,
+      "chars": 23565
+    }
+  }
+}
