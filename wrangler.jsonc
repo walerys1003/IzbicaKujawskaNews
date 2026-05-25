@@ -22,5 +22,8 @@
     { "binding": "CAPTCHA_KV", "id": "replace-captcha-kv", "preview_id": "local-dev" },
     { "binding": "SEARCH_SUGGESTIONS_KV", "id": "replace-search-suggestions-kv", "preview_id": "local-dev" },
     { "binding": "BACKUP_SNAPSHOTS_KV", "id": "replace-backup-snapshots-kv", "preview_id": "local-dev" }
-  ]
+  ],
+  "triggers": {
+    "crons": ["*/10 * * * *", "0 * * * *"]
+  }
 }
