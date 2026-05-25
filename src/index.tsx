@@ -11,13 +11,25 @@ import {
   CenyPaliw, PomagamyRazem, KronikaRodzinna, KalendarzTygodnia,
   TopTygodnia, MowiaMieszkancy, NewsletterInline,
 } from './components/home-v2'
+import { ArticlePage } from './components/article'
+import { CategoryPage } from './components/category'
+import { SearchPage, NotFoundPage } from './components/search'
 import { PlanPage } from './components/plan'
 import { WiedzaPage } from './components/wiedza'
 import { ragStats } from './rag'
+import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory, searchArticles } from './data-articles'
+import {
+  generateSitemap, generateNewsSitemap, generateRss, generateRobots,
+  generateManifest, generateHumansTxt, generateSecurityTxt,
+} from './seo'
+import apiV1 from './api/v1'
 
 const app = new Hono()
 
 app.use(renderer)
+
+// ============ API v1 — sub-app mounted at /api/v1 ============
+app.route('/api/v1', apiV1)
 
 // ============ STRONA GŁÓWNA — PEŁNA MAKIETA PORTALU (25 modułów) ============
 //
@@ -170,10 +182,164 @@ app.get('/wiedza', (c) => {
   )
 })
 
-// ============ API: STATS ============
-app.get('/api/stats', (c) => c.json(ragStats))
+// ============ STRONA: ARTYKUŁ ============
+app.get('/wiadomosci/:slug', (c) => {
+  const slug = c.req.param('slug')
+  const article = findArticle(slug)
+  if (!article) {
+    c.status(404)
+    return c.render(
+      <>
+        <DemoStrip />
+        <SuperHeader />
+        <MainNav />
+        <main id="page-main" class="main-wrap"><NotFoundPage path={`/wiadomosci/${slug}`} /></main>
+        <Footer />
+      </>,
+      { title: '404 — izbica24.pl' }
+    )
+  }
+  return c.render(
+    <>
+      <DemoStrip />
+      <SuperHeader />
+      <MainNav />
+      <main id="page-main" class="main-wrap">
+        <ArticlePage article={article} />
+      </main>
+      <Footer />
+    </>,
+    { title: `${article.title} — izbica24.pl` }
+  )
+})
 
-// ============ ZDROWIE ============
+// ============ STRONA: SZUKAJ (MUSI BYĆ PRZED /:cat) ============
+app.get('/szukaj', (c) => {
+  const q = c.req.query('q') || ''
+  const results = q ? searchArticles(q).map(a => ({
+    url: `/wiadomosci/${a.slug}`,
+    category: a.category,
+    title: a.title,
+    snippet: highlightSnippet(a.lede, q),
+    publishedAt: a.publishedAt,
+  })) : []
+  return c.render(
+    <>
+      <DemoStrip />
+      <SuperHeader />
+      <MainNav />
+      <main id="page-main" class="main-wrap">
+        <SearchPage query={q} results={results} total={results.length} />
+      </main>
+      <Footer />
+    </>,
+    { title: q ? `Szukaj: ${q} — izbica24.pl` : 'Wyszukiwarka — izbica24.pl' }
+  )
+})
+
+function highlightSnippet(text: string, q: string): string {
+  if (!q) return text
+  const safe = text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+  return safe.replace(re, '<mark>$1</mark>')
+}
+
+// ============ SEO: sitemap, RSS, robots, manifest (PRZED /:cat) ============
+app.get('/sitemap.xml', (c) => {
+  c.header('Content-Type', 'application/xml; charset=utf-8')
+  c.header('Cache-Control', 'public, max-age=3600')
+  return c.body(generateSitemap())
+})
+app.get('/news-sitemap.xml', (c) => {
+  c.header('Content-Type', 'application/xml; charset=utf-8')
+  c.header('Cache-Control', 'public, max-age=600')
+  return c.body(generateNewsSitemap())
+})
+app.get('/rss.xml', (c) => {
+  c.header('Content-Type', 'application/rss+xml; charset=utf-8')
+  c.header('Cache-Control', 'public, max-age=900')
+  return c.body(generateRss())
+})
+app.get('/robots.txt', (c) => {
+  c.header('Content-Type', 'text/plain; charset=utf-8')
+  return c.body(generateRobots())
+})
+app.get('/manifest.json', (c) => c.json(generateManifest()))
+app.get('/humans.txt', (c) => {
+  c.header('Content-Type', 'text/plain; charset=utf-8')
+  return c.body(generateHumansTxt())
+})
+app.get('/.well-known/security.txt', (c) => {
+  c.header('Content-Type', 'text/plain; charset=utf-8')
+  return c.body(generateSecurityTxt())
+})
+
+// ============ STRONA: KATEGORIA (catch-all — MUSI BYĆ OSTATNIA) ============
+app.get('/:cat', (c) => {
+  const cat = c.req.param('cat')
+  // Skip routes that don't look like categories
+  if (['api', 'static', 'downloads', 'szukaj', 'plan', 'wiedza', 'rss.xml', 'sitemap.xml', 'news-sitemap.xml', 'robots.txt', 'manifest.json', 'humans.txt', '_debug-layout.js'].includes(cat)) {
+    return c.notFound()
+  }
+  const meta = CATEGORIES_MAP[cat]
+  if (!meta) {
+    c.status(404)
+    return c.render(
+      <>
+        <DemoStrip />
+        <SuperHeader />
+        <MainNav />
+        <main id="page-main" class="main-wrap"><NotFoundPage path={`/${cat}`} /></main>
+        <Footer />
+      </>,
+      { title: '404 — izbica24.pl' }
+    )
+  }
+  const articles = articlesByCategory(cat)
+  const page = parseInt(c.req.query('page') || '1')
+  const perPage = 12
+  const paged = articles.slice((page - 1) * perPage, page * perPage)
+
+  return c.render(
+    <>
+      <DemoStrip />
+      <SuperHeader />
+      <MainNav />
+      <main id="page-main" class="main-wrap">
+        <CategoryPage cat={{
+          slug: cat,
+          title: meta.title,
+          description: meta.description,
+          color: meta.color,
+          subcategories: meta.subcategories,
+          articles: paged,
+          total: articles.length,
+          page,
+          perPage,
+        }} />
+      </main>
+      <Footer />
+    </>,
+    { title: `${meta.title} — izbica24.pl` }
+  )
+})
+
+// ============ LEGACY: API STATS + HEALTH ============
+app.get('/api/stats', (c) => c.json(ragStats))
 app.get('/api/health', (c) => c.json({ ok: true, time: new Date().toISOString() }))
+
+// ============ 404 ============
+app.notFound((c) => {
+  return c.render(
+    <>
+      <DemoStrip />
+      <SuperHeader />
+      <MainNav />
+      <main id="page-main" class="main-wrap"><NotFoundPage path={c.req.path} /></main>
+      <Footer />
+    </>,
+    { title: '404 — izbica24.pl' }
+  )
+})
 
 export default app
