@@ -2,6 +2,41 @@
 
 **Działający prototyp** kompletnego portalu informacyjnego z silnikiem AI-newsroom + baza wiedzy projektu (RAG).
 
+## 🆕 Layout v2 + 11 nowych modułów rezydenckich (2026-05-25)
+
+**Cel:** zero marginesów po bokach + dynamiczna kompozycja zaplanowana strategicznie.
+
+### Naprawione marginesy
+- `--max-w: 1440px` (z 1200px) — szersza wersja na FHD/4K
+- **Full-bleed pattern** dla: `#super-header`, `#main-nav`, `#breaking-bar`, `#hero`, `#na-sygnale`, `footer`, `.newsletter-inline`
+  - Mechanizm: `width: 100vw; margin-left: calc(50% - 50vw)` — wystaje poza rodzica
+  - Wszystkie elementy mają **L=0px R=0px** (potwierdzone Playwright)
+- Treść contained do 1440px, sticky sidebar 320–400px (zależnie od viewport)
+
+### 11 nowych modułów (analiza potrzeb mieszkańca gminy 5400-osobowej)
+
+| # | Moduł | Funkcja | Lokalne dane |
+|---|-------|---------|--------------|
+| 1 | **SkrotDnia** | 6 KPI: pogoda, prąd, drogi, dyżur, sesja, zbiórki | wszystkie dziś rano |
+| 2 | **AwarieIUtrudnienia** | Energa + ZGK + MEC + LTE — status live | Smolsk, Naczachowo, Modzerowo |
+| 3 | **DrogiKomunikacja** | DK62, S10, DW270, PKS — utrudnienia | Izbica–Lubraniec, Włocławek |
+| 4 | **DyzuryGodziny** | Apteka, lekarz, urząd, MGOPS, policja, OSP | NZOZ Medikus, ul. Rynek |
+| 5 | **CenyPaliw** | Ranking lokalnych stacji + trend | Orlen, BP, Circle K |
+| 6 | **PomagamyRazem** | Zbiórki OSP/MGOPS z paskiem postępu | aktywne kampanie |
+| 7 | **KronikaRodzinna** | Narodziny, śluby, jubileusze, nekrologi | parafia + USC |
+| 8 | **KalendarzTygodnia** | 7-dniowy event-grid: msze, sport, kultura | Kujawianka, MGCK |
+| 9 | **TopTygodnia** | Top-5 najczytanych (BM25-style ranking) | algorytm lokalny |
+| 10 | **MowiaMieszkancy** | 4 cytaty z FB/komentarzy (moderowane) | głosy z gminy |
+| 11 | **NewsletterInline** | Full-bleed dark band + email signup | mid-page CTA |
+
+**Łącznie: 25 modułów na home** (14 oryginalnych + 11 nowych) ułożonych w 7 strategicznych pasach narracyjnych — od "orientacji w dniu" przez "twarde informacje" do "ranking tygodnia".
+
+### Pliki
+- `public/static/layout-v2.css` (8 KB) — full-bleed pattern + asymmetric grid
+- `public/static/modules-v2.css` (21 KB) — Reuters-tier styling 11 modułów
+- `src/components/home-v2.tsx` (23 KB) — 11 nowych komponentów + `IconByKey` helper
+- `public/static/_debug-layout.js` — diagnostyka layoutu (aktywacja: `?debug=1`)
+
 ## 📦 Artefakty backend N1-N6 (v1.0.0, 2026-05-25)
 
 | Pakiet | Rozmiar | Zawartość | Pobierz |
