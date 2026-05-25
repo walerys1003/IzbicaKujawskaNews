@@ -31,6 +31,98 @@ export const ModuleHead = ({ eyebrow, title, link, linkLabel = 'Zobacz wszystkie
 /* ============ INICJAŁY (dla awatara) ============ */
 const initials = (name: string) => name.split(' ').filter(Boolean).slice(0, 2).map(s => s[0]).join('').toUpperCase()
 
+/* ============ MAPOWANIE ZDJĘĆ (stock photos /static/img/) ============ */
+const IMG = {
+  inwestycje: {
+    'koscielna-remont': '/static/img/inwestycje/01-droga.jpg',
+    'wodociag-sadlno': '/static/img/inwestycje/02-kanalizacja.jpg',
+    'plac-wolnosci': '/static/img/inwestycje/03-swietlica.jpg',
+    'przedszkole-rozbudowa': '/static/img/inwestycje/04-fotowoltaika.jpg',
+    'oswietlenie-led': '/static/img/inwestycje/05-osp.jpg',
+  } as Record<string, string>,
+  historia: {
+    feature: '/static/img/historia/01-kurhany.jpg',
+    'dzieje': '/static/img/historia/02-stare-miasto.jpg',
+    'zydzi': '/static/img/historia/03-spolecznosc.jpg',
+    'zabytki': '/static/img/historia/04-zabytki.jpg',
+  } as Record<string, string>,
+  kultura: {
+    'koncert': '/static/img/kultura/01-koncert.jpg',
+    'warsztaty': '/static/img/kultura/04-kgw.jpg',
+    'event': '/static/img/kultura/05-festyn.jpg',
+    'wystawa': '/static/img/kultura/02-mgck.jpg',
+    'mgck': '/static/img/kultura/02-mgck.jpg',
+    'biblioteka': '/static/img/kultura/03-biblioteka.jpg',
+    'kgw': '/static/img/kultura/04-kgw.jpg',
+  } as Record<string, string>,
+  edukacja: {
+    feature: '/static/img/edukacja/01-matura.jpg',
+    przedszkole: '/static/img/edukacja/02-przedszkole.jpg',
+    sp1: '/static/img/edukacja/03-sp1.jpg',
+    matematyka: '/static/img/edukacja/04-matematyka.jpg',
+    zajecia: '/static/img/edukacja/05-zajecia.jpg',
+  } as Record<string, string>,
+  zdrowie: {
+    apteka: '/static/img/zdrowie/01-apteka.jpg',
+    spzoz: '/static/img/zdrowie/02-spzoz.jpg',
+    profilaktyka: '/static/img/zdrowie/03-profilaktyka.jpg',
+    szczepienia: '/static/img/zdrowie/04-szczepienia.jpg',
+  } as Record<string, string>,
+  opinie: [
+    '/static/img/opinie/01-redaktor1.jpg',
+    '/static/img/opinie/02-redaktor2.jpg',
+    '/static/img/opinie/03-redaktor3.jpg',
+  ],
+  ludzie: {
+    burmistrz: '/static/img/ludzie/01-burmistrz.jpg',
+    portrety: [
+      '/static/img/ludzie/02-maria.jpg',
+      '/static/img/ludzie/03-tadeusz.jpg',
+      '/static/img/ludzie/04-anna.jpg',
+      '/static/img/ludzie/05-piotr.jpg',
+    ],
+  },
+  mieszkaniec: [
+    '/static/img/mieszkaniec/01-krzysztof.jpg',
+    '/static/img/mieszkaniec/02-halina.jpg',
+    '/static/img/mieszkaniec/03-marek.jpg',
+    '/static/img/mieszkaniec/04-katarzyna.jpg',
+  ],
+  kalendarz: [
+    '/static/img/kalendarz/01-sesja.jpg',
+    '/static/img/kalendarz/02-warsztaty.jpg',
+    '/static/img/kalendarz/03-pradkujawski.jpg',
+    '/static/img/kalendarz/04-spotkanie.jpg',
+    '/static/img/kalendarz/05-wernisaz.jpg',
+    '/static/img/kalendarz/06-festyn.jpg',
+    '/static/img/kalendarz/07-dziecko.jpg',
+  ],
+  wiadomosci: [
+    '/static/img/wiadomosci/01.jpg',
+    '/static/img/wiadomosci/02.jpg',
+    '/static/img/wiadomosci/03.jpg',
+    '/static/img/wiadomosci/04.jpg',
+    '/static/img/wiadomosci/05.jpg',
+    '/static/img/wiadomosci/06.jpg',
+  ],
+  solectwaMap: '/static/img/solectwa/mapa-gminy-izbica.png',
+}
+
+/* ============ PODSERWISY SAMORZĄDU ============ */
+const SAMORZAD_PODSERWISY = [
+  { slug: 'burmistrz', name: 'Burmistrz', meta: 'Dorabiała Marek', icon: 'mayor' },
+  { slug: 'rada', name: 'Rada Miejska', meta: '15 radnych · 4 komisje', icon: 'gavel' },
+  { slug: 'komisje', name: 'Komisje', meta: 'Budżet · Oświata · Skarg', icon: 'committee' },
+  { slug: 'konsultacje', name: 'Konsultacje', meta: '2 aktywne', icon: 'consult' },
+]
+
+/* ============ PODSERWISY KULTURY (MGCK / Biblioteka / 15 KGW) ============ */
+const KULTURA_PODSERWISY = [
+  { slug: 'mgck', name: 'MGCK', desc: 'Miejsko-Gminne Centrum Kultury. Koncerty, warsztaty, wystawy.', meta: 'ul. Narutowicza 49 · tel. 54 286 76 02', img: IMG.kultura.mgck },
+  { slug: 'biblioteka', name: 'Biblioteka Publiczna', desc: 'Spotkania autorskie, ferie z książką, kursy online.', meta: 'ul. Marszałka Piłsudskiego 32 · 7 filii w gminie', img: IMG.kultura.biblioteka },
+  { slug: 'kgw', name: '15 Kół Gospodyń Wiejskich', desc: 'Tradycja, kuchnia kujawska, festiwale, warsztaty.', meta: 'Aktywne we wszystkich sołectwach', img: IMG.kultura.kgw },
+]
+
 /* =================================================================
    [03] NA SYGNALE — ALERT STRIP (full-bleed burgundy)
    ================================================================= */
@@ -86,10 +178,10 @@ export const WiadomosciModule = () => {
           ))}
         </div>
         <div class="v3-news-grid">
-          {/* Feature card 2x2 */}
+          {/* Feature card 2x2 — z prawdziwym zdjęciem */}
           <article class="v3-news-card v3-news-card-feature" style={`--cat-color: ${featured.categoryColor}`}>
             <a href={`/wiadomosci/${featured.slug}`} class="v3-news-card-img">
-              <div class="v3-img-placeholder v3-ph-news"></div>
+              <img src={IMG.wiadomosci[0]} alt={featured.title} loading="lazy" />
               <span class="v3-news-card-cat">{featured.category}</span>
             </a>
             <div class="v3-news-card-body">
@@ -100,11 +192,11 @@ export const WiadomosciModule = () => {
               </div>
             </div>
           </article>
-          {/* 6 small cards */}
-          {rest.map(a => (
+          {/* 6 small cards z prawdziwymi zdjęciami */}
+          {rest.map((a, idx) => (
             <article class="v3-news-card" style={`--cat-color: ${a.categoryColor}`}>
               <a href={`/wiadomosci/${a.slug}`} class="v3-news-card-img">
-                <div class="v3-img-placeholder v3-ph-news"></div>
+                <img src={IMG.wiadomosci[(idx + 1) % IMG.wiadomosci.length] || IMG.wiadomosci[1]} alt={a.title} loading="lazy" />
                 <span class="v3-news-card-cat">{a.category}</span>
               </a>
               <div class="v3-news-card-body">
@@ -211,6 +303,23 @@ export const SamorzadModule = () => {
             </div>
           </aside>
         </div>
+        {/* Podserwisy samorządu */}
+        <div class="v3-samorzad-podserwisy" role="navigation" aria-label="Działy samorządu">
+          {SAMORZAD_PODSERWISY.map(p => (
+            <a class="v3-samorzad-podserwis" href={`/samorzad/${p.slug}`}>
+              <span class="v3-samorzad-podserwis-icon">
+                {p.icon === 'mayor' && <Icon.User size={18} />}
+                {p.icon === 'gavel' && <Icon.Building size={18} />}
+                {p.icon === 'committee' && <Icon.Wrench size={18} />}
+                {p.icon === 'consult' && <Icon.Send size={18} />}
+              </span>
+              <span class="v3-samorzad-podserwis-text">
+                <span class="v3-samorzad-podserwis-name">{p.name}</span>
+                <span class="v3-samorzad-podserwis-meta">{p.meta}</span>
+              </span>
+            </a>
+          ))}
+        </div>
       </div>
     </section>
   )
@@ -219,31 +328,50 @@ export const SamorzadModule = () => {
 /* =================================================================
    [06] INWESTYCJE — Progress list 5-col
    ================================================================= */
-export const InwestycjeModule = () => (
-  <section class="v3-module v3-inwestycje-module" aria-labelledby="mod-inwest">
-    <div class="v3-container">
-      <ModuleHead eyebrow="Inwestycje gminne" title="Co się dziś buduje w gminie" link="/inwestycje" linkLabel="Mapa wszystkich inwestycji →" />
-      <div class="v3-inwestycje-grid">
-        {INWESTYCJE.map(i => {
-          const statusLabel = i.status === 'completed' ? 'Zakończona' : i.status === 'in_progress' ? `W trakcie · ${i.progress}%` : 'Planowana'
-          return (
-            <a class="v3-investment-card" href={`/inwestycje/${i.slug}`}>
-              <span class={`v3-investment-card-status v3-investment-card-status-${i.status}`}>{statusLabel}</span>
-              <h3 class="v3-investment-card-title">{i.title}</h3>
-              <div class="v3-investment-card-meta">📍 {i.location} · ⏱ {i.deadline}</div>
-              {i.status !== 'planned' && (
-                <div class="v3-investment-card-progress">
-                  <div class="v3-investment-card-progress-bar" style={`width: ${i.progress}%`}></div>
+export const InwestycjeModule = () => {
+  const excerpts: Record<string, string> = {
+    'koscielna-remont': 'Pełna modernizacja jezdni, chodników i odwodnienia. Oddana mieszkańcom przed terminem.',
+    'wodociag-sadlno': 'Etap I (12 km sieci) zakończony. Etap II ruszył w marcu — woda dotrze do ostatnich gospodarstw jesienią.',
+    'plac-wolnosci': 'Start prac w lipcu. W projekcie: fontanna, ławki, oświetlenie LED, zieleń. Cisi zwycięzcy konsultacji.',
+    'przedszkole-rozbudowa': '4 nowe sale, kuchnia, świetlica. Liczba miejsc wzrośnie z 80 do 140 dzieci.',
+    'oswietlenie-led': 'Wymiana 380 opraw na energooszczędne LED. Oszczędności rzędu 65% rocznie.',
+  }
+  return (
+    <section class="v3-module v3-inwestycje-module" aria-labelledby="mod-inwest">
+      <div class="v3-container">
+        <ModuleHead eyebrow="Inwestycje gminne" title="Co się dziś buduje w gminie" link="/inwestycje" linkLabel="Mapa wszystkich inwestycji →" />
+        <div class="v3-inwestycje-grid">
+          {INWESTYCJE.map(i => {
+            const statusLabel = i.status === 'completed' ? 'Zakończona' : i.status === 'in_progress' ? `W trakcie · ${i.progress}%` : 'Planowana'
+            const statusClass = i.status === 'completed' ? 'status-done' : i.status === 'in_progress' ? 'status-progress' : 'status-planned'
+            return (
+              <a class="v3-investment-card" href={`/inwestycje/${i.slug}`}>
+                <div class="v3-investment-card-img">
+                  <img src={IMG.inwestycje[i.slug]} alt={i.title} loading="lazy" />
                 </div>
-              )}
-              <div class="v3-investment-card-budget">{i.budget}</div>
-            </a>
-          )
-        })}
+                <div class="v3-investment-card-body">
+                  <span class={`v3-investment-card-status ${statusClass}`}>{statusLabel}</span>
+                  <h3 class="v3-investment-card-title">{i.title}</h3>
+                  <p class="v3-investment-card-excerpt">{excerpts[i.slug]}</p>
+                  {i.status !== 'planned' && (
+                    <div class="v3-investment-card-progress">
+                      <div class="v3-investment-card-progress-bar" style={`width: ${i.progress}%`}></div>
+                    </div>
+                  )}
+                  <div class="v3-investment-card-meta">
+                    <span>📍 {i.location}</span>
+                    <span>⏱ {i.deadline}</span>
+                    <span>💰 {i.budget}</span>
+                  </div>
+                </div>
+              </a>
+            )
+          })}
+        </div>
       </div>
-    </div>
-  </section>
-)
+    </section>
+  )
+}
 
 /* =================================================================
    [07] KUJAWIANKA + SPORT — match card + next match + scorers + amateur
@@ -302,35 +430,40 @@ export const KulturaModule = () => (
   <section class="v3-module v3-kultura-module" aria-labelledby="mod-kultura">
     <div class="v3-container">
       <ModuleHead eyebrow="Kultura · MGCK" title="Co dzieje się w kulturze" link="/kultura" linkLabel="Pełny kalendarz →" />
+      {/* Najbliższe wydarzenia — karty z obrazami */}
       <div class="v3-kultura-grid">
-        <div class="v3-kultura-events" aria-label="Najbliższe wydarzenia MGCK">
-          {KULTURA_EVENTS.map(e => (
-            <a href={`/kultura/${e.cat}`} class="v3-kultura-event">
-              <div class="v3-kultura-event-date">
-                <span class="v3-kultura-event-date-day">{e.date}</span>
-                <span class="v3-kultura-event-date-month">{e.month}</span>
-              </div>
-              <div class="v3-kultura-event-content">
-                <div class="v3-kultura-event-title">{e.title}</div>
-                <div class="v3-kultura-event-meta">📍 {e.place}</div>
-              </div>
-            </a>
-          ))}
-        </div>
-        <div class="v3-kultura-cards">
-          <a href="/instytucje/mgck" class="v3-kultura-card">
-            <div class="v3-kultura-card-name">MGCK</div>
-            <div class="v3-kultura-card-meta">Miejsko-Gminne Centrum Kultury</div>
+        {KULTURA_EVENTS.map(e => (
+          <a href={`/kultura/${e.cat}`} class="v3-kultura-card">
+            <div class="v3-kultura-card-img">
+              <img src={IMG.kultura[e.cat] || IMG.kultura['koncert']} alt={e.title} loading="lazy" />
+            </div>
+            <div class="v3-kultura-card-body">
+              <div class="v3-kultura-card-eyebrow">{e.month} · {e.date} · {e.place}</div>
+              <h3 class="v3-kultura-card-title">{e.title}</h3>
+              <p class="v3-kultura-card-excerpt">
+                {e.cat === 'koncert' && 'Kapela z Kujaw wraca na Rynek z autorskim repertuarem ludowym.'}
+                {e.cat === 'warsztaty' && 'Wszystkie chętne dzieci od 6 do 12 lat — zapisy w MGCK do końca tygodnia.'}
+                {e.cat === 'event' && 'Tradycyjne ognisko, koncert plenerowy, pokaz ognia. Wstęp wolny.'}
+                {e.cat === 'wystawa' && 'Najlepsze zdjęcia mieszkańców gminy. Wystawa otwarta do końca lipca.'}
+              </p>
+            </div>
           </a>
-          <a href="/instytucje/biblioteka" class="v3-kultura-card">
-            <div class="v3-kultura-card-name">Biblioteka</div>
-            <div class="v3-kultura-card-meta">Publiczna Izbica Kujawska</div>
+        ))}
+      </div>
+      {/* Pod-serwisy: MGCK, Biblioteka, KGW */}
+      <div class="v3-kultura-podserwisy">
+        {KULTURA_PODSERWISY.map(p => (
+          <a class="v3-kultura-podserwis" href={`/instytucje/${p.slug}`}>
+            <div class="v3-kultura-podserwis-img">
+              <img src={p.img} alt={p.name} loading="lazy" />
+            </div>
+            <div>
+              <h3 class="v3-kultura-podserwis-name">{p.name}</h3>
+              <p class="v3-kultura-podserwis-desc">{p.desc}</p>
+              <div class="v3-kultura-podserwis-meta">{p.meta}</div>
+            </div>
           </a>
-          <a href="/kultura/kgw" class="v3-kultura-card">
-            <div class="v3-kultura-card-name">Koła Gospodyń</div>
-            <div class="v3-kultura-card-meta">15 KGW w gminie</div>
-          </a>
-        </div>
+        ))}
       </div>
     </div>
   </section>
@@ -339,31 +472,42 @@ export const KulturaModule = () => (
 /* =================================================================
    [10] EDUKACJA — feature ZS + lista
    ================================================================= */
-export const EdukacjaModule = () => (
-  <section class="v3-module v3-edukacja-module" aria-labelledby="mod-edu">
-    <div class="v3-container">
-      <ModuleHead eyebrow="Szkoły i przedszkola" title="Edukacja w gminie" link="/edukacja" linkLabel="Wszystkie szkoły →" />
-      <div class="v3-edukacja-grid">
-        <article class="v3-edukacja-feature">
-          <div class="v3-edukacja-feature-eyebrow">ZS im. Jana Kasprowicza</div>
-          <h3 class="v3-edukacja-feature-title">Maturalne wyniki 2026 — 100% zdawalności w klasach humanistycznych</h3>
-          <span class="v3-edukacja-feature-stat">98% średnia zdawalności</span>
-          <p class="v3-edukacja-feature-lede">Tegoroczni maturzyści ZS im. Kasprowicza pobili rekord szkoły. W klasach humanistycznych zdawalność osiągnęła 100%. Dyrekcja ogłasza nabór na rok szkolny 2026/27.</p>
-        </article>
-        <div class="v3-edukacja-list" aria-label="Aktualności edukacyjne">
-          {EDUKACJA_NEWS.map(n => (
-            <a href={`/edukacja/${encodeURIComponent(n.title)}`} class="v3-edukacja-list-item">
-              <div class="v3-edukacja-list-item-content">
-                <div class="v3-edukacja-list-item-title">{n.title}</div>
-                <div class="v3-edukacja-list-item-meta">{n.school} · {n.date}</div>
-              </div>
-            </a>
-          ))}
+export const EdukacjaModule = () => {
+  const eduImgs = [IMG.edukacja.przedszkole, IMG.edukacja.sp1, IMG.edukacja.matematyka, IMG.edukacja.zajecia]
+  return (
+    <section class="v3-module v3-edukacja-module" aria-labelledby="mod-edu">
+      <div class="v3-container">
+        <ModuleHead eyebrow="Szkoły i przedszkola" title="Edukacja w gminie" link="/edukacja" linkLabel="Wszystkie szkoły →" />
+        <div class="v3-edukacja-grid">
+          <article class="v3-edukacja-feature">
+            <div class="v3-edukacja-feature-img">
+              <img src={IMG.edukacja.feature} alt="Maturzyści ZS im. Kasprowicza" loading="lazy" />
+            </div>
+            <div class="v3-edukacja-feature-body">
+              <div class="v3-edukacja-feature-eyebrow">ZS im. Jana Kasprowicza</div>
+              <h3 class="v3-edukacja-feature-title">Maturalne wyniki 2026 — 100% zdawalności w klasach humanistycznych</h3>
+              <span class="v3-edukacja-feature-stat">98% średnia zdawalności</span>
+              <p class="v3-edukacja-feature-lede">Tegoroczni maturzyści ZS im. Kasprowicza pobili rekord szkoły. W klasach humanistycznych zdawalność osiągnęła 100%. Dyrekcja ogłasza nabór na rok szkolny 2026/27.</p>
+            </div>
+          </article>
+          <div class="v3-edukacja-list" aria-label="Aktualności edukacyjne">
+            {EDUKACJA_NEWS.map((n, i) => (
+              <a href={`/edukacja/${encodeURIComponent(n.title)}`} class="v3-edukacja-list-item">
+                <div class="v3-edukacja-list-item-img">
+                  <img src={eduImgs[i % eduImgs.length]} alt={n.title} loading="lazy" />
+                </div>
+                <div class="v3-edukacja-list-item-content">
+                  <div class="v3-edukacja-list-item-title">{n.title}</div>
+                  <div class="v3-edukacja-list-item-meta">{n.school} · {n.date}</div>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
-  </section>
-)
+    </section>
+  )
+}
 
 /* =================================================================
    [11] ZDROWIE — apteka + SPZOZ + profilaktyka
@@ -374,12 +518,18 @@ export const ZdrowieModule = () => (
       <ModuleHead eyebrow="Zdrowie i pomoc" title="Zdrowie w gminie" link="/zdrowie" linkLabel="Wszystko o zdrowiu →" />
       <div class="v3-zdrowie-grid">
         <div class="v3-zdrowie-apteka">
+          <div class="v3-zdrowie-card-img">
+            <img src={IMG.zdrowie.apteka} alt="Apteka dyżurna" loading="lazy" />
+          </div>
           <span class="v3-zdrowie-apteka-badge">Dziś dyżur · 24h</span>
           <h3 class="v3-zdrowie-apteka-name">{APTEKA_DYZUR.nazwa}</h3>
           <div class="v3-zdrowie-apteka-info">📍 {APTEKA_DYZUR.adres}<br/>📞 {APTEKA_DYZUR.telefon}<br/>🕓 {APTEKA_DYZUR.godziny}</div>
           <a href={APTEKA_DYZUR.mapsUrl} class="v3-zdrowie-apteka-cta" target="_blank" rel="noopener">Pokaż na mapie →</a>
         </div>
         <div class="v3-zdrowie-spzoz">
+          <div class="v3-zdrowie-card-img">
+            <img src={IMG.zdrowie.spzoz} alt="SPZOZ Izbica" loading="lazy" />
+          </div>
           <h3 class="v3-zdrowie-spzoz-title">SPZOZ Izbica — godziny przyjęć</h3>
           <ul class="v3-zdrowie-spzoz-list">
             <li><b>Pediatra</b><span>{SPZOZ_INFO.pediatra.dni} · {SPZOZ_INFO.pediatra.godziny}</span></li>
@@ -388,6 +538,9 @@ export const ZdrowieModule = () => (
           </ul>
         </div>
         <div class="v3-zdrowie-profilaktyka">
+          <div class="v3-zdrowie-card-img">
+            <img src={IMG.zdrowie.profilaktyka} alt="Profilaktyka zdrowotna" loading="lazy" />
+          </div>
           <h3 class="v3-zdrowie-profilaktyka-title">Profilaktyka</h3>
           <ul style="list-style:none; padding:0; margin:0; font:400 0.8rem/1.45 Inter,sans-serif;">
             <li style="padding:0.35rem 0; border-top:1px solid #e5e7eb;"><b style="color:#27ae60;">●</b> Badania mammograficzne — 5 czerwca, Rynek</li>
@@ -453,18 +606,25 @@ export const LudzieModule = () => (
       <ModuleHead eyebrow="Mieszkańcy gminy" title="Ludzie Izbicy" link="/ludzie" linkLabel="Wszystkie sylwetki →" />
       <div class="v3-ludzie-grid">
         <a href={`/wywiady/${WYWIAD_FEATURED.slug}`} class="v3-ludzie-wywiad" style="text-decoration:none;">
-          <div class="v3-ludzie-wywiad-eyebrow">Wywiad miesiąca</div>
-          <h3 class="v3-ludzie-wywiad-name">{WYWIAD_FEATURED.name}</h3>
-          <div class="v3-ludzie-wywiad-role">{WYWIAD_FEATURED.role}</div>
-          <blockquote class="v3-ludzie-wywiad-quote">{WYWIAD_FEATURED.quote}</blockquote>
-          <div class="v3-ludzie-wywiad-meta">
-            <Icon.Clock size={12} /> {WYWIAD_FEATURED.readingMinutes} min · {WYWIAD_FEATURED.publishedAt}
+          <div class="v3-ludzie-wywiad-img">
+            <img src={IMG.ludzie.burmistrz} alt={WYWIAD_FEATURED.name} loading="lazy" />
+          </div>
+          <div class="v3-ludzie-wywiad-body">
+            <div class="v3-ludzie-wywiad-eyebrow">Wywiad miesiąca</div>
+            <h3 class="v3-ludzie-wywiad-name">{WYWIAD_FEATURED.name}</h3>
+            <div class="v3-ludzie-wywiad-role">{WYWIAD_FEATURED.role}</div>
+            <blockquote class="v3-ludzie-wywiad-quote">{WYWIAD_FEATURED.quote}</blockquote>
+            <div class="v3-ludzie-wywiad-meta">
+              <Icon.Clock size={12} /> {WYWIAD_FEATURED.readingMinutes} min · {WYWIAD_FEATURED.publishedAt}
+            </div>
           </div>
         </a>
         <div class="v3-ludzie-portrety">
-          {LUDZIE_PORTRETY.map(p => (
+          {LUDZIE_PORTRETY.map((p, i) => (
             <a class="v3-ludzie-portret" href={`/ludzie/${p.slug}`}>
-              <div class="v3-ludzie-portret-avatar" style={`--avatar-color: ${p.avatar}`}>{initials(p.name)}</div>
+              <div class="v3-ludzie-portret-img">
+                <img src={IMG.ludzie.portrety[i % IMG.ludzie.portrety.length]} alt={p.name} loading="lazy" />
+              </div>
               <div class="v3-ludzie-portret-content">
                 <div class="v3-ludzie-portret-name">{p.name}</div>
                 <div class="v3-ludzie-portret-role">{p.role}</div>
@@ -487,16 +647,26 @@ export const HistoriaModule = () => (
       <ModuleHead eyebrow="Historia i dziedzictwo" title="Dziedzictwo Kujaw" link="/historia" linkLabel="Wszystkie tematy →" />
       <div class="v3-historia-grid">
         <a href="/wiadomosci/wietrzychowice-sezon" class="v3-historia-feature" style="text-decoration:none;">
-          <div class="v3-historia-feature-eyebrow">Polskie Piramidy · Wietrzychowice</div>
-          <h3 class="v3-historia-feature-title">Neolityczne kurhany sprzed 5 500 lat — wizytówka gminy</h3>
-          <p class="v3-historia-feature-lede">Muzeum Archeologiczne w Wietrzychowicach otwiera sezon 1 czerwca. W tym roku siedmioro nowych przewodników oprowadzi po unikatowym stanowisku, które rocznie przyciąga 18 tys. turystów.</p>
-          <span style="display:inline-block; padding:0.5rem 0.85rem; background:#c8a951; color:#0a2540; font:700 0.78rem/1 Inter,sans-serif; border-radius:6px; letter-spacing:0.06em;">Zwiedzanie od 1 czerwca →</span>
+          <div class="v3-historia-feature-img">
+            <img src={IMG.historia.feature} alt="Neolityczne kurhany Wietrzychowice" loading="lazy" />
+          </div>
+          <div class="v3-historia-feature-body">
+            <div class="v3-historia-feature-eyebrow">Polskie Piramidy · Wietrzychowice</div>
+            <h3 class="v3-historia-feature-title">Neolityczne kurhany sprzed 5 500 lat — wizytówka gminy</h3>
+            <p class="v3-historia-feature-lede">Muzeum Archeologiczne w Wietrzychowicach otwiera sezon 1 czerwca. W tym roku siedmioro nowych przewodników oprowadzi po unikatowym stanowisku, które rocznie przyciąga 18 tys. turystów.</p>
+            <span style="display:inline-block; padding:0.5rem 0.85rem; background:#c8a951; color:#0a2540; font:700 0.78rem/1 Inter,sans-serif; border-radius:6px; letter-spacing:0.06em;">Zwiedzanie od 1 czerwca →</span>
+          </div>
         </a>
         <div class="v3-historia-mini">
           {HISTORIA_CARDS.map(c => (
             <a class="v3-historia-mini-card" href={`/historia/${c.slug}`}>
-              <h4 class="v3-historia-mini-card-title">{c.title}</h4>
-              <p class="v3-historia-mini-card-excerpt">{c.excerpt}</p>
+              <div class="v3-historia-mini-card-img">
+                <img src={IMG.historia[c.slug] || IMG.historia.feature} alt={c.title} loading="lazy" />
+              </div>
+              <div class="v3-historia-mini-card-body">
+                <h4 class="v3-historia-mini-card-title">{c.title}</h4>
+                <p class="v3-historia-mini-card-excerpt">{c.excerpt}</p>
+              </div>
             </a>
           ))}
         </div>
@@ -508,61 +678,22 @@ export const HistoriaModule = () => (
 /* =================================================================
    [14] SOŁECTWA — INTERAKTYWNA MAPA + CHIPY + RECENT
    ================================================================= */
-const SolectwaMapa = () => (
-  <svg viewBox="0 0 100 100" class="v3-solectwa-map-svg" aria-label="Mapa sołectw gminy Izbica Kujawska">
-    {/* Tło — uproszczony kontur gminy (octogonal blob) */}
-    <defs>
-      <pattern id="gridPattern" width="10" height="10" patternUnits="userSpaceOnUse">
-        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(45,90,61,0.1)" stroke-width="0.3" />
-      </pattern>
-    </defs>
-    <path
-      d="M 8 25 Q 12 8, 28 6 L 60 4 Q 80 8, 88 18 L 94 38 Q 96 58, 92 75 L 85 88 Q 70 95, 50 94 L 28 92 Q 14 88, 8 72 L 4 50 Q 4 35, 8 25 Z"
-      fill="#e8e0c8"
-      stroke="#2d5a3d"
-      stroke-width="0.5"
-      stroke-dasharray="2 1"
-    />
-    <path
-      d="M 8 25 Q 12 8, 28 6 L 60 4 Q 80 8, 88 18 L 94 38 Q 96 58, 92 75 L 85 88 Q 70 95, 50 94 L 28 92 Q 14 88, 8 72 L 4 50 Q 4 35, 8 25 Z"
-      fill="url(#gridPattern)"
-    />
-    {/* Centrum Izbicy — gwiazda */}
-    <g>
-      <circle cx="50" cy="50" r="3.5" fill="#8b1d2a" stroke="#c8a951" stroke-width="0.8" />
-      <text x="50" y="46" text-anchor="middle" font-family="Inter" font-size="2.8" font-weight="800" fill="#0a2540">IZBICA</text>
-    </g>
-    {/* Pinezki sołectw */}
-    {SOLECTWA.map(s => (
-      <g>
-        <circle
-          cx={s.x} cy={s.y} r="1.8"
-          class={`v3-solectwa-pin v3-solectwa-pin-${s.activity}`}
-        >
-          <title>{s.name} · sołtys {s.sołtys} · {s.lastNews}</title>
-        </circle>
-        <text x={s.x} y={s.y - 3} text-anchor="middle" class="v3-solectwa-pin-label">{s.name}</text>
-      </g>
-    ))}
-    {/* Rzeka Zgłowiączka — schematyczna linia */}
-    <path d="M 5 60 Q 30 55, 50 58 Q 70 62, 95 55" fill="none" stroke="#3498db" stroke-width="0.8" opacity="0.55" />
-    <text x="80" y="52" font-family="Inter" font-size="2" font-style="italic" fill="#3498db">Zgłowiączka</text>
-  </svg>
-)
-
 export const SolectwaModule = () => (
   <section class="v3-module v3-solectwa-module" aria-labelledby="mod-sol">
     <div class="v3-container">
       <ModuleHead eyebrow="15 sołectw gminy" title="Sołectwa Izbicy Kujawskiej" link="/solectwa" linkLabel="Pełna lista sołectw →" />
       <div class="v3-solectwa-grid">
         <div class="v3-solectwa-map">
-          <div class="v3-solectwa-map-eyebrow">Mapa interaktywna</div>
-          <SolectwaMapa />
+          <div class="v3-solectwa-map-eyebrow">Mapa gminy Izbica Kujawska</div>
+          <div class="v3-solectwa-map-wrap">
+            <img src={IMG.solectwaMap} alt="Mapa gminy Izbica Kujawska — 15 sołectw" loading="lazy" />
+          </div>
           <div class="v3-solectwa-legend">
             <span><span class="v3-solectwa-legend-dot" style="background:#c0392b;"></span>Wysoka aktywność</span>
             <span><span class="v3-solectwa-legend-dot" style="background:#c8a951;"></span>Średnia</span>
             <span><span class="v3-solectwa-legend-dot" style="background:#95a5a6;"></span>Niska</span>
           </div>
+          <div class="v3-solectwa-map-credit">Mapa: OpenStreetMap contributors (ODbL)</div>
         </div>
         <div class="v3-solectwa-list">
           <div class="v3-solectwa-list-eyebrow">Wszystkie sołectwa</div>
@@ -588,30 +719,52 @@ export const SolectwaModule = () => (
 /* =================================================================
    [15] KALENDARZ TYGODNIA — 7 dni
    ================================================================= */
-export const KalendarzModule = () => (
-  <section class="v3-module v3-kalendarz-module" aria-labelledby="mod-kal">
-    <div class="v3-container">
-      <ModuleHead eyebrow="Tydzień w gminie" title="Kalendarz wydarzeń" link="/kalendarz" linkLabel="Pełny kalendarz →" />
-      <div class="v3-kalendarz-days">
-        {KALENDARZ_7DNI.map(d => (
-          <div class="v3-kalendarz-day">
-            <div class="v3-kalendarz-day-head">
-              <span class="v3-kalendarz-day-name">{d.dzien}</span>
-              <span class="v3-kalendarz-day-date">{d.data}</span>
-            </div>
-            {d.eventy.map(e => (
-              <div class={`v3-kalendarz-event v3-kalendarz-event-${e.cat}`}>
-                <span class="v3-kalendarz-event-time">{e.time}</span>
-                {e.title}
+export const KalendarzModule = () => {
+  // Mapa kategoria → indeks zdjęcia w IMG.kalendarz
+  const calImg: Record<string, string> = {
+    'sesja': IMG.kalendarz[0],
+    'warsztaty': IMG.kalendarz[1],
+    'koncert': IMG.kalendarz[2],
+    'spotkanie': IMG.kalendarz[3],
+    'wystawa': IMG.kalendarz[4],
+    'festyn': IMG.kalendarz[5],
+    'rekreacja': IMG.kalendarz[6],
+  }
+  let eventCounter = 0
+  return (
+    <section class="v3-module v3-kalendarz-module" aria-labelledby="mod-kal">
+      <div class="v3-container">
+        <ModuleHead eyebrow="Tydzień w gminie" title="Kalendarz wydarzeń" link="/kalendarz" linkLabel="Pełny kalendarz →" />
+        <div class="v3-kalendarz-days">
+          {KALENDARZ_7DNI.map(d => (
+            <div class="v3-kalendarz-day">
+              <div class="v3-kalendarz-day-head">
+                <span class="v3-kalendarz-day-name">{d.dzien}</span>
+                <span class="v3-kalendarz-day-date">{d.data}</span>
               </div>
-            ))}
-            {d.eventy.length === 0 && <div style="font:400 0.7rem Inter,sans-serif; color:#9ca3af; padding:0.3rem 0;">brak wydarzeń</div>}
-          </div>
-        ))}
+              {d.eventy.map(e => {
+                const img = calImg[e.cat] || IMG.kalendarz[eventCounter % IMG.kalendarz.length]
+                eventCounter++
+                return (
+                  <div class={`v3-kalendarz-event v3-kalendarz-event-${e.cat}`}>
+                    <div class="v3-kalendarz-event-img">
+                      <img src={img} alt={e.title} loading="lazy" />
+                    </div>
+                    <div class="v3-kalendarz-event-body">
+                      <span class="v3-kalendarz-event-time">{e.time}</span>
+                      <span class="v3-kalendarz-event-title">{e.title}</span>
+                    </div>
+                  </div>
+                )
+              })}
+              {d.eventy.length === 0 && <div style="font:400 0.7rem Inter,sans-serif; color:#9ca3af; padding:0.3rem 0;">brak wydarzeń</div>}
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
-)
+    </section>
+  )
+}
 
 /* =================================================================
    [16] MULTIMEDIA — featured video + thumbs + podcast
@@ -666,11 +819,16 @@ export const MieszkaniecPytaModule = () => (
     <div class="v3-container">
       <ModuleHead eyebrow="Głos mieszkańca" title="Mieszkaniec pyta — urząd odpowiada" link="/mieszkaniec-pyta" linkLabel="Wszystkie pytania →" />
       <div class="v3-mieszkaniec-feed">
-        {MIESZKANIEC_FEED.map(m => (
+        {MIESZKANIEC_FEED.map((m, i) => (
           <div class="v3-mieszkaniec-item">
             <div class="v3-mieszkaniec-item-head">
-              <span class="v3-mieszkaniec-item-author"><b>{m.author}</b> · {m.solectwo}</span>
-              <span>{m.time}</span>
+              <div class="v3-mieszkaniec-avatar">
+                <img src={IMG.mieszkaniec[i % IMG.mieszkaniec.length]} alt={m.author} loading="lazy" />
+              </div>
+              <div class="v3-mieszkaniec-item-meta">
+                <span class="v3-mieszkaniec-item-author"><b>{m.author}</b> · {m.solectwo}</span>
+                <span class="v3-mieszkaniec-item-time">{m.time}</span>
+              </div>
             </div>
             <h3 class="v3-mieszkaniec-item-q">{m.q}</h3>
             <p class="v3-mieszkaniec-item-a">{m.a}</p>
@@ -694,10 +852,12 @@ export const OpinieModule = () => (
       <ModuleHead eyebrow="Komentarze · Felietony" title="Opinie redakcji" link="/opinie" linkLabel="Wszystkie felietony →" />
       <div class="v3-opinie-grid">
         <div class="v3-opinie-list">
-          {OPINIE.map(o => (
+          {OPINIE.map((o, i) => (
             <a class="v3-opinia" href={`/opinie/${o.slug}`} style={`--avatar-color: ${o.avatar}`}>
               <div class="v3-opinia-author-row">
-                <div class="v3-opinia-avatar">{initials(o.author)}</div>
+                <div class="v3-opinia-avatar">
+                  <img src={IMG.opinie[i % IMG.opinie.length]} alt={o.author} loading="lazy" />
+                </div>
                 <div class="v3-opinia-author">
                   <div class="v3-opinia-name">{o.author}</div>
                   <div class="v3-opinia-role">{o.authorRole}</div>

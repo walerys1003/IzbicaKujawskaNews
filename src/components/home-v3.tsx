@@ -724,8 +724,7 @@ export const HomeV3 = () => (
       <SamorzadModule />
       {/* [06] Inwestycje — 5 projektów progress (waga ↑↑) */}
       <InwestycjeModule />
-      {/* [07] Kujawianka + Sport — match + scorers + amatorzy */}
-      <KujawiankaSection />
+      {/* [07] Kujawianka + Sport — match + scorers + amatorzy (BEZ duplikatu KujawiankaSection — wszystko w SportModule) */}
       <SportModule />
       {/* [08] Kultura (przed Historią — user request) */}
       <KulturaModule />
