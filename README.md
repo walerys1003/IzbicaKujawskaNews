@@ -4,6 +4,56 @@
 
 ---
 
+## 🛠️ v3.7 — FIX-PACK #2 (2026-05-25, 16 poprawek pre-roadmap)
+
+**Build**: `npm run build` → dist/_worker.js 268.61 kB, 68 modules, 1.45s
+**HTTP**: localhost:3000 zwraca 200, HTML 125 KB (+28 KB vs v3.6)
+
+### 16 napraw zgłoszonych po v3.6
+
+| # | Element | Status |
+|---|---------|--------|
+| A | Hero text "Kościelna" — biały na białym → **czarny + burgundowy hover** | ✅ v3-fix.css:135-180 |
+| B | **"Na Sygnale" przywrócone z paska do PEŁNEJ SEKCJI** (LIVE pulse + 5 chips + featured + 3 cards + telefony 112/998/997/999) | ✅ NaSygnaleSection |
+| C | Chips podserwisów dodane: Samorząd (7), Kultura (6), Historia (5), Ludzie (4), Edukacja, Sport, Multimedia | ✅ |
+| D | **Nowy moduł "Życie"** dodany do home (4 chips + 4 cards) | ✅ ZycieModule |
+| E | Kujawianka — z generycznej karty → **editorial-grid** (feature + scoreboard + tabela 4.ligi + strzelcy) | ✅ |
+| F | Zielona Gmina — `KANAL_ZGLOWIACZKI` feature card + 4× `ROLNICTWO_PROGRAMY` z urgency (foto+excerpt+slug) | ✅ |
+| G | Ogłoszenia — 3 kolumny ze zdjęciami 90px (nekrolog/praca/nieruchomości) + sepia filter dla nekrologów | ✅ |
+| H | **Top 10 czytane** — 10 kart z rank+cat badge + foto + tytuł + zajawka + odsłony | ✅ |
+| I | Historia/Dziedzictwo Kujaw — twin grid (2 mniejsze zdjęcia zamiast 1 długiego) | ✅ |
+| J | Inwestycje gminne — stats-bar (5 inwestycji / 12,4 mln / 68% / 2 zakończone) | ✅ |
+| K | Edukacja — stats-bar (4 szkoły / 6 przedszkoli / 1 LO / 1487 uczniów / 98%) | ✅ |
+| L | Multimedia — video-hero (1.4fr+1fr) + 4-thumb grid + podcast-hero (fioletowy gradient) | ✅ |
+| M | Newsletter — białe litery na granatowym tle (utwardzenie regułami `!important`) | ✅ |
+| N | Opinie redakcji — zdjęcia są (potwierdzone z v3.6, `IMG.opinie` array) | ✅ verified |
+| O | Wszystkie podserwisy z chips — kolor kategorii via `--cat-color` CSS var | ✅ |
+| P | 22 nowe placeholder JPG (Picsum stable seeds) w `public/static/img/{srodowisko,ogloszenia,zycie,nasygnale,wiadomosci}/` | ✅ |
+
+### Pliki zmienione w v3.7
+- `public/static/v3-fix.css` — 989 → **1791 linii** (+802)
+- `src/data-modules.ts` — rozszerzono 6 stałych + dodano 4 nowe (ZYCIE_*, NA_SYGNALE_*)
+- `src/components/home-v3-modules.tsx` — major refactor 8 modułów + 1 nowy (ZycieModule)
+- `src/components/home-v3.tsx` — NaSygnaleSection + ZycieModule w layout
+
+### Render verification (curl localhost:3000)
+```
+v3-nasygnale-section              1  ✅
+v3-zycie-grid                     1  ✅
+v3-top10-grid                     1  ✅
+v3-kujawianka-editorial-grid      1  ✅
+v3-historia-twin                 15  ✅
+v3-srod-kanal-card                1  ✅
+v3-ogl-list-photo                 3  ✅
+v3-multimedia-spacious            1  ✅
+v3-chips                         10  ✅
+v3-chip                          84  ✅
+v3-inwest-stats-bar               1  ✅
+v3-edu-stats-bar                  1  ✅
+```
+
+---
+
 ## 🛠️ v3.6 — FIX-PACK (2026-05-25, krytyka użytkownika → jedna duża fala)
 
 ### Naprawa 12 problemów zgłoszonych po v3.5
