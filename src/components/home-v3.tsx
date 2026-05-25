@@ -6,7 +6,7 @@
 import { Icon } from './icons'
 import { ARTICLES, CATEGORIES_MAP } from '../data-articles'
 import {
-  NaSygnaleStrip,
+  NaSygnaleSection,
   WiadomosciModule,
   SamorzadModule,
   InwestycjeModule,
@@ -17,6 +17,7 @@ import {
   SrodowiskoRolnictwoModule,
   LudzieModule,
   HistoriaModule,
+  ZycieModule,
   SolectwaModule,
   KalendarzModule,
   MultimediaModule,
@@ -716,15 +717,15 @@ export const HomeV3 = () => (
       {/* [01] HERO + [02] TopStrip (6 KPI) */}
       <HeroSection />
       <TopStrip />
-      {/* [03] Na Sygnale — alert strip (waga ↑↑↑) */}
-      <NaSygnaleStrip />
+      {/* [03] Na Sygnale — PEŁNA SEKCJA (v3.7 — promote) */}
+      <NaSygnaleSection />
       {/* [04] Wiadomości — feature 2x2 + 6 small + chips */}
       <WiadomosciModule />
       {/* [05] Samorząd — lead + sub-widget Sesja Rady + sub-widget Budżet donut (waga ↑↑) */}
       <SamorzadModule />
       {/* [06] Inwestycje — 5 projektów progress (waga ↑↑) */}
       <InwestycjeModule />
-      {/* [07] Kujawianka + Sport — match + scorers + amatorzy (BEZ duplikatu KujawiankaSection — wszystko w SportModule) */}
+      {/* [07] Kujawianka + Sport — match + scorers + amatorzy */}
       <SportModule />
       {/* [08] Kultura (przed Historią — user request) */}
       <KulturaModule />
@@ -734,9 +735,11 @@ export const HomeV3 = () => (
       <ZdrowieModule />
       {/* [11] Środowisko + Rolnictwo */}
       <SrodowiskoRolnictwoModule />
-      {/* [12] Ludzie — wywiad + 3 portrety */}
+      {/* [12] Życie w gminie — NOWY MODUŁ (v3.7) */}
+      <ZycieModule />
+      {/* [13] Ludzie — wywiad + 3 portrety */}
       <LudzieModule />
-      {/* [13] Historia (niżej — user request: "Historię niżej daj") */}
+      {/* [14] Historia (niżej — user request: "Historię niżej daj") */}
       <HistoriaModule />
       {/* [14] Sołectwa — SVG minimapa + chipy + ostatnia aktywność */}
       <SolectwaModule />

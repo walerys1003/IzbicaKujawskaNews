@@ -13,6 +13,8 @@ import {
   MIESZKANIEC_FEED, OPINIE, NAJ_KOMENTOWANE, VIDEO_FEATURED, VIDEO_THUMBS,
   PODCAST_LATEST, KALENDARZ_7DNI, NEKROLOGI, PRACA, NIERUCHOMOSCI,
   TOP10_TYDZIEN, ARCHIWUM,
+  NA_SYGNALE_ALERTY, NA_SYGNALE_PODSERWISY,
+  ZYCIE_PODSERWISY, ZYCIE_ARTYKULY,
 } from '../data-modules'
 
 /* ============ REUSABLE: MODULE HEADER ============ */
@@ -108,12 +110,21 @@ const IMG = {
   solectwaMap: '/static/img/solectwa/mapa-gminy-izbica.png',
 }
 
-/* ============ PODSERWISY SAMORZĄDU ============ */
+/* ============ PODSERWISY SAMORZĄDU (chips na home) ============ */
 const SAMORZAD_PODSERWISY = [
   { slug: 'burmistrz', name: 'Burmistrz', meta: 'Dorabiała Marek', icon: 'mayor' },
   { slug: 'rada', name: 'Rada Miejska', meta: '15 radnych · 4 komisje', icon: 'gavel' },
   { slug: 'komisje', name: 'Komisje', meta: 'Budżet · Oświata · Skarg', icon: 'committee' },
   { slug: 'konsultacje', name: 'Konsultacje', meta: '2 aktywne', icon: 'consult' },
+]
+const SAMORZAD_CHIPS = [
+  { slug: 'urzad', label: 'Urząd' },
+  { slug: 'burmistrz', label: 'Burmistrz' },
+  { slug: 'rada', label: 'Rada Miejska' },
+  { slug: 'budzet', label: 'Budżet' },
+  { slug: 'solectwa', label: 'Sołectwa' },
+  { slug: 'powiat', label: 'Powiat' },
+  { slug: 'wybory', label: 'Wybory' },
 ]
 
 /* ============ PODSERWISY KULTURY (MGCK / Biblioteka / 15 KGW) ============ */
@@ -122,43 +133,113 @@ const KULTURA_PODSERWISY = [
   { slug: 'biblioteka', name: 'Biblioteka Publiczna', desc: 'Spotkania autorskie, ferie z książką, kursy online.', meta: 'ul. Marszałka Piłsudskiego 32 · 7 filii w gminie', img: IMG.kultura.biblioteka },
   { slug: 'kgw', name: '15 Kół Gospodyń Wiejskich', desc: 'Tradycja, kuchnia kujawska, festiwale, warsztaty.', meta: 'Aktywne we wszystkich sołectwach', img: IMG.kultura.kgw },
 ]
+const KULTURA_CHIPS = [
+  { slug: 'mgck', label: 'MGCK' },
+  { slug: 'biblioteka', label: 'Biblioteka' },
+  { slug: 'parafia', label: 'Parafia' },
+  { slug: 'orionisci', label: 'Orioniści' },
+  { slug: 'kgw', label: 'KGW' },
+  { slug: 'kalendarz', label: 'Kalendarz' },
+]
+
+/* ============ PODSERWISY HISTORII / LUDZIE / ŻYCIE (chips) ============ */
+const HISTORIA_CHIPS = [
+  { slug: 'dzieje', label: 'Dzieje miasta' },
+  { slug: 'wietrzychowice', label: 'Polskie Piramidy' },
+  { slug: 'zydzi', label: 'Społeczność żydowska' },
+  { slug: 'zabytki', label: 'Zabytki' },
+  { slug: 'kalendarium', label: 'Kalendarium' },
+]
+const LUDZIE_CHIPS = [
+  { slug: 'wywiady', label: 'Wywiady' },
+  { slug: 'sylwetki', label: 'Sylwetki' },
+  { slug: 'sukcesy', label: 'Sukcesy' },
+  { slug: 'wspomnienia', label: 'Wspomnienia' },
+]
 
 /* =================================================================
-   [03] NA SYGNALE — ALERT STRIP (full-bleed burgundy)
+   [03] NA SYGNALE — PEŁNA SEKCJA (v3.7 promote)
+   Burgundowa szpalta z featured + 3 alerty + chips podserwisów
    ================================================================= */
-export const NaSygnaleStrip = () => (
-  <section class="v3-alert-strip" aria-label="Na sygnale — alerty i komunikaty">
-    <div class="v3-container">
-      <div class="v3-alert-strip-inner">
-        <div class="v3-alert-strip-label">
-          <Icon.Alert size={18} />
-          <span>NA SYGNALE</span>
+export const NaSygnaleSection = () => {
+  const featured = NA_SYGNALE_ALERTY[0]
+  const rest = NA_SYGNALE_ALERTY.slice(1, 4)
+  return (
+    <section class="v3-module v3-nasygnale-section" aria-labelledby="mod-nasygnale" style="--cat-color: #b8302a">
+      <div class="v3-container">
+        {/* Header z dramatyczną ramką + status LIVE */}
+        <div class="v3-nasygnale-head">
+          <div class="v3-nasygnale-head-left">
+            <div class="v3-nasygnale-pulse">
+              <span class="v3-nasygnale-dot"></span>
+              <span class="v3-nasygnale-live">LIVE</span>
+            </div>
+            <div>
+              <div class="v3-module-eyebrow" style="color:#b8302a">SŁUŻBY · ALERTY · INTERWENCJE</div>
+              <h2 class="v3-module-title v3-nasygnale-title" id="mod-nasygnale">Na sygnale</h2>
+            </div>
+          </div>
+          <a href="/na-sygnale" class="v3-module-link v3-nasygnale-link">Wszystkie zgłoszenia →</a>
         </div>
-        <a href="/komunikaty/pge-wylaczenia-28-maja" class="v3-alert-card">
-          <span class="v3-alert-card-icon"><Icon.Power size={18} /></span>
-          <span class="v3-alert-card-text">
-            <span class="v3-alert-card-type">Wyłączenia prądu</span>
-            <span class="v3-alert-card-msg">28 maja, 8:00–14:00 — Smólsk, Świętosławice</span>
-          </span>
-        </a>
-        <a href="/drogi/utrudnienia" class="v3-alert-card">
-          <span class="v3-alert-card-icon"><Icon.MapPin size={18} /></span>
-          <span class="v3-alert-card-text">
-            <span class="v3-alert-card-type">Utrudnienia drogowe</span>
-            <span class="v3-alert-card-msg">DW 270 — remont mostku, objazd przez Sadłno</span>
-          </span>
-        </a>
-        <a href="/zdrowie/apteka-dyzurna" class="v3-alert-card">
-          <span class="v3-alert-card-icon"><Icon.Heart size={18} /></span>
-          <span class="v3-alert-card-text">
-            <span class="v3-alert-card-type">Apteka dyżurna</span>
-            <span class="v3-alert-card-msg">Medikus, Rynek 12 — dziś do 22:00</span>
-          </span>
-        </a>
+        {/* Chips — 5 podserwisów */}
+        <div class="v3-chips v3-nasygnale-chips">
+          <a href="/na-sygnale" class="v3-chip v3-chip-active" style="--cat-color:#b8302a">Wszystkie</a>
+          {NA_SYGNALE_PODSERWISY.map(p => (
+            <a href={`/na-sygnale/${p.slug}`} class="v3-chip" style={`--chip-color:${p.color}`}>{p.label}</a>
+          ))}
+        </div>
+        {/* Grid: 1 featured 2x + 3 mniejsze */}
+        <div class="v3-nasygnale-grid">
+          <article class="v3-nasygnale-card v3-nasygnale-card-feature" style={`--alert-color: ${featured.color}`}>
+            <a href={`/na-sygnale/${featured.slug}`} class="v3-nasygnale-card-img">
+              <img src={featured.img} alt={featured.title} loading="lazy" />
+              <span class="v3-nasygnale-card-typ" style={`background: ${featured.color}`}>{featured.typLabel}</span>
+              <span class={`v3-nasygnale-card-status v3-nasygnale-status-${featured.status}`}>{featured.status === 'aktywne' ? '⏱ AKTYWNE' : featured.status === 'opanowane' ? '✓ OPANOWANE' : '✓ ZAMKNIĘTE'}</span>
+            </a>
+            <div class="v3-nasygnale-card-body">
+              <div class="v3-nasygnale-card-meta">
+                <span class="v3-nasygnale-card-time">🕒 {featured.time}</span>
+                <span class="v3-nasygnale-card-date">dziś</span>
+              </div>
+              <h3 class="v3-nasygnale-card-title"><a href={`/na-sygnale/${featured.slug}`}>{featured.title}</a></h3>
+              <p class="v3-nasygnale-card-excerpt">{featured.excerpt}</p>
+              <a href={`/na-sygnale/${featured.slug}`} class="v3-nasygnale-card-cta">Czytaj relację →</a>
+            </div>
+          </article>
+          <div class="v3-nasygnale-list">
+            {rest.map(a => (
+              <article class="v3-nasygnale-card-small" style={`--alert-color: ${a.color}`}>
+                <a href={`/na-sygnale/${a.slug}`} class="v3-nasygnale-card-small-img">
+                  <img src={a.img} alt={a.title} loading="lazy" />
+                  <span class="v3-nasygnale-card-typ-small" style={`background: ${a.color}`}>{a.typLabel}</span>
+                </a>
+                <div class="v3-nasygnale-card-small-body">
+                  <div class="v3-nasygnale-card-meta">
+                    <span class="v3-nasygnale-card-time">🕒 {a.time}</span>
+                    <span class={`v3-nasygnale-status-mini v3-nasygnale-status-${a.status}`}>{a.status}</span>
+                  </div>
+                  <h4 class="v3-nasygnale-card-small-title"><a href={`/na-sygnale/${a.slug}`}>{a.title}</a></h4>
+                  <p class="v3-nasygnale-card-small-excerpt">{a.excerpt}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+        {/* Pasek info — telefony alarmowe */}
+        <div class="v3-nasygnale-emergency">
+          <span class="v3-nasygnale-emergency-label">📞 Telefony alarmowe:</span>
+          <a href="tel:112" class="v3-nasygnale-emergency-num"><strong>112</strong> · Numer alarmowy</a>
+          <a href="tel:998" class="v3-nasygnale-emergency-num"><strong>998</strong> · Straż OSP</a>
+          <a href="tel:997" class="v3-nasygnale-emergency-num"><strong>997</strong> · Policja</a>
+          <a href="tel:999" class="v3-nasygnale-emergency-num"><strong>999</strong> · Pogotowie</a>
+        </div>
       </div>
-    </div>
-  </section>
-)
+    </section>
+  )
+}
+
+/* Alias dla wstecznej kompatybilności (jeszcze używane w home-v3.tsx) */
+export const NaSygnaleStrip = NaSygnaleSection
 
 /* =================================================================
    [04] WIADOMOŚCI — 7-grid (1 feature 2x2 + 6 small) z chipami filtrów
@@ -251,9 +332,15 @@ export const SamorzadModule = () => {
   const lead = samorzadArticles[0] || ARTICLES.find(a => a.slug === 'sesja-rady-22-maja') || ARTICLES[1]
   const list = samorzadArticles.slice(1).concat(ARTICLES.filter(a => a.category === 'komunikaty').slice(0, 2)).slice(0, 4)
   return (
-    <section class="v3-module v3-samorzad-module" aria-labelledby="mod-samorzad">
+    <section class="v3-module v3-samorzad-module" aria-labelledby="mod-samorzad" style="--cat-color: #0a2540">
       <div class="v3-container">
         <ModuleHead eyebrow="Władza lokalna" title="Samorząd" link="/samorzad" linkLabel="Wszystkie z samorządu →" />
+        <div class="v3-chips">
+          <a href="/samorzad" class="v3-chip v3-chip-active" style="--cat-color:#0a2540">Wszystkie</a>
+          {SAMORZAD_CHIPS.map(c => (
+            <a href={`/samorzad/${c.slug}`} class="v3-chip">{c.label}</a>
+          ))}
+        </div>
         <div class="v3-samorzad-grid">
           <article class="v3-samorzad-lead">
             <div class="v3-img-placeholder v3-ph-news v3-ph-news-samorzad" style="aspect-ratio: 16/9; border-radius: 8px;"></div>
@@ -337,9 +424,28 @@ export const InwestycjeModule = () => {
     'oswietlenie-led': 'Wymiana 380 opraw na energooszczędne LED. Oszczędności rzędu 65% rocznie.',
   }
   return (
-    <section class="v3-module v3-inwestycje-module" aria-labelledby="mod-inwest">
+    <section class="v3-module v3-inwestycje-module" aria-labelledby="mod-inwest" style="--cat-color: #d4663a">
       <div class="v3-container">
         <ModuleHead eyebrow="Inwestycje gminne" title="Co się dziś buduje w gminie" link="/inwestycje" linkLabel="Mapa wszystkich inwestycji →" />
+        {/* Statystyki nad gridem — wizualny "kick" */}
+        <div class="v3-inwest-stats-bar">
+          <div class="v3-inwest-stat">
+            <div class="v3-inwest-stat-val">5</div>
+            <div class="v3-inwest-stat-label">aktywnych inwestycji</div>
+          </div>
+          <div class="v3-inwest-stat">
+            <div class="v3-inwest-stat-val">12,4 mln zł</div>
+            <div class="v3-inwest-stat-label">budżet 2026</div>
+          </div>
+          <div class="v3-inwest-stat">
+            <div class="v3-inwest-stat-val">68%</div>
+            <div class="v3-inwest-stat-label">średni postęp</div>
+          </div>
+          <div class="v3-inwest-stat">
+            <div class="v3-inwest-stat-val">2</div>
+            <div class="v3-inwest-stat-label">zakończone w 2026</div>
+          </div>
+        </div>
         <div class="v3-inwestycje-grid">
           {INWESTYCJE.map(i => {
             const statusLabel = i.status === 'completed' ? 'Zakończona' : i.status === 'in_progress' ? `W trakcie · ${i.progress}%` : 'Planowana'
@@ -374,49 +480,87 @@ export const InwestycjeModule = () => {
 }
 
 /* =================================================================
-   [07] KUJAWIANKA + SPORT — match card + next match + scorers + amateur
+   [07] KUJAWIANKA + SPORT — redakcyjna prezentacja (v3.7 less AI-look)
    ================================================================= */
 export const SportModule = () => (
-  <section class="v3-module v3-kujawianka" aria-labelledby="mod-sport">
+  <section class="v3-module v3-kujawianka v3-kujawianka-editorial" aria-labelledby="mod-sport" style="--cat-color: #1e7a4f">
     <div class="v3-container">
-      <ModuleHead eyebrow="Sport lokalny" title="Kujawianka i sport gminy" link="/kujawianka" linkLabel="Wszystko o sporcie →" />
-      {/* Główna karta meczu */}
-      <div class="v3-kujawianka-card" style="margin-bottom: 1.25rem;">
-        <div class="v3-kujawianka-match">
-          <div class="v3-kujawianka-team">
-            <div class="v3-kujawianka-team-logo" style="background: #1e7a4f;">K</div>
-            <div class="v3-kujawianka-team-name">Kujawianka</div>
-          </div>
-          <div class="v3-kujawianka-score">3 : 1</div>
-          <div class="v3-kujawianka-team">
-            <div class="v3-kujawianka-team-logo" style="background: #34495e;">W</div>
-            <div class="v3-kujawianka-team-name">Włocłavia</div>
-          </div>
-        </div>
-        <div class="v3-kujawianka-meta">26. kolejka klasy okręgowej · 24 maja 2026, 19:45 · Stadion Włocłavia</div>
-        <a href="/wiadomosci/kujawianka-wloclavia" class="v3-kujawianka-cta">Pełna relacja meczu →</a>
+      <ModuleHead eyebrow="Sport lokalny · 4. liga" title="Kujawianka i sport gminy" link="/kujawianka" linkLabel="Pełen profil klubu →" />
+      <div class="v3-chips">
+        <a href="/kujawianka" class="v3-chip v3-chip-active" style="--cat-color:#1e7a4f">Kujawianka</a>
+        <a href="/sport/amatorski" class="v3-chip">Amatorski</a>
+        <a href="/sport/mlodziezowy" class="v3-chip">Młodzieżowy</a>
+        <a href="/sport/halowy" class="v3-chip">Halowy</a>
+        <a href="/sport/rekreacja" class="v3-chip">Rekreacja</a>
       </div>
-      {/* Extras: next match + scorers + amateur */}
-      <div class="v3-sport-extras">
-        <div class="v3-sport-next-match">
-          <div class="v3-sport-next-match-eyebrow">Następny mecz</div>
-          <div class="v3-sport-next-match-vs">Kujawianka vs {NEXT_MATCH.rywal}</div>
-          <div class="v3-sport-next-match-meta">{NEXT_MATCH.data} · {NEXT_MATCH.godzina} · {NEXT_MATCH.miejsce}</div>
-          <span class="v3-sport-next-match-countdown">⏱ Za {NEXT_MATCH.daysLeft} dni · kolejka {NEXT_MATCH.kolejka}</span>
-        </div>
-        <div class="v3-sport-scorers">
-          <div class="v3-sport-scorers-eyebrow">Top strzelcy sezonu</div>
-          <ol class="v3-sport-scorers-list">
-            {TOP_SCORERS.map(p => (
-              <li><span>{p.player} <span style="font:400 0.72rem Inter; color:#6b7280; margin-left:.3rem;">{p.position}</span></span><b>{p.goals}</b></li>
-            ))}
-          </ol>
-        </div>
+      <div class="v3-kujawianka-editorial-grid">
+        {/* LEWO: zdjęcie + duża karta meczu + relacja */}
+        <article class="v3-kujawianka-feature">
+          <div class="v3-kujawianka-feature-img">
+            <img src="/static/img/wiadomosci/02-kujawianka.jpg" alt="Kujawianka — mecz z Włocłavią" loading="lazy" />
+            <span class="v3-kujawianka-feature-badge">📍 Wynik · 26. kolejka</span>
+          </div>
+          <div class="v3-kujawianka-feature-scoreboard">
+            <div class="v3-kujawianka-team">
+              <div class="v3-kujawianka-team-logo" style="background: #1e7a4f;">K</div>
+              <div class="v3-kujawianka-team-name">Kujawianka</div>
+              <div class="v3-kujawianka-team-place">gospodarze</div>
+            </div>
+            <div class="v3-kujawianka-score-wrap">
+              <div class="v3-kujawianka-score">3 : 1</div>
+              <div class="v3-kujawianka-score-status">✓ ZWYCIĘSTWO</div>
+            </div>
+            <div class="v3-kujawianka-team">
+              <div class="v3-kujawianka-team-logo" style="background: #34495e;">W</div>
+              <div class="v3-kujawianka-team-name">Włocłavia</div>
+              <div class="v3-kujawianka-team-place">goście</div>
+            </div>
+          </div>
+          <div class="v3-kujawianka-feature-meta">
+            <span>📅 24 maja 2026 · 19:45</span>
+            <span>📍 Stadion Włocłavia</span>
+            <span>👥 1 247 kibiców</span>
+          </div>
+          <div class="v3-kujawianka-feature-body">
+            <h3 class="v3-kujawianka-feature-title">Kujawianka rozbiła rywali z Włocławka. Trzy gole w pierwszej połowie</h3>
+            <p class="v3-kujawianka-feature-lede">Derby kujawskie nie zostawiły wątpliwości — Kujawianka pokonała Włocłavię 3:1. Bramki strzelili Kowalski (23'), Nowak (41') i Wiśniewski (78'). Honorowe trafienie dla gości zdobył Kowalski w 89. min.</p>
+            <a href="/wiadomosci/kujawianka-wloclavia" class="v3-kujawianka-feature-cta">Pełna relacja + statystyki →</a>
+          </div>
+        </article>
+        {/* PRAWO: sidebar — next match + tabela + strzelcy */}
+        <aside class="v3-kujawianka-sidebar">
+          <div class="v3-sport-next-match">
+            <div class="v3-sport-next-match-eyebrow">⏱ Następny mecz</div>
+            <div class="v3-sport-next-match-vs">Kujawianka vs {NEXT_MATCH.rywal}</div>
+            <div class="v3-sport-next-match-meta">{NEXT_MATCH.data} · {NEXT_MATCH.godzina}<br/>{NEXT_MATCH.miejsce}</div>
+            <span class="v3-sport-next-match-countdown">📅 Za {NEXT_MATCH.daysLeft} dni · kolejka {NEXT_MATCH.kolejka}</span>
+          </div>
+          <div class="v3-kujawianka-table">
+            <div class="v3-kujawianka-table-head">🏆 Tabela 4. ligi</div>
+            <ol class="v3-kujawianka-table-list">
+              <li class="v3-kujawianka-table-row v3-kujawianka-table-leader"><span class="v3-kujawianka-pos">1.</span><span class="v3-kujawianka-tname">Kujawianka</span><span class="v3-kujawianka-pts">52 pkt</span></li>
+              <li class="v3-kujawianka-table-row"><span class="v3-kujawianka-pos">2.</span><span class="v3-kujawianka-tname">GKS Brześć</span><span class="v3-kujawianka-pts">48 pkt</span></li>
+              <li class="v3-kujawianka-table-row"><span class="v3-kujawianka-pos">3.</span><span class="v3-kujawianka-tname">Włocłavia</span><span class="v3-kujawianka-pts">44 pkt</span></li>
+              <li class="v3-kujawianka-table-row"><span class="v3-kujawianka-pos">4.</span><span class="v3-kujawianka-tname">Unia Lubraniec</span><span class="v3-kujawianka-pts">38 pkt</span></li>
+              <li class="v3-kujawianka-table-row"><span class="v3-kujawianka-pos">5.</span><span class="v3-kujawianka-tname">Sparta Gostynin</span><span class="v3-kujawianka-pts">36 pkt</span></li>
+            </ol>
+            <a href="/kujawianka/tabela" class="v3-kujawianka-table-link">Pełna tabela 4. ligi →</a>
+          </div>
+          <div class="v3-sport-scorers">
+            <div class="v3-sport-scorers-eyebrow">⚽ Top strzelcy sezonu</div>
+            <ol class="v3-sport-scorers-list">
+              {TOP_SCORERS.map(p => (
+                <li><span>{p.player} <span class="v3-scorers-pos">{p.position}</span></span><b>{p.goals}</b></li>
+              ))}
+            </ol>
+          </div>
+        </aside>
       </div>
-      {/* Amatorski */}
-      <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      {/* Amatorski — pas dolny */}
+      <div class="v3-sport-amator">
+        <span class="v3-sport-amator-label">⚽ Sport amatorski:</span>
         {SPORT_AMATORSKI.map(s => (
-          <a href={`/sport/${s.cat}`} class="v3-chip">⚽ {s.title}</a>
+          <a href={`/sport/${s.cat}`} class="v3-chip">{s.title}</a>
         ))}
       </div>
     </div>
@@ -424,12 +568,18 @@ export const SportModule = () => (
 )
 
 /* =================================================================
-   [09] KULTURA — calendar + cards
+   [09] KULTURA — calendar + cards + CHIPS (v3.7)
    ================================================================= */
 export const KulturaModule = () => (
-  <section class="v3-module v3-kultura-module" aria-labelledby="mod-kultura">
+  <section class="v3-module v3-kultura-module" aria-labelledby="mod-kultura" style="--cat-color: #6b3aa0">
     <div class="v3-container">
       <ModuleHead eyebrow="Kultura · MGCK" title="Co dzieje się w kulturze" link="/kultura" linkLabel="Pełny kalendarz →" />
+      <div class="v3-chips">
+        <a href="/kultura" class="v3-chip v3-chip-active" style="--cat-color:#6b3aa0">Wszystkie</a>
+        {KULTURA_CHIPS.map(c => (
+          <a href={`/kultura/${c.slug}`} class="v3-chip">{c.label}</a>
+        ))}
+      </div>
       {/* Najbliższe wydarzenia — karty z obrazami */}
       <div class="v3-kultura-grid">
         {KULTURA_EVENTS.map(e => (
@@ -475,9 +625,26 @@ export const KulturaModule = () => (
 export const EdukacjaModule = () => {
   const eduImgs = [IMG.edukacja.przedszkole, IMG.edukacja.sp1, IMG.edukacja.matematyka, IMG.edukacja.zajecia]
   return (
-    <section class="v3-module v3-edukacja-module" aria-labelledby="mod-edu">
+    <section class="v3-module v3-edukacja-module" aria-labelledby="mod-edu" style="--cat-color: #c8a951">
       <div class="v3-container">
         <ModuleHead eyebrow="Szkoły i przedszkola" title="Edukacja w gminie" link="/edukacja" linkLabel="Wszystkie szkoły →" />
+        <div class="v3-chips">
+          <a href="/edukacja" class="v3-chip v3-chip-active" style="--cat-color:#c8a951">Wszystkie</a>
+          <a href="/edukacja/przedszkola" class="v3-chip">Przedszkola</a>
+          <a href="/edukacja/sp" class="v3-chip">Szkoły podstawowe</a>
+          <a href="/edukacja/zs-kasprowicz" class="v3-chip">ZS Kasprowicz</a>
+          <a href="/edukacja/konkursy" class="v3-chip">Konkursy</a>
+          <a href="/edukacja/sukcesy" class="v3-chip">Sukcesy uczniów</a>
+          <a href="/edukacja/rekrutacja" class="v3-chip">Rekrutacja</a>
+        </div>
+        {/* Statystyki edukacyjne */}
+        <div class="v3-edu-stats-bar">
+          <div class="v3-edu-stat"><strong>4</strong>przedszkola</div>
+          <div class="v3-edu-stat"><strong>6</strong>szkół podstawowych</div>
+          <div class="v3-edu-stat"><strong>1</strong>liceum (ZS Kasprowicz)</div>
+          <div class="v3-edu-stat"><strong>1 487</strong>uczniów w gminie</div>
+          <div class="v3-edu-stat"><strong>98%</strong>zdawalność matury 2026</div>
+        </div>
         <div class="v3-edukacja-grid">
           <article class="v3-edukacja-feature">
             <div class="v3-edukacja-feature-img">
@@ -554,56 +721,84 @@ export const ZdrowieModule = () => (
 )
 
 /* =================================================================
-   [12] ŚRODOWISKO + ROLNICTWO
+   [12] ŚRODOWISKO + ROLNICTWO (v3.7 — foto + excerpt + link)
    ================================================================= */
 export const SrodowiskoRolnictwoModule = () => (
-  <section class="v3-module v3-srod-module" aria-labelledby="mod-srod">
+  <section class="v3-module v3-srod-module" aria-labelledby="mod-srod" style="--cat-color: #2d5a3d">
     <div class="v3-container">
       <ModuleHead eyebrow="Środowisko i rolnictwo" title="Zielona gmina" link="/srodowisko" linkLabel="Więcej o środowisku →" />
-      <div class="v3-srod-grid">
-        <div class="v3-srod-card">
-          <div class="v3-srod-card-eyebrow">Środowisko · Kanał Zgłowiączki</div>
-          <h3 class="v3-srod-card-title">Stan kanału i prace melioracyjne</h3>
-          <div class="v3-srod-card-stat-row">
+      {/* Kanał Zgłowiączki — featured card z foto + excerpt + CTA */}
+      <a href={`/srodowisko/${KANAL_ZGLOWIACZKI.slug}`} class="v3-srod-kanal-card">
+        <div class="v3-srod-kanal-img">
+          <img src={KANAL_ZGLOWIACZKI.img} alt="Kanał Zgłowiączki — prace melioracyjne" loading="lazy" />
+          <span class="v3-srod-kanal-badge">Środowisko · Kanał Zgłowiączki</span>
+        </div>
+        <div class="v3-srod-kanal-body">
+          <h3 class="v3-srod-kanal-title">Stan kanału i prace melioracyjne</h3>
+          <div class="v3-srod-kanal-stat-row">
             <div class="v3-srod-card-stat">
-              <div class="v3-srod-card-stat-val">Normalny</div>
+              <div class="v3-srod-card-stat-val">{KANAL_ZGLOWIACZKI.poziom === 'normalny' ? 'Normalny' : KANAL_ZGLOWIACZKI.poziom}</div>
               <div class="v3-srod-card-stat-label">Poziom wody</div>
             </div>
             <div class="v3-srod-card-stat">
               <div class="v3-srod-card-stat-val">14 km</div>
-              <div class="v3-srod-card-stat-label">Wyczyszczono</div>
+              <div class="v3-srod-card-stat-label">Wyczyszczono rowów</div>
             </div>
             <div class="v3-srod-card-stat">
-              <div class="v3-srod-card-stat-val">580 tys.</div>
+              <div class="v3-srod-card-stat-val">{KANAL_ZGLOWIACZKI.budget_2026}</div>
               <div class="v3-srod-card-stat-label">Budżet 2026</div>
             </div>
           </div>
-          <p style="font:400 0.85rem/1.5 Lora,serif; color:#475569; margin:0;">{KANAL_ZGLOWIACZKI.prace}. Ostatnia kontrola: {KANAL_ZGLOWIACZKI.ostatnia_kontrola}.</p>
+          <p class="v3-srod-kanal-excerpt">{KANAL_ZGLOWIACZKI.excerpt}</p>
+          <div class="v3-srod-kanal-meta">
+            <span>📅 Ostatnia kontrola: {KANAL_ZGLOWIACZKI.ostatnia_kontrola}</span>
+          </div>
+          <span class="v3-srod-kanal-cta">Czytaj pełen raport →</span>
         </div>
-        <div class="v3-srod-card">
-          <div class="v3-srod-card-eyebrow">Rolnictwo · Dopłaty i programy</div>
-          <h3 class="v3-srod-card-title">Aktualne terminy dla rolników</h3>
-          <ul class="v3-rol-programy">
-            {ROLNICTWO_PROGRAMY.map(p => (
-              <li class={`v3-rol-program v3-rol-program-${p.urgency}`}>
-                <span>{p.title}</span>
-                <span class="v3-rol-program-deadline">⏱ {p.deadline}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+      </a>
+      {/* Programy rolne — karty z foto + excerpt + CTA */}
+      <div class="v3-srod-rolnictwo-head">
+        <div class="v3-module-eyebrow" style="color:#2d5a3d">Rolnictwo · Dopłaty i programy</div>
+        <h3 class="v3-srod-rolnictwo-title">Aktualne terminy dla rolników</h3>
+      </div>
+      <div class="v3-rol-grid">
+        {ROLNICTWO_PROGRAMY.map(p => (
+          <a href={`/rolnictwo/${p.slug}`} class={`v3-rol-card v3-rol-card-${p.urgency}`}>
+            <div class="v3-rol-card-img">
+              <img src={p.img} alt={p.title} loading="lazy" />
+              <span class={`v3-rol-card-urgency v3-rol-urgency-${p.urgency}`}>
+                {p.urgency === 'high' ? '🔥 PILNE' : p.urgency === 'medium' ? '⏱ AKTYWNE' : '📅 NABÓR'}
+              </span>
+            </div>
+            <div class="v3-rol-card-body">
+              <h4 class="v3-rol-card-title">{p.title}</h4>
+              <p class="v3-rol-card-excerpt">{p.excerpt}</p>
+              <div class="v3-rol-card-deadline">
+                <span class="v3-rol-card-deadline-label">Termin:</span>
+                <strong>{p.deadline}</strong>
+              </div>
+              <span class="v3-rol-card-cta">Szczegóły programu →</span>
+            </div>
+          </a>
+        ))}
       </div>
     </div>
   </section>
 )
 
 /* =================================================================
-   [13] LUDZIE — wywiad featured + 3 portrety
+   [13] LUDZIE — wywiad featured + 3 portrety + CHIPS (v3.7)
    ================================================================= */
 export const LudzieModule = () => (
-  <section class="v3-module v3-ludzie-module" aria-labelledby="mod-ludzie">
+  <section class="v3-module v3-ludzie-module" aria-labelledby="mod-ludzie" style="--cat-color: #a64430">
     <div class="v3-container">
       <ModuleHead eyebrow="Mieszkańcy gminy" title="Ludzie Izbicy" link="/ludzie" linkLabel="Wszystkie sylwetki →" />
+      <div class="v3-chips">
+        <a href="/ludzie" class="v3-chip v3-chip-active" style="--cat-color:#a64430">Wszystkie</a>
+        {LUDZIE_CHIPS.map(c => (
+          <a href={`/ludzie/${c.slug}`} class="v3-chip">{c.label}</a>
+        ))}
+      </div>
       <div class="v3-ludzie-grid">
         <a href={`/wywiady/${WYWIAD_FEATURED.slug}`} class="v3-ludzie-wywiad" style="text-decoration:none;">
           <div class="v3-ludzie-wywiad-img">
@@ -639,37 +834,90 @@ export const LudzieModule = () => (
 )
 
 /* =================================================================
-   [08] HISTORIA — featured Polskie Piramidy + 3 mini
+   [08] HISTORIA — 2 featured (split z 1 długiego) + chips + 3 mini (v3.7)
    ================================================================= */
 export const HistoriaModule = () => (
-  <section class="v3-module v3-historia-module" aria-labelledby="mod-hist">
+  <section class="v3-module v3-historia-module" aria-labelledby="mod-hist" style="--cat-color: #8a6d2a">
     <div class="v3-container">
       <ModuleHead eyebrow="Historia i dziedzictwo" title="Dziedzictwo Kujaw" link="/historia" linkLabel="Wszystkie tematy →" />
-      <div class="v3-historia-grid">
-        <a href="/wiadomosci/wietrzychowice-sezon" class="v3-historia-feature" style="text-decoration:none;">
-          <div class="v3-historia-feature-img">
+      <div class="v3-chips">
+        <a href="/historia" class="v3-chip v3-chip-active" style="--cat-color:#8a6d2a">Wszystkie</a>
+        {HISTORIA_CHIPS.map(c => (
+          <a href={`/historia/${c.slug}`} class="v3-chip">{c.label}</a>
+        ))}
+      </div>
+      {/* Górny pas: 2 mniejsze featured (zamiast 1 długiego) */}
+      <div class="v3-historia-twin">
+        <a href="/wiadomosci/wietrzychowice-sezon" class="v3-historia-twin-card" style="text-decoration:none;">
+          <div class="v3-historia-twin-img">
             <img src={IMG.historia.feature} alt="Neolityczne kurhany Wietrzychowice" loading="lazy" />
           </div>
-          <div class="v3-historia-feature-body">
-            <div class="v3-historia-feature-eyebrow">Polskie Piramidy · Wietrzychowice</div>
-            <h3 class="v3-historia-feature-title">Neolityczne kurhany sprzed 5 500 lat — wizytówka gminy</h3>
-            <p class="v3-historia-feature-lede">Muzeum Archeologiczne w Wietrzychowicach otwiera sezon 1 czerwca. W tym roku siedmioro nowych przewodników oprowadzi po unikatowym stanowisku, które rocznie przyciąga 18 tys. turystów.</p>
-            <span style="display:inline-block; padding:0.5rem 0.85rem; background:#c8a951; color:#0a2540; font:700 0.78rem/1 Inter,sans-serif; border-radius:6px; letter-spacing:0.06em;">Zwiedzanie od 1 czerwca →</span>
+          <div class="v3-historia-twin-body">
+            <div class="v3-historia-twin-eyebrow">Polskie Piramidy · Wietrzychowice</div>
+            <h3 class="v3-historia-twin-title">Neolityczne kurhany sprzed 5 500 lat — wizytówka gminy</h3>
+            <p class="v3-historia-twin-lede">Muzeum Archeologiczne w Wietrzychowicach otwiera sezon 1 czerwca. Siedmioro nowych przewodników oprowadzi po unikatowym stanowisku — 18 tys. turystów rocznie.</p>
+            <span class="v3-historia-twin-cta">Zwiedzanie od 1 czerwca →</span>
           </div>
         </a>
-        <div class="v3-historia-mini">
-          {HISTORIA_CARDS.map(c => (
-            <a class="v3-historia-mini-card" href={`/historia/${c.slug}`}>
-              <div class="v3-historia-mini-card-img">
-                <img src={IMG.historia[c.slug] || IMG.historia.feature} alt={c.title} loading="lazy" />
+        <a href="/historia/dzieje" class="v3-historia-twin-card" style="text-decoration:none;">
+          <div class="v3-historia-twin-img">
+            <img src={IMG.historia['dzieje']} alt="Stare miasto Izbica Kujawska" loading="lazy" />
+          </div>
+          <div class="v3-historia-twin-body">
+            <div class="v3-historia-twin-eyebrow">Dzieje miasta · od 1394 r.</div>
+            <h3 class="v3-historia-twin-title">630 lat praw miejskich — historia w 12 odsłonach</h3>
+            <p class="v3-historia-twin-lede">Od średniowiecznej osady do prężnej gminy XXI wieku. Cykl artykułów o najważniejszych momentach Izbicy Kujawskiej.</p>
+            <span class="v3-historia-twin-cta">Czytaj cykl →</span>
+          </div>
+        </a>
+      </div>
+      {/* Mini-karty: zabytki, społeczność żydowska, zabytki */}
+      <div class="v3-historia-mini">
+        {HISTORIA_CARDS.map(c => (
+          <a class="v3-historia-mini-card" href={`/historia/${c.slug}`}>
+            <div class="v3-historia-mini-card-img">
+              <img src={IMG.historia[c.slug] || IMG.historia.feature} alt={c.title} loading="lazy" />
+            </div>
+            <div class="v3-historia-mini-card-body">
+              <h4 class="v3-historia-mini-card-title">{c.title}</h4>
+              <p class="v3-historia-mini-card-excerpt">{c.excerpt}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+)
+
+/* =================================================================
+   [13b] ŻYCIE — nowy moduł (v3.7)
+   ================================================================= */
+export const ZycieModule = () => (
+  <section class="v3-module v3-zycie-module" aria-labelledby="mod-zycie" style="--cat-color: #2d5a3d">
+    <div class="v3-container">
+      <ModuleHead eyebrow="Codzienność mieszkańca" title="Życie w gminie" link="/zycie" linkLabel="Wszystkie poradniki →" />
+      <div class="v3-chips">
+        <a href="/zycie" class="v3-chip v3-chip-active" style="--cat-color:#2d5a3d">Wszystkie</a>
+        {ZYCIE_PODSERWISY.map(c => (
+          <a href={`/zycie/${c.slug}`} class="v3-chip" style={`--chip-color:${c.color}`}>{c.label}</a>
+        ))}
+      </div>
+      <div class="v3-zycie-grid">
+        {ZYCIE_ARTYKULY.map(z => (
+          <a href={`/zycie/${z.cat}/${z.slug}`} class="v3-zycie-card">
+            <div class="v3-zycie-card-img">
+              <img src={z.img} alt={z.title} loading="lazy" />
+              <span class="v3-zycie-card-cat">{ZYCIE_PODSERWISY.find(p => p.slug === z.cat)?.label || z.cat}</span>
+            </div>
+            <div class="v3-zycie-card-body">
+              <h3 class="v3-zycie-card-title">{z.title}</h3>
+              <p class="v3-zycie-card-excerpt">{z.excerpt}</p>
+              <div class="v3-zycie-card-meta">
+                <Icon.Clock size={12} /> {z.readingMinutes} min · {z.publishedAt}
               </div>
-              <div class="v3-historia-mini-card-body">
-                <h4 class="v3-historia-mini-card-title">{c.title}</h4>
-                <p class="v3-historia-mini-card-excerpt">{c.excerpt}</p>
-              </div>
-            </a>
-          ))}
-        </div>
+            </div>
+          </a>
+        ))}
       </div>
     </div>
   </section>
@@ -767,49 +1015,74 @@ export const KalendarzModule = () => {
 }
 
 /* =================================================================
-   [16] MULTIMEDIA — featured video + thumbs + podcast
+   [16] MULTIMEDIA — featured video + thumbs + podcast (v3.7 przestrzenny)
    ================================================================= */
-export const MultimediaModule = () => (
-  <section class="v3-module v3-multimedia-module" aria-labelledby="mod-multi">
-    <div class="v3-container">
-      <ModuleHead eyebrow="Wideo · Podcast · Galerie" title="Multimedia" link="/multimedia" linkLabel="Wszystkie materiały →" />
-      <div class="v3-multimedia-grid">
-        <a href={`/multimedia/wideo/${VIDEO_FEATURED.slug}`} class="v3-video-featured">
-          <div class="v3-video-featured-play">
-            <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" /></svg>
+export const MultimediaModule = () => {
+  const mediaChips = [
+    { slug: 'wideo', label: '🎬 Wideo', color: '#b8302a' },
+    { slug: 'podcast', label: '🎙 Podcast', color: '#6b3aa0' },
+    { slug: 'galerie', label: '📷 Galerie', color: '#c8a951' },
+    { slug: 'infografiki', label: '📊 Infografiki', color: '#2d5a3d' },
+  ]
+  return (
+    <section class="v3-module v3-multimedia-module v3-multimedia-spacious" aria-labelledby="mod-multi" style="--cat-color: #b8302a">
+      <div class="v3-container">
+        <ModuleHead eyebrow="Wideo · Podcast · Galerie · Infografiki" title="Multimedia" link="/multimedia" linkLabel="Wszystkie materiały →" />
+        <div class="v3-chips">
+          <a href="/multimedia" class="v3-chip v3-chip-active" style="--cat-color:#b8302a">Wszystkie</a>
+          {mediaChips.map(c => (
+            <a href={`/multimedia/${c.slug}`} class="v3-chip" style={`--chip-color:${c.color}`}>{c.label}</a>
+          ))}
+        </div>
+        {/* Featured video — pełna szerokość */}
+        <a href={`/multimedia/wideo/${VIDEO_FEATURED.slug}`} class="v3-video-hero">
+          <div class="v3-video-hero-img">
+            <img src="/static/img/wiadomosci/04-sesja.jpg" alt={VIDEO_FEATURED.title} loading="lazy" />
+            <div class="v3-video-hero-play">
+              <svg viewBox="0 0 24 24" width="56" height="56"><polygon points="6,3 20,12 6,21" fill="white" /></svg>
+            </div>
+            <span class="v3-video-hero-duration">⏱ {VIDEO_FEATURED.duration}</span>
+            <span class="v3-video-hero-views">👁 {VIDEO_FEATURED.views}</span>
           </div>
-          <div class="v3-video-featured-info">
-            <div class="v3-video-featured-eyebrow">Wideo polecane</div>
-            <h3 class="v3-video-featured-title">{VIDEO_FEATURED.title}</h3>
-            <div class="v3-video-featured-meta">⏱ {VIDEO_FEATURED.duration} · 👁 {VIDEO_FEATURED.views} odsłon</div>
+          <div class="v3-video-hero-body">
+            <span class="v3-video-hero-eyebrow">🎬 Wideo polecane</span>
+            <h3 class="v3-video-hero-title">{VIDEO_FEATURED.title}</h3>
+            <span class="v3-video-hero-cta">Obejrzyj relację →</span>
           </div>
         </a>
-        <div>
-          <div class="v3-video-thumbs">
-            {VIDEO_THUMBS.map(v => (
-              <a href={`/multimedia/wideo/${v.slug}`} class="v3-video-thumb">
-                <div class="v3-video-thumb-img">
-                  <span class="v3-video-thumb-duration">{v.duration}</span>
+        {/* Grid: 4 thumby wideo */}
+        <div class="v3-video-thumbs-grid">
+          {VIDEO_THUMBS.map((v, i) => (
+            <a href={`/multimedia/wideo/${v.slug}`} class="v3-video-thumb-card">
+              <div class="v3-video-thumb-card-img">
+                <img src={IMG.kalendarz[i % IMG.kalendarz.length]} alt={v.title} loading="lazy" />
+                <div class="v3-video-thumb-card-play">
+                  <svg viewBox="0 0 24 24" width="32" height="32"><polygon points="6,3 20,12 6,21" fill="white" /></svg>
                 </div>
-                <div class="v3-video-thumb-title">{v.title}</div>
-              </a>
-            ))}
-          </div>
-          <a href="/multimedia/podcast" class="v3-podcast-banner">
-            <div class="v3-podcast-icon">
-              <Icon.PlayCircle size={24} />
-            </div>
-            <div class="v3-podcast-info">
-              <div class="v3-podcast-eyebrow">Podcast · odc. {PODCAST_LATEST.episode}</div>
-              <div class="v3-podcast-title">{PODCAST_LATEST.title}</div>
-              <div class="v3-podcast-meta">⏱ {PODCAST_LATEST.duration} · {PODCAST_LATEST.publishedAt}</div>
-            </div>
-          </a>
+                <span class="v3-video-thumb-card-duration">{v.duration}</span>
+              </div>
+              <div class="v3-video-thumb-card-body">
+                <h4 class="v3-video-thumb-card-title">{v.title}</h4>
+              </div>
+            </a>
+          ))}
         </div>
+        {/* Podcast banner — pełna szerokość */}
+        <a href="/multimedia/podcast" class="v3-podcast-hero">
+          <div class="v3-podcast-hero-icon">
+            <Icon.PlayCircle size={48} />
+          </div>
+          <div class="v3-podcast-hero-info">
+            <div class="v3-podcast-hero-eyebrow">🎙 Najnowszy podcast · odcinek {PODCAST_LATEST.episode}</div>
+            <h3 class="v3-podcast-hero-title">{PODCAST_LATEST.title}</h3>
+            <div class="v3-podcast-hero-meta">⏱ {PODCAST_LATEST.duration} · 📅 {PODCAST_LATEST.publishedAt}</div>
+          </div>
+          <span class="v3-podcast-hero-cta">▶ Słuchaj</span>
+        </a>
       </div>
-    </div>
-  </section>
-)
+    </section>
+  )
+}
 
 /* =================================================================
    [17] MIESZKANIEC PYTA — Q&A feed
@@ -914,50 +1187,85 @@ export const NewsletterBleed = () => (
 )
 
 /* =================================================================
-   [20] OGŁOSZENIA — 3 KOLUMNY
+   [20] OGŁOSZENIA — 3 KOLUMNY (v3.7 — z foto)
    ================================================================= */
 export const OgloszeniaModule = () => (
   <section class="v3-module v3-ogloszenia-module" aria-labelledby="mod-ogl">
     <div class="v3-container">
       <ModuleHead eyebrow="Ogłoszenia lokalne" title="Ogłoszenia mieszkańców" link="/ogloszenia" linkLabel="Dodaj ogłoszenie →" />
       <div class="v3-ogloszenia-grid">
+        {/* NEKROLOGI z foto zmarłego */}
         <div class="v3-ogl-col v3-ogl-col-nekro">
-          <span class="v3-ogl-col-eyebrow">Nekrologi</span>
-          <ul class="v3-ogl-list">
+          <span class="v3-ogl-col-eyebrow">🕯 Nekrologi</span>
+          <ul class="v3-ogl-list-photo">
             {NEKROLOGI.map(n => (
-              <li class="v3-ogl-item">
-                <div class="v3-ogl-item-title">{n.name}</div>
-                <div class="v3-ogl-item-meta">{n.dates}</div>
-                <div class="v3-ogl-item-meta" style="margin-top: 0.25rem;">{n.text}</div>
+              <li class="v3-ogl-item-photo">
+                <a href={`/nekrologi/${n.slug}`} class="v3-ogl-item-photo-link">
+                  <div class="v3-ogl-item-photo-img v3-ogl-photo-nekro">
+                    <img src={n.photo} alt={n.name} loading="lazy" />
+                  </div>
+                  <div class="v3-ogl-item-photo-body">
+                    <div class="v3-ogl-item-title">{n.name}</div>
+                    <div class="v3-ogl-item-meta">{n.dates}</div>
+                    <div class="v3-ogl-item-meta v3-ogl-item-text">{n.text}</div>
+                  </div>
+                </a>
               </li>
             ))}
           </ul>
-          <a href="/ogloszenia/nekrologi" style="display:inline-block; margin-top:0.75rem; font:700 0.78rem/1 Inter,sans-serif; color:#2c2c2c; text-decoration:none; letter-spacing:0.06em; text-transform:uppercase;">Wszystkie nekrologi →</a>
+          <div class="v3-ogl-footer">
+            <a href="/ogloszenia/nekrologi" class="v3-ogl-footer-link" style="color:#2c2c2c">Wszystkie nekrologi →</a>
+            <a href="/ogloszenia/nekrologi/dodaj" class="v3-ogl-footer-add" style="background:#2c2c2c">+ Dodaj nekrolog</a>
+          </div>
         </div>
+        {/* PRACA z foto */}
         <div class="v3-ogl-col v3-ogl-col-praca">
-          <span class="v3-ogl-col-eyebrow">Praca</span>
-          <ul class="v3-ogl-list">
+          <span class="v3-ogl-col-eyebrow">💼 Praca</span>
+          <ul class="v3-ogl-list-photo">
             {PRACA.map(p => (
-              <li class="v3-ogl-item">
-                <div class="v3-ogl-item-title">{p.title}</div>
-                <div class="v3-ogl-item-meta">{p.firm}</div>
-                <div class="v3-ogl-item-meta" style="margin-top: 0.25rem;"><b>{p.stawka}</b></div>
+              <li class="v3-ogl-item-photo">
+                <a href={`/praca/${p.slug}`} class="v3-ogl-item-photo-link">
+                  <div class="v3-ogl-item-photo-img">
+                    <img src={p.photo} alt={p.title} loading="lazy" />
+                  </div>
+                  <div class="v3-ogl-item-photo-body">
+                    <div class="v3-ogl-item-title">{p.title}</div>
+                    <div class="v3-ogl-item-meta">{p.firm}</div>
+                    <div class="v3-ogl-item-meta v3-ogl-item-text">{p.excerpt}</div>
+                    <div class="v3-ogl-item-price" style="color:#1a3a5c">{p.stawka}</div>
+                  </div>
+                </a>
               </li>
             ))}
           </ul>
-          <a href="/ogloszenia/praca" style="display:inline-block; margin-top:0.75rem; font:700 0.78rem/1 Inter,sans-serif; color:#1a3a5c; text-decoration:none; letter-spacing:0.06em; text-transform:uppercase;">Wszystkie oferty →</a>
+          <div class="v3-ogl-footer">
+            <a href="/ogloszenia/praca" class="v3-ogl-footer-link" style="color:#1a3a5c">Wszystkie oferty →</a>
+            <a href="/ogloszenia/praca/dodaj" class="v3-ogl-footer-add" style="background:#1a3a5c">+ Dodaj ofertę</a>
+          </div>
         </div>
+        {/* NIERUCHOMOŚCI z foto */}
         <div class="v3-ogl-col v3-ogl-col-nier">
-          <span class="v3-ogl-col-eyebrow">Nieruchomości</span>
-          <ul class="v3-ogl-list">
+          <span class="v3-ogl-col-eyebrow">🏠 Nieruchomości</span>
+          <ul class="v3-ogl-list-photo">
             {NIERUCHOMOSCI.map(n => (
-              <li class="v3-ogl-item">
-                <div class="v3-ogl-item-title">{n.title}</div>
-                <div class="v3-ogl-item-meta" style="margin-top: 0.25rem;"><b>{n.price}</b></div>
+              <li class="v3-ogl-item-photo">
+                <a href={`/nieruchomosci/${n.slug}`} class="v3-ogl-item-photo-link">
+                  <div class="v3-ogl-item-photo-img">
+                    <img src={n.photo} alt={n.title} loading="lazy" />
+                  </div>
+                  <div class="v3-ogl-item-photo-body">
+                    <div class="v3-ogl-item-title">{n.title}</div>
+                    <div class="v3-ogl-item-meta v3-ogl-item-text">{n.excerpt}</div>
+                    <div class="v3-ogl-item-price" style="color:#8b1d2a">{n.price}</div>
+                  </div>
+                </a>
               </li>
             ))}
           </ul>
-          <a href="/ogloszenia/nieruchomosci" style="display:inline-block; margin-top:0.75rem; font:700 0.78rem/1 Inter,sans-serif; color:#8b1d2a; text-decoration:none; letter-spacing:0.06em; text-transform:uppercase;">Wszystkie nieruchomości →</a>
+          <div class="v3-ogl-footer">
+            <a href="/ogloszenia/nieruchomosci" class="v3-ogl-footer-link" style="color:#8b1d2a">Wszystkie nieruchomości →</a>
+            <a href="/ogloszenia/nieruchomosci/dodaj" class="v3-ogl-footer-add" style="background:#8b1d2a">+ Dodaj ogłoszenie</a>
+          </div>
         </div>
       </div>
     </div>
@@ -1002,23 +1310,37 @@ export const PartnerzyBar = () => (
 )
 
 /* =================================================================
-   [22] TOP 10 CZYTANE TYGODNIA
+   [22] TOP 10 CZYTANE TYGODNIA (v3.7 — foto + title + excerpt + views)
    ================================================================= */
 export const Top10Module = () => (
   <section class="v3-module v3-top10-module" aria-labelledby="mod-top10">
     <div class="v3-container">
       <ModuleHead eyebrow="Najpopularniejsze" title="Top 10 czytane w tym tygodniu" link="/top-tygodnia" linkLabel="Pełny ranking →" />
-      <ol class="v3-top10-list">
-        {TOP10_TYDZIEN.map((t, i) => (
-          <li>
-            <a class="v3-top10-item" href={`/wiadomosci/top/${i+1}`}>
-              <div>
-                <div class="v3-top10-item-title">{t.title}</div>
-                <div class="v3-top10-item-views">👁 {t.views} odsłon</div>
-              </div>
-            </a>
-          </li>
-        ))}
+      <ol class="v3-top10-grid">
+        {TOP10_TYDZIEN.map((t, i) => {
+          const catColor = CATEGORIES_MAP[t.cat]?.color || '#8b1d2a'
+          const catLabel = CATEGORIES_MAP[t.cat]?.label || t.cat
+          return (
+            <li class="v3-top10-card" style={`--rank-color: ${catColor}`}>
+              <a class="v3-top10-card-link" href={`/wiadomosci/${t.slug}`}>
+                <div class="v3-top10-card-img">
+                  <img src={t.img} alt={t.title} loading="lazy" />
+                  <span class="v3-top10-rank">#{i + 1}</span>
+                  <span class="v3-top10-cat" style={`background: ${catColor}`}>{catLabel}</span>
+                </div>
+                <div class="v3-top10-card-body">
+                  <h3 class="v3-top10-card-title">{t.title}</h3>
+                  <p class="v3-top10-card-excerpt">{t.excerpt}</p>
+                  <div class="v3-top10-card-views">
+                    <span class="v3-top10-views-icon">👁</span>
+                    <strong>{t.views}</strong>
+                    <span>odsłon</span>
+                  </div>
+                </div>
+              </a>
+            </li>
+          )
+        })}
       </ol>
     </div>
   </section>

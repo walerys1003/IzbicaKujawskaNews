@@ -180,12 +180,44 @@ export const KANAL_ZGLOWIACZKI = {
   ostatnia_kontrola: '22 maja 2026',
   prace: 'Zakończono kwartalne czyszczenie 14 km rowów',
   budget_2026: '580 tys. zł',
+  img: '/static/img/srodowisko/kanal-zglowiaczki.jpg',
+  excerpt: 'Stan kanału monitorowany codziennie. W maju 2026 zakończono czyszczenie 14 km rowów melioracyjnych w 6 sołectwach gminy Izbica Kujawska.',
+  slug: 'kanal-zglowiaczki-prace-melioracyjne-maj-2026',
 }
 
 export const ROLNICTWO_PROGRAMY = [
-  { title: 'Dopłaty obszarowe ARiMR — termin do 15 czerwca', deadline: '15.06.2026', urgency: 'high' },
-  { title: 'Modernizacja gospodarstw — nabór 1-30 lipca', deadline: '01.07.2026', urgency: 'medium' },
-  { title: 'Ekosystemy — szkolenie gminy 12 czerwca', deadline: '12.06.2026', urgency: 'medium' },
+  {
+    slug: 'doplaty-obszarowe-arimr-2026',
+    title: 'Dopłaty obszarowe ARiMR — termin do 15 czerwca',
+    deadline: '15.06.2026',
+    urgency: 'high',
+    img: '/static/img/srodowisko/doplaty-obszarowe.jpg',
+    excerpt: 'Wnioski składamy przez aplikację eWniosekPlus. W gminie Izbica Kujawska kwalifikuje się ok. 4 200 ha gruntów rolnych.',
+  },
+  {
+    slug: 'modernizacja-gospodarstw-prow-2026',
+    title: 'Modernizacja gospodarstw — nabór 1-30 lipca',
+    deadline: '01.07.2026',
+    urgency: 'medium',
+    img: '/static/img/srodowisko/modernizacja-gospodarstw.jpg',
+    excerpt: 'Maksymalna dopłata 900 tys. zł na inwestycję. PROW 2023-2027 obejmuje budynki, maszyny i instalacje energetyczne.',
+  },
+  {
+    slug: 'ekosystemy-szkolenie-czerwiec-2026',
+    title: 'Ekosystemy — szkolenie gminy 12 czerwca',
+    deadline: '12.06.2026',
+    urgency: 'medium',
+    img: '/static/img/srodowisko/ekosystemy.jpg',
+    excerpt: 'Bezpłatne szkolenie z zazielenienia w UG Izbica Kujawska. Tematy: międzyplony, ugorowanie, retencja wodna, ekosystemy łąkowe.',
+  },
+  {
+    slug: 'szkolenia-rolnicze-czerwiec-2026',
+    title: 'Szkolenia ARiMR + KOWR — czerwiec 2026',
+    deadline: '20.06.2026',
+    urgency: 'low',
+    img: '/static/img/srodowisko/szkolenia-rolnicze.jpg',
+    excerpt: 'Cykl 4 spotkań w MGCK Izbica: rozliczenia VAT, dotacje, ubezpieczenia upraw, nowy KPS Polskiego Ładu Rolnego.',
+  },
 ]
 
 // ============ LUDZIE — PORTRETY + FEATURED WYWIAD ============
@@ -303,36 +335,267 @@ export const KALENDARZ_7DNI = [
   { dzien: 'NIE', data: '01.06', eventy: [{ title: 'Dzień Dziecka — Rynek', time: '12:00–18:00', cat: 'event' }, { title: 'Mecz Kujawianka — Lubraniec', time: '17:00', cat: 'sport' }] },
 ]
 
-// ============ OGŁOSZENIA — 3 KOLUMNY ============
+// ============ OGŁOSZENIA — 3 KOLUMNY (rozszerzone v3.7 z foto + slug) ============
 export const NEKROLOGI = [
-  { name: 'Ś.P. Stanisław Kowalski', dates: '1942–2026', text: 'Msza żałobna 27 maja, godz. 10:00, kościół parafialny.' },
-  { name: 'Ś.P. Janina Nowakowa', dates: '1948–2026', text: 'Pogrzeb 26 maja, godz. 12:00, cmentarz parafialny.' },
+  {
+    slug: 'sp-stanislaw-kowalski',
+    name: 'Ś.P. Stanisław Kowalski',
+    dates: '1942–2026',
+    text: 'Msza żałobna 27 maja, godz. 10:00, kościół parafialny.',
+    photo: '/static/img/ogloszenia/nekrolog-1.jpg',
+  },
+  {
+    slug: 'sp-janina-nowakowa',
+    name: 'Ś.P. Janina Nowakowa',
+    dates: '1948–2026',
+    text: 'Pogrzeb 26 maja, godz. 12:00, cmentarz parafialny.',
+    photo: '/static/img/ogloszenia/nekrolog-2.jpg',
+  },
+  {
+    slug: 'sp-andrzej-michalski',
+    name: 'Ś.P. Andrzej Michalski',
+    dates: '1953–2026',
+    text: 'Pogrzeb 28 maja, godz. 11:00, kaplica cmentarna Pamięcin.',
+    photo: '/static/img/ogloszenia/nekrolog-3.jpg',
+  },
 ]
 
 export const PRACA = [
-  { title: 'Kierowca C+E — okolice Izbicy', firm: 'Trans-Pol Sp. z o.o.', stawka: '5500–7000 zł' },
-  { title: 'Sprzedawca w sklepie spożywczym', firm: 'PSS Społem', stawka: 'do uzgodnienia' },
-  { title: 'Pomoc kuchenna — restauracja', firm: 'Karczma Kujawska', stawka: '4200 zł' },
+  {
+    slug: 'kierowca-ce-trans-pol',
+    title: 'Kierowca C+E — okolice Izbicy',
+    firm: 'Trans-Pol Sp. z o.o.',
+    stawka: '5500–7000 zł',
+    photo: '/static/img/ogloszenia/praca-kierowca.jpg',
+    excerpt: 'Trasy krajowe i UE. Wymagana karta kierowcy + ADR. Stała umowa o pracę, premia kwartalna.',
+  },
+  {
+    slug: 'sprzedawca-pss-spolem',
+    title: 'Sprzedawca w sklepie spożywczym',
+    firm: 'PSS Społem',
+    stawka: 'do uzgodnienia',
+    photo: '/static/img/ogloszenia/praca-sprzedawca.jpg',
+    excerpt: 'Sklep przy ul. Toruńskiej. Praca dwuzmianowa, doświadczenie mile widziane, ale nie wymagane.',
+  },
+  {
+    slug: 'pomoc-kuchenna-karczma',
+    title: 'Pomoc kuchenna — restauracja',
+    firm: 'Karczma Kujawska',
+    stawka: '4200 zł',
+    photo: '/static/img/ogloszenia/praca-kucharz.jpg',
+    excerpt: 'Restauracja kujawskiej kuchni regionalnej. Pomoc przy przygotowaniu potraw, zmywanie, porządek.',
+  },
 ]
 
 export const NIERUCHOMOSCI = [
-  { title: 'Dom 120 m² + działka 1200 m² · Sadłno', price: '385 000 zł' },
-  { title: 'Mieszkanie 48 m² · ul. Kościelna', price: '215 000 zł' },
-  { title: 'Działka budowlana 800 m² · Augustowo', price: '65 000 zł' },
+  {
+    slug: 'dom-sadlno-120m',
+    title: 'Dom 120 m² + działka 1200 m² · Sadłno',
+    price: '385 000 zł',
+    photo: '/static/img/ogloszenia/nieruchomosc-dom.jpg',
+    excerpt: 'Dom parterowy z poddaszem, garaż, ogrzewanie gazowe, działka ogrodzona. Stan idealny.',
+  },
+  {
+    slug: 'mieszkanie-koscielna-48m',
+    title: 'Mieszkanie 48 m² · ul. Kościelna',
+    price: '215 000 zł',
+    photo: '/static/img/ogloszenia/nieruchomosc-mieszkanie.jpg',
+    excerpt: 'Mieszkanie po remoncie w centrum Izbicy. 2 pokoje, kuchnia osobna, balkon, piwnica.',
+  },
+  {
+    slug: 'dzialka-augustowo-800m',
+    title: 'Działka budowlana 800 m² · Augustowo',
+    price: '65 000 zł',
+    photo: '/static/img/ogloszenia/nieruchomosc-dzialka.jpg',
+    excerpt: 'Działka z warunkami zabudowy, media w drodze. Plan zagospodarowania potwierdzony.',
+  },
 ]
 
-// ============ TOP 10 TYGODNIA ============
+// ============ TOP 10 TYGODNIA (z photo+excerpt v3.7) ============
 export const TOP10_TYDZIEN = [
-  { title: 'Remont ulicy Kościelnej zakończony przed terminem', views: '4 287' },
-  { title: 'Kujawianka wygrywa 3:1 z Włocłavią', views: '3 521' },
-  { title: 'PGE — wyłączenia prądu 28 maja w Smólsku', views: '2 894' },
-  { title: 'Sesja Rady Miejskiej — relacja z 22 maja', views: '2 412' },
-  { title: 'MGCK ogłasza program „Lata w Izbicy 2026"', views: '1 938' },
-  { title: 'Wietrzychowice — rusza letni sezon turystyczny', views: '1 765' },
-  { title: 'SPZOZ — nowe godziny pediatry od czerwca', views: '1 522' },
-  { title: 'Caritas — program „Lato w gminie" dla dzieci', views: '1 348' },
-  { title: 'Kanał Zgłowiączki — prace melioracyjne zakończone', views: '1 102' },
-  { title: 'Rekrutacja do ZS Kasprowicz — harmonogram', views: '987' },
+  {
+    slug: 'remont-ul-koscielnej-2026',
+    title: 'Remont ulicy Kościelnej zakończony przed terminem',
+    excerpt: 'Po sześciu miesiącach prac modernizacyjnych ulica Kościelna w centrum Izbicy została w pełni przebudowana.',
+    views: '4 287',
+    img: '/static/img/wiadomosci/01-koscielna.jpg',
+    cat: 'inwestycje',
+  },
+  {
+    slug: 'kujawianka-wygrywa-3-1',
+    title: 'Kujawianka wygrywa 3:1 z Włocłavią',
+    excerpt: 'Derby kujawskie rozstrzygnięte na korzyść gospodarzy. Komplet bramek od minuty 23. do 78.',
+    views: '3 521',
+    img: '/static/img/wiadomosci/02-kujawianka.jpg',
+    cat: 'sport',
+  },
+  {
+    slug: 'pge-wylaczenia-28-maja',
+    title: 'PGE — wyłączenia prądu 28 maja w Smólsku',
+    excerpt: 'Planowane przerwy w dostawie energii w godzinach 8:00–14:00. Dotyczy 4 ulic w Smólsku.',
+    views: '2 894',
+    img: '/static/img/wiadomosci/03-pge.jpg',
+    cat: 'komunikaty',
+  },
+  {
+    slug: 'sesja-rady-22-maja-relacja',
+    title: 'Sesja Rady Miejskiej — relacja z 22 maja',
+    excerpt: 'Radni jednogłośnie przyjęli sprawozdanie budżetowe. Burmistrz otrzymał absolutorium.',
+    views: '2 412',
+    img: '/static/img/wiadomosci/04-sesja.jpg',
+    cat: 'samorzad',
+  },
+  {
+    slug: 'mgck-lata-2026',
+    title: 'MGCK ogłasza program „Lata w Izbicy 2026"',
+    excerpt: 'Cztery koncerty plenerowe, warsztaty dla dzieci, kino letnie i festyn dożynkowy. Wstęp wolny.',
+    views: '1 938',
+    img: '/static/img/wiadomosci/05-mgck.jpg',
+    cat: 'kultura',
+  },
+  {
+    slug: 'wietrzychowice-sezon-2026',
+    title: 'Wietrzychowice — rusza letni sezon turystyczny',
+    excerpt: 'Polskie Piramidy otwarte 1 czerwca. Nowe ścieżki edukacyjne i przewodnicy w czterech językach.',
+    views: '1 765',
+    img: '/static/img/wiadomosci/06-wietrzychowice.jpg',
+    cat: 'historia',
+  },
+  {
+    slug: 'spzoz-godziny-pediatry',
+    title: 'SPZOZ — nowe godziny pediatry od czerwca',
+    excerpt: 'Przyjęcia dziecięce wydłużone do 18:00 w poniedziałki i środy. Rejestracja telefoniczna od 7:00.',
+    views: '1 522',
+    img: '/static/img/wiadomosci/07-spzoz.jpg',
+    cat: 'zdrowie',
+  },
+  {
+    slug: 'caritas-lato-w-gminie',
+    title: 'Caritas — program „Lato w gminie" dla dzieci',
+    excerpt: 'Bezpłatne półkolonie dla 80 dzieci z gminy. Wycieczki, basen, warsztaty plastyczne.',
+    views: '1 348',
+    img: '/static/img/wiadomosci/08-caritas.jpg',
+    cat: 'spoleczne',
+  },
+  {
+    slug: 'kanal-zglowiaczki-zakonczone',
+    title: 'Kanał Zgłowiączki — prace melioracyjne zakończone',
+    excerpt: '14 km rowów wyczyszczonych w 6 sołectwach. Inwestycja za 580 tys. zł z budżetu gminy.',
+    views: '1 102',
+    img: '/static/img/srodowisko/kanal-zglowiaczki.jpg',
+    cat: 'srodowisko',
+  },
+  {
+    slug: 'rekrutacja-zs-kasprowicz',
+    title: 'Rekrutacja do ZS Kasprowicz — harmonogram',
+    excerpt: 'Zapisy do klas pierwszych od 1 czerwca. Cztery oddziały, profile zawodowe i licealne.',
+    views: '987',
+    img: '/static/img/wiadomosci/10-zs-kasprowicz.jpg',
+    cat: 'edukacja',
+  },
+]
+
+// ============ ŻYCIE — moduł na home (v3.7) ============
+export const ZYCIE_PODSERWISY = [
+  { slug: 'poradnik', label: 'Poradnik mieszkańca', color: '#0a2540' },
+  { slug: 'zdrowie', label: 'Zdrowie', color: '#a64430' },
+  { slug: 'rolnictwo', label: 'Rolnictwo', color: '#2d5a3d' },
+  { slug: 'turystyka', label: 'Turystyka', color: '#c8a951' },
+]
+
+export const ZYCIE_ARTYKULY = [
+  {
+    slug: 'jak-zalatwic-dowod-osobisty-2026',
+    title: 'Jak załatwić dowód osobisty w 2026 r. — krok po kroku',
+    excerpt: 'Nowe procedury w UM Izbica, terminy, dokumenty, opłaty i czas oczekiwania.',
+    img: '/static/img/zycie/zycie-poradnik.jpg',
+    cat: 'poradnik',
+    publishedAt: '24 maja 2026',
+    readingMinutes: 5,
+  },
+  {
+    slug: 'sezonowe-warzywa-kujawskie',
+    title: 'Sezonowe warzywa kujawskie — kalendarz na czerwiec',
+    excerpt: 'Co teraz dojrzewa na kujawskich polach? Truskawki, młoda kapusta, rabarbar, sałata.',
+    img: '/static/img/zycie/zycie-rolnictwo.jpg',
+    cat: 'rolnictwo',
+    publishedAt: '23 maja 2026',
+    readingMinutes: 4,
+  },
+  {
+    slug: 'spacer-po-wietrzychowicach',
+    title: 'Spacer po Wietrzychowicach — 3 trasy na weekend',
+    excerpt: 'Trzy zaplanowane trasy turystyczne wokół Polskich Piramid. Mapy, czasy, atrakcje po drodze.',
+    img: '/static/img/zycie/zycie-turystyka.jpg',
+    cat: 'turystyka',
+    publishedAt: '22 maja 2026',
+    readingMinutes: 6,
+  },
+  {
+    slug: 'cwiczenia-dla-seniorow',
+    title: 'Ćwiczenia dla seniorów — bezpłatny program SPZOZ',
+    excerpt: 'Trzy razy w tygodniu w sali gimnastycznej MGCK. Profilaktyka kręgosłupa i równowagi.',
+    img: '/static/img/zycie/zycie-zdrowie.jpg',
+    cat: 'zdrowie',
+    publishedAt: '21 maja 2026',
+    readingMinutes: 3,
+  },
+]
+
+// ============ NA SYGNALE — pełna sekcja (v3.7) ============
+export const NA_SYGNALE_ALERTY = [
+  {
+    slug: 'wypadek-droga-265-22maja',
+    typ: 'wypadek',
+    typLabel: 'WYPADEK',
+    title: 'Kolizja na drodze 265 — utrudnienia ruchu',
+    excerpt: 'Zderzenie dwóch pojazdów osobowych na odcinku Izbica–Lubraniec. Brak ofiar śmiertelnych, 2 osoby w szpitalu.',
+    img: '/static/img/nasygnale/wypadek-1.jpg',
+    time: '11:42',
+    status: 'aktywne',
+    color: '#b8302a',
+  },
+  {
+    slug: 'pozar-stodoly-smolsk-22maja',
+    typ: 'pozar',
+    typLabel: 'POŻAR',
+    title: 'Pożar stodoły w Smólsku — OSP w akcji',
+    excerpt: 'Cztery zastępy OSP gasiły pożar gospodarczy. Akcja trwała 3 godziny. Brak osób poszkodowanych.',
+    img: '/static/img/nasygnale/pozar-1.jpg',
+    time: '08:15',
+    status: 'opanowane',
+    color: '#d4663a',
+  },
+  {
+    slug: 'awaria-energa-pamiecin-22maja',
+    typ: 'awaria',
+    typLabel: 'AWARIA',
+    title: 'Awaria energetyczna — Pamięcin bez prądu',
+    excerpt: 'Uszkodzenie linii średniego napięcia. ENERGA pracuje na miejscu. Przewidywany czas usunięcia: 16:00.',
+    img: '/static/img/nasygnale/awaria-1.jpg',
+    time: '13:08',
+    status: 'aktywne',
+    color: '#c8a951',
+  },
+  {
+    slug: 'interwencja-policja-rynek-22maja',
+    typ: 'interwencja',
+    typLabel: 'INTERWENCJA',
+    title: 'Interwencja policji na Rynku — sprawa wyjaśniana',
+    excerpt: 'Kłótnia dwóch grup młodzieży zakończona interwencją patrolu KPP. Trzy osoby legitymowane.',
+    img: '/static/img/nasygnale/interwencja-1.jpg',
+    time: '15:30',
+    status: 'zamknięte',
+    color: '#0a2540',
+  },
+]
+
+export const NA_SYGNALE_PODSERWISY = [
+  { slug: 'wypadki', label: 'Wypadki', icon: 'Alert', color: '#b8302a' },
+  { slug: 'pozary', label: 'Pożary', icon: 'Flame', color: '#d4663a' },
+  { slug: 'interwencje', label: 'Interwencje', icon: 'Shield', color: '#0a2540' },
+  { slug: 'kronika-policyjna', label: 'Kronika policyjna', icon: 'Badge', color: '#3a3a3a' },
+  { slug: 'awarie', label: 'Awarie', icon: 'Power', color: '#c8a951' },
 ]
 
 // ============ ARCHIWUM — LATA + MIESIĄCE ============
