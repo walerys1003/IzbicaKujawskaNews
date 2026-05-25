@@ -23,7 +23,11 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=${{ vars.CF_PAGES_PROJECT || 'izbica24-portal' }} --branch=main --commit-dirty=true
-      - name: Trigger D1 migrations
-        uses: benc-uk/workflow-dispatch@v1
-        with:
-          workflow: db-migrate.yml
+      - name: Apply D1 migrations
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          D1_DATABASE_NAME: ${{ vars.D1_DATABASE_NAME || 'izbica24' }}
+        run: bash scripts/migrate.sh prod
+      - name: Post-deploy smoke
+        run: bash scripts/health-check.sh ${{ vars.PRODUCTION_URL || 'https://izbica24.pl' }}

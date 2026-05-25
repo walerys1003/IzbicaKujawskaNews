@@ -17,9 +17,22 @@ import {
 import { HomeV3 } from './components/home-v3'
 import { ArticlePage } from './components/article'
 import { CategoryPage } from './components/category'
-import { SearchPage, NotFoundPage } from './components/search'
+import { SearchPage } from './components/search'
+import { Error404 } from './components/error/Error404'
+import { Error500 } from './components/error/Error500'
+import { Error503 } from './components/error/Error503'
 import { PlanPage } from './components/plan'
 import { WiedzaPage } from './components/wiedza'
+import aboutRoute from './routes/public/about'
+import contactRoute from './routes/public/contact'
+import regulaminRoute from './routes/public/regulamin'
+import privacyRoute from './routes/public/privacy'
+import cookiesPolicyRoute from './routes/public/cookies-policy'
+import redakcjaRoute from './routes/public/redakcja'
+import reklamaRoute from './routes/public/reklama'
+import karieraRoute from './routes/public/kariera'
+import dlaPrasyRoute from './routes/public/dla-prasy'
+import dostepnoscRoute from './routes/public/dostepnosc'
 import { ragStats } from './rag'
 import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory, searchArticles } from './data-articles'
 import {
@@ -37,6 +50,16 @@ app.use(renderer)
 app.route('/api/v1', apiV1)
 app.route('/api/ai', aiRouter)
 app.route('/api/rag', ragRouter)
+app.route('/', aboutRoute)
+app.route('/', contactRoute)
+app.route('/', regulaminRoute)
+app.route('/', privacyRoute)
+app.route('/', cookiesPolicyRoute)
+app.route('/', redakcjaRoute)
+app.route('/', reklamaRoute)
+app.route('/', karieraRoute)
+app.route('/', dlaPrasyRoute)
+app.route('/', dostepnoscRoute)
 
 // ============ STRONA GŁÓWNA — PEŁNA MAKIETA PORTALU (25 modułów) ============
 //
@@ -199,7 +222,7 @@ app.get('/wiadomosci/:slug', (c) => {
         <DemoStrip />
         <SuperHeader />
         <MainNav />
-        <main id="page-main" class="main-wrap"><NotFoundPage path={`/wiadomosci/${slug}`} /></main>
+        <main id="page-main" class="main-wrap"><Error404 path={`/wiadomosci/${slug}`} /></main>
         <Footer />
       </>,
       { title: '404 — izbica24.pl' }
@@ -281,6 +304,15 @@ app.get('/.well-known/security.txt', (c) => {
 })
 
 // ============ STRONA: KATEGORIA (catch-all — MUSI BYĆ OSTATNIA) ============
+app.get('/serwis', (c) => {
+  c.status(503)
+  return c.render(<><DemoStrip /><SuperHeader /><MainNav /><main id="page-main"><Error503 /></main><Footer /></>, { title: '503 — izbica24.pl' })
+})
+app.get('/blad/500', (c) => {
+  c.status(500)
+  return c.render(<><DemoStrip /><SuperHeader /><MainNav /><main id="page-main"><Error500 /></main><Footer /></>, { title: '500 — izbica24.pl' })
+})
+
 app.get('/:cat', (c) => {
   const cat = c.req.param('cat')
   // Skip routes that don't look like categories
@@ -295,7 +327,7 @@ app.get('/:cat', (c) => {
         <DemoStrip />
         <SuperHeader />
         <MainNav />
-        <main id="page-main" class="main-wrap"><NotFoundPage path={`/${cat}`} /></main>
+        <main id="page-main" class="main-wrap"><Error404 path={`/${cat}`} /></main>
         <Footer />
       </>,
       { title: '404 — izbica24.pl' }
@@ -336,15 +368,30 @@ app.get('/api/health', (c) => c.json({ ok: true, time: new Date().toISOString() 
 
 // ============ 404 ============
 app.notFound((c) => {
+  c.status(404)
   return c.render(
     <>
       <DemoStrip />
       <SuperHeader />
       <MainNav />
-      <main id="page-main" class="main-wrap"><NotFoundPage path={c.req.path} /></main>
+      <main id="page-main" class="main-wrap"><Error404 path={c.req.path} /></main>
       <Footer />
     </>,
     { title: '404 — izbica24.pl' }
+  )
+})
+
+app.onError((_, c) => {
+  c.status(500)
+  return c.render(
+    <>
+      <DemoStrip />
+      <SuperHeader />
+      <MainNav />
+      <main id="page-main"><Error500 /></main>
+      <Footer />
+    </>,
+    { title: '500 — izbica24.pl' }
   )
 })
 
