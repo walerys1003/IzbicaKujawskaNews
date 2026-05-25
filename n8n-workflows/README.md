@@ -1,0 +1,32 @@
+# n8n workflows for Izbica24
+
+- ingest-rss-pap: Pobiera RSS PAP/Gazeta.pl, filtruje Izbicę/Kujawy i wysyła draft do /api/articles
+- ingest-rss-tvp: Pobiera RSS TVP3 Bydgoszcz i tworzy drafty lokalne
+- ingest-rss-radio-pik: Monitoruje RSS Radio PiK dla słów kluczowych lokalnych
+- ingest-gov-pl-watch: Monitoruje gov.pl i BIP gminne pod kątem komunikatów
+- ingest-facebook-page: Zaciąga posty z Facebook Graph API strony urzędu
+- ingest-weather-imgw: Pobiera dane IMGW i aktualizuje kartę pogody co 30 min
+- ingest-aqi-gios: Pobiera jakość powietrza z GIOŚ
+- social-publish-fb: Publikacja artykułu do Facebooka po webhooku published
+- social-publish-twitter: Publikacja artykułu do X/Twitter po webhooku published
+- newsletter-daily-digest: Codzienny digest top 10 z Mailchimp i AI blurbem
+- push-breaking-news: Breaking news do OneSignal po webhooku
+- backup-d1-daily: Codzienny backup D1 do R2 w ZIP z timestampem
+- backup-r2-snapshot: Tworzy manifest snapshotu R2 do JSON
+- analytics-daily-report: GA4 + statystyki portalu wysyłane mailem do redakcji
+- comments-moderation: Co 5 min moderuje komentarze przez /api/ai/prompt/comments-moderator
+- seo-sitemap-refresh: Codziennie odświeża sitemap.xml do R2
+- seo-indexnow: Przy publikacji wysyła ping IndexNow do Bing/Yandex
+- seo-google-news-feed: Generuje i publikuje feed Google News
+- obituaries-import: Importuje nekrologi z PDF parafii z obserwowanego folderu
+- weather-alerts-rcb: RCB + SMS API -> push + wpis na stronę
+- road-incidents: KGP API -> karta Na sygnale dla powiatu włocławskiego
+- council-meetings-calendar: Import iCal spotkań rady do kalendarza portalu
+- budget-watch: Porównuje PDF BIP z poprzednią wersją i alarmuje redakcję
+- tender-watch: Monitoruje przetargi gminy i tworzy wpis do Samorządu
+- youtube-channel-watcher: Śledzi nowe odcinki Izbica24 TV na YouTube
+- podcast-rss-publish: Po uploadzie do R2 odświeża RSS podcastu
+- content-audit-monthly: Co miesiąc uruchamia /api/rag/find-duplicates i wysyła raport
+- dead-link-checker: Co tydzień sprawdza 404 w artykułach i raportuje
+- image-optimize-r2: Po uploadzie do R2 optymalizuje obrazy do WebP/AVIF
+- analytics-anomaly-detection: Wykrywa anomalie ruchu i wysyła alert na Slack

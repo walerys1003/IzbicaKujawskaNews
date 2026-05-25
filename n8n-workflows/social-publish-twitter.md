@@ -1,0 +1,17 @@
+# social-publish-twitter
+
+Publikacja artykułu do X/Twitter po webhooku published
+
+## Trigger
+- webhook
+
+## Import
+1. Import JSON do n8n
+2. Uzupełnij credentials i zmienne środowiskowe
+3. Zaktualizuj PORTAL_API_BASE oraz klucze integracji
+
+## Główne kroki
+- trigger wejściowy
+- normalizacja danych
+- wywołanie API portalu lub usługi zewnętrznej
+- publikacja / alert / zapis

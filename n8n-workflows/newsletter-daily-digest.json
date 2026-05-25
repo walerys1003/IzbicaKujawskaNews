@@ -1,0 +1,105 @@
+{
+  "name": "newsletter-daily-digest",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        180,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "2",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        420,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.PORTAL_API_BASE || \"https://example.com\"}}/api/v1/articles?limit=10"
+      }
+    },
+    {
+      "id": "3",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.PORTAL_API_BASE || \"https://example.com\"}}/api/ai/prompt/newsletter-blurb",
+        "sendBody": true,
+        "jsonParameters": true,
+        "bodyParametersJson": "={{ { variables: { title: \"Digest dnia\", content: JSON.stringify($json) } } }}"
+      }
+    },
+    {
+      "id": "4",
+      "name": "Mailchimp",
+      "type": "n8n-nodes-base.mailchimp",
+      "typeVersion": 1,
+      "position": [
+        920,
+        300
+      ],
+      "parameters": {
+        "resource": "campaign",
+        "operation": "create",
+        "listId": "={{$env.MAILCHIMP_LIST_ID || \"list_id\"}}",
+        "subjectLine": "Izbica24 — digest",
+        "content": "={{$json.data?.blurb || \"Nowy digest\"}}"
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Mailchimp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "active": false,
+  "versionId": "newsletter-daily-digest-v1"
+}
