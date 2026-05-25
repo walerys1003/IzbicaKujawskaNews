@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "izbica24-portal",
+  "compatibility_date": "2025-01-01",
+  "pages_build_output_dir": "./dist",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "APP_ENV": "production",
+    "SITE_URL": "https://izbica24.pl"
+  },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "izbica24-prod", "database_id": "replace-prod-d1-id" }
+  ],
+  "kv_namespaces": [
+    { "binding": "WEATHER_KV", "id": "replace-prod-weather-kv" },
+    { "binding": "FUEL_KV", "id": "replace-prod-fuel-kv" },
+    { "binding": "AIR_KV", "id": "replace-prod-air-kv" }
+  ]
+}

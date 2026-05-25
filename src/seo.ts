@@ -1,5 +1,6 @@
 // SANDBOX C — task C14-C24: SEO module — sitemap, RSS, robots, OG meta, JSON-LD
 import { ARTICLES, CATEGORIES_MAP } from './data-articles'
+import { parseFlexibleDate } from './lib/dates'
 
 const SITE_URL = 'https://izbica24.pl'
 const SITE_NAME = 'izbica24.pl'
@@ -200,8 +201,8 @@ export const buildArticleJsonLd = (a: typeof ARTICLES[number]) => ({
   headline: a.title,
   description: a.lede,
   image: a.heroImage,
-  datePublished: new Date(a.publishedAt).toISOString(),
-  dateModified: a.updatedAt ? new Date(a.updatedAt).toISOString() : undefined,
+  datePublished: parseFlexibleDate(a.publishedAt).toISOString(),
+  dateModified: a.updatedAt ? parseFlexibleDate(a.updatedAt).toISOString() : undefined,
   author: { '@type': 'Person', name: a.author },
   publisher: {
     '@type': 'NewsMediaOrganization',
@@ -241,4 +242,15 @@ function escapeXml(s: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;')
+}
+
+export const buildCanonicalUrl = (path: string): string => {
+  const url = new URL(path, SITE_URL)
+  const normalizedPath = url.pathname === '' ? '/' : url.pathname.replace(/\/+/g, '/')
+  return normalizedPath === '/' ? `${SITE_URL}/` : `${SITE_URL}${normalizedPath.replace(/\/$/, '')}`
+}
+
+export const generateArticleSitemapEntries = (): string[] => {
+  const today = new Date().toISOString().slice(0, 10)
+  return ARTICLES.map((a) => `<url><loc>${buildCanonicalUrl(`/wiadomosci/${a.slug}`)}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`)
 }

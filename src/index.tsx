@@ -17,9 +17,22 @@ import {
 import { HomeV3 } from './components/home-v3'
 import { ArticlePage } from './components/article'
 import { CategoryPage } from './components/category'
-import { SearchPage, NotFoundPage } from './components/search'
+import { SearchPage } from './components/search'
+import { Error404 } from './components/error/Error404'
+import { Error500 } from './components/error/Error500'
+import { Error503 } from './components/error/Error503'
 import { PlanPage } from './components/plan'
 import { WiedzaPage } from './components/wiedza'
+import aboutRoute from './routes/public/about'
+import contactRoute from './routes/public/contact'
+import regulaminRoute from './routes/public/regulamin'
+import privacyRoute from './routes/public/privacy'
+import cookiesPolicyRoute from './routes/public/cookies-policy'
+import redakcjaRoute from './routes/public/redakcja'
+import reklamaRoute from './routes/public/reklama'
+import karieraRoute from './routes/public/kariera'
+import dlaPrasyRoute from './routes/public/dla-prasy'
+import dostepnoscRoute from './routes/public/dostepnosc'
 import { ragStats } from './rag'
 import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory, searchArticles } from './data-articles'
 import {
@@ -29,15 +42,56 @@ import {
 import apiV1 from './api/v1'
 import adminRoutes from './routes/admin'
 import aiNewsroomRoutes from './routes/ai-newsroom'
+// Sandbox 9: monitoring + observability
+import healthRoutes from './routes/v1/health'
+import metricsRoutes from './routes/v1/metrics'
+import versionRoutes from './routes/v1/version'
+import adminLogsRoutes from './routes/admin/logs'
+import adminErrorsRoutes from './routes/admin/errors'
+import adminSlowQueriesRoutes from './routes/admin/slow-queries'
+import adminBackupListRoutes from './routes/admin/backup-list'
+import adminBackupCreateRoutes from './routes/admin/backup-create'
+import adminBackupRestoreRoutes from './routes/admin/backup-restore'
+import adminBackupDownloadRoutes from './routes/admin/backup-download'
+import adminBackupVerifyRoutes from './routes/admin/backup-verify'
+import { requestIdMiddleware } from './middleware/request-id'
+import { requestLoggerMiddleware } from './middleware/request-logger'
+import { errorHandler as monitoringErrorHandler } from './middleware/error-handler'
 
 const app = new Hono<AppEnv>()
 
+app.onError(errorHandler)
+app.use('*', requestIdMiddleware)
+app.use('*', requestLoggerMiddleware)
 app.use(renderer)
 
 // ============ API v1 — sub-app mounted at /api/v1 ============
 app.route('/api/v1', apiV1)
 app.route('/api/ai', aiRouter)
 app.route('/api/rag', ragRouter)
+// Public pages (HEAD)
+app.route('/', aboutRoute)
+app.route('/', contactRoute)
+app.route('/', regulaminRoute)
+app.route('/', privacyRoute)
+app.route('/', cookiesPolicyRoute)
+app.route('/', redakcjaRoute)
+app.route('/', reklamaRoute)
+app.route('/', karieraRoute)
+app.route('/', dlaPrasyRoute)
+app.route('/', dostepnoscRoute)
+// Sandbox 9: monitoring + admin observability routes
+app.route('/', healthRoutes)
+app.route('/', metricsRoutes)
+app.route('/', versionRoutes)
+app.route('/admin', adminLogsRoutes)
+app.route('/admin', adminErrorsRoutes)
+app.route('/admin', adminSlowQueriesRoutes)
+app.route('/admin', adminBackupListRoutes)
+app.route('/admin', adminBackupCreateRoutes)
+app.route('/admin', adminBackupRestoreRoutes)
+app.route('/admin', adminBackupDownloadRoutes)
+app.route('/admin', adminBackupVerifyRoutes)
 
 // ============ STRONA GŁÓWNA — PEŁNA MAKIETA PORTALU (25 modułów) ============
 //
@@ -200,7 +254,7 @@ app.get('/wiadomosci/:slug', (c) => {
         <DemoStrip />
         <SuperHeader />
         <MainNav />
-        <main id="page-main" class="main-wrap"><NotFoundPage path={`/wiadomosci/${slug}`} /></main>
+        <main id="page-main" class="main-wrap"><Error404 path={`/wiadomosci/${slug}`} /></main>
         <Footer />
       </>,
       { title: '404 — izbica24.pl' }
@@ -282,6 +336,15 @@ app.get('/.well-known/security.txt', (c) => {
 })
 
 // ============ STRONA: KATEGORIA (catch-all — MUSI BYĆ OSTATNIA) ============
+app.get('/serwis', (c) => {
+  c.status(503)
+  return c.render(<><DemoStrip /><SuperHeader /><MainNav /><main id="page-main"><Error503 /></main><Footer /></>, { title: '503 — izbica24.pl' })
+})
+app.get('/blad/500', (c) => {
+  c.status(500)
+  return c.render(<><DemoStrip /><SuperHeader /><MainNav /><main id="page-main"><Error500 /></main><Footer /></>, { title: '500 — izbica24.pl' })
+})
+
 app.get('/:cat', (c) => {
   const cat = c.req.param('cat')
   // Skip routes that don't look like categories
@@ -296,7 +359,7 @@ app.get('/:cat', (c) => {
         <DemoStrip />
         <SuperHeader />
         <MainNav />
-        <main id="page-main" class="main-wrap"><NotFoundPage path={`/${cat}`} /></main>
+        <main id="page-main" class="main-wrap"><Error404 path={`/${cat}`} /></main>
         <Footer />
       </>,
       { title: '404 — izbica24.pl' }
@@ -337,12 +400,13 @@ app.get('/api/health', (c) => c.json({ ok: true, time: new Date().toISOString() 
 
 // ============ 404 ============
 app.notFound((c) => {
+  c.status(404)
   return c.render(
     <>
       <DemoStrip />
       <SuperHeader />
       <MainNav />
-      <main id="page-main" class="main-wrap"><NotFoundPage path={c.req.path} /></main>
+      <main id="page-main" class="main-wrap"><Error404 path={c.req.path} /></main>
       <Footer />
     </>,
     { title: '404 — izbica24.pl' }
@@ -350,7 +414,21 @@ app.notFound((c) => {
 })
 
 app.route('/admin', adminRoutes)
-
 app.route('/api/newsroom', aiNewsroomRoutes)
+
+// Sandbox 10: 500 error handler
+app.onError((_, c) => {
+  c.status(500)
+  return c.render(
+    <>
+      <DemoStrip />
+      <SuperHeader />
+      <MainNav />
+      <main id="page-main"><Error500 /></main>
+      <Footer />
+    </>,
+    { title: '500 — izbica24.pl' }
+  )
+})
 
 export default app

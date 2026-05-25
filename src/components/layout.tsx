@@ -100,11 +100,11 @@ export const Footer = () => (
       </div>
       <div class="footer-col footer-info">
         <h4>Informacje</h4>
-        <a href="/o-portalu">O portalu</a>
+        <a href="/o-nas">O nas</a>
         <a href="/redakcja">Redakcja</a>
         <a href="/kontakt">Kontakt</a>
         <a href="/reklama">Reklama</a>
-        <a href="/dolacz">Dołącz do nas</a>
+        <a href="/kariera">Dołącz do nas</a>
         <a href="/mapa">Mapa gminy</a>
         <a href="/telefony">Ważne telefony</a>
         <a href="/linki">Linki</a>
@@ -124,7 +124,8 @@ export const Footer = () => (
         <div>
           <a href="/regulamin">Regulamin</a> ·{' '}
           <a href="/polityka-prywatnosci">Polityka prywatności</a> ·{' '}
-          <a href="/rodo">RODO</a>
+          <a href="/cookies">Cookies</a> ·{' '}
+          <a href="/deklaracja-dostepnosci">Dostępność</a>
         </div>
         <div class="footer-ai-note">
           Portal używa AI do tworzenia części treści — wszystkie materiały weryfikowane przez redakcję

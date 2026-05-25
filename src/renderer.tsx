@@ -48,6 +48,8 @@ export const renderer = jsxRenderer(({ children, title }) => {
         {children}
         <script src="/static/app.js" defer></script>
         <script src="/static/v3-app.js" defer></script>
+        <script src="/static/push-client.js" defer></script>
+        <script src="/static/search.js" defer></script>
         <script src="/static/js/search-autocomplete.js" defer></script>
         <script src="/static/js/infinite-scroll.js" defer></script>
         <script src="/static/js/lazy-img.js" defer></script>

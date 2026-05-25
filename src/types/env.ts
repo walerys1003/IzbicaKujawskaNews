@@ -97,6 +97,7 @@ export interface Bindings {
   // AI secrets (Sandbox 5)
   OPENAI_API_KEY?: string
   ANTHROPIC_API_KEY?: string
+  VAPID_PUBLIC_KEY?: string
 
   // Generic KV (Sandbox 3)
   APP_KV?: KVNamespaceLike

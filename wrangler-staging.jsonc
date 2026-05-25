@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "izbica24-portal-staging",
+  "compatibility_date": "2025-01-01",
+  "pages_build_output_dir": "./dist",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "APP_ENV": "staging",
+    "SITE_URL": "https://staging.izbica24.pl"
+  },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "izbica24-staging", "database_id": "replace-staging-d1-id" }
+  ],
+  "kv_namespaces": [
+    { "binding": "WEATHER_KV", "id": "replace-staging-weather-kv" },
+    { "binding": "FUEL_KV", "id": "replace-staging-fuel-kv" },
+    { "binding": "AIR_KV", "id": "replace-staging-air-kv" }
+  ]
+}
