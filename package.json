@@ -29,6 +29,6 @@
     "@vitest/coverage-v8": "^4.1.7",
     "vite": "^6.3.5",
     "vitest": "^4.1.7",
-    "wrangler": "^4.4.0"
+    "wrangler": "^4.94.0"
   }
 }
