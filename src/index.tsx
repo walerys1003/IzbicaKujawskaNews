@@ -42,6 +42,18 @@ import {
 import apiV1 from './api/v1'
 import { responsePerformanceMiddleware } from './lib/performance'
 import type { AppEnv } from './types/env'
+// Sandbox 9: monitoring + observability routes
+import healthRoutes from './routes/v1/health'
+import metricsRoutes from './routes/v1/metrics'
+import versionRoutes from './routes/v1/version'
+import adminLogsRoutes from './routes/admin/logs'
+import adminErrorsRoutes from './routes/admin/errors'
+import adminSlowQueriesRoutes from './routes/admin/slow-queries'
+import adminBackupListRoutes from './routes/admin/backup-list'
+import adminBackupCreateRoutes from './routes/admin/backup-create'
+import adminBackupRestoreRoutes from './routes/admin/backup-restore'
+import adminBackupDownloadRoutes from './routes/admin/backup-download'
+import adminBackupVerifyRoutes from './routes/admin/backup-verify'
 
 const app = new Hono<AppEnv>()
 
