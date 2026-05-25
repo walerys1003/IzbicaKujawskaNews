@@ -6,7 +6,10 @@
     "build": "vite build",
     "preview": "wrangler pages dev",
     "deploy": "npm run build && wrangler pages deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "test": "vitest run --coverage && playwright test",
+    "test:unit": "vitest run --coverage",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "hono": "^4.12.23"
@@ -14,7 +17,10 @@
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
     "@hono/vite-dev-server": "^0.25.2",
+    "@playwright/test": "^1.60.0",
+    "@vitest/coverage-v8": "^4.1.7",
     "vite": "^6.3.5",
+    "vitest": "^4.1.7",
     "wrangler": "^4.4.0"
   }
 }

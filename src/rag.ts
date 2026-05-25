@@ -3,5 +3,5 @@
 // =========================================================================
 // Stats jest mały (1 KB) — możemy zaimportować go statycznie.
 
-import statsData from './rag-stats.json'
+import statsData from './rag-stats.json' with { type: 'json' }
 export const ragStats = statsData as any
