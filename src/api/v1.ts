@@ -20,6 +20,24 @@ import socialFacebookRoute from '../routes/auth/social-facebook'
 import apiKeysRoute from '../routes/auth/api-keys'
 import sessionsRoute from '../routes/auth/sessions'
 
+import mediaUploadRoute from '../routes/v1/media-upload'
+import mediaListRoute from '../routes/v1/media-list'
+import mediaDeleteRoute from '../routes/v1/media-delete'
+import mediaTagRoute from '../routes/v1/media-tag'
+import mediaSearchRoute from '../routes/v1/media-search'
+import mediaBulkRoute from '../routes/v1/media-bulk'
+import videoUploadRoute from '../routes/v1/video-upload'
+import videoListRoute from '../routes/v1/video-list'
+import videoDetailRoute from '../routes/v1/video-detail'
+import audioUploadRoute from '../routes/v1/audio-upload'
+import podcastFeedRoute from '../routes/v1/podcast-feed'
+import multimediaRecentRoute from '../routes/v1/multimedia-recent'
+import galleriesPublicRoute from '../routes/v1/galleries-public'
+import galleryCreateRoute from '../routes/v1/gallery-create'
+import galleryAddImageRoute from '../routes/v1/gallery-add-image'
+import galleryReorderRoute from '../routes/v1/gallery-reorder'
+import galleryPublishRoute from '../routes/v1/gallery-publish'
+
 const api = new Hono<AppEnv>()
 
 api.route('/auth', registerRoute)
@@ -38,6 +56,24 @@ api.route('/auth', socialGoogleRoute)
 api.route('/auth', socialFacebookRoute)
 api.route('/auth', apiKeysRoute)
 api.route('/auth', sessionsRoute)
+
+api.route('/media/upload', mediaUploadRoute)
+api.route('/media/list', mediaListRoute)
+api.route('/media/delete', mediaDeleteRoute)
+api.route('/media/tag', mediaTagRoute)
+api.route('/media/search', mediaSearchRoute)
+api.route('/media/bulk', mediaBulkRoute)
+api.route('/videos/upload', videoUploadRoute)
+api.route('/videos/list', videoListRoute)
+api.route('/videos/detail', videoDetailRoute)
+api.route('/audio/upload', audioUploadRoute)
+api.route('/podcast', podcastFeedRoute)
+api.route('/multimedia/recent', multimediaRecentRoute)
+api.route('/galleries', galleriesPublicRoute)
+api.route('/galleries/create', galleryCreateRoute)
+api.route('/galleries/add-image', galleryAddImageRoute)
+api.route('/galleries/reorder', galleryReorderRoute)
+api.route('/galleries/publish', galleryPublishRoute)
 
 // ============ B7: HEALTH ============
 api.get('/health', (c) =>
