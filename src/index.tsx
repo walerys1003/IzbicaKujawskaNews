@@ -27,7 +27,8 @@ import {
   generateManifest, generateHumansTxt, generateSecurityTxt,
 } from './seo'
 import apiV1 from './api/v1'
-import type { AppEnv } from './types/env'
+import adminRoutes from './routes/admin'
+import aiNewsroomRoutes from './routes/ai-newsroom'
 
 const app = new Hono<AppEnv>()
 
@@ -347,5 +348,9 @@ app.notFound((c) => {
     { title: '404 — izbica24.pl' }
   )
 })
+
+app.route('/admin', adminRoutes)
+
+app.route('/api/newsroom', aiNewsroomRoutes)
 
 export default app
