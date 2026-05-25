@@ -48,6 +48,21 @@ export const renderer = jsxRenderer(({ children, title }) => {
         {children}
         <script src="/static/app.js" defer></script>
         <script src="/static/v3-app.js" defer></script>
+        <script src="/static/js/search-autocomplete.js" defer></script>
+        <script src="/static/js/infinite-scroll.js" defer></script>
+        <script src="/static/js/lazy-img.js" defer></script>
+        <script src="/static/js/dark-mode-toggle.js" defer></script>
+        <script src="/static/js/share-buttons.js" defer></script>
+        <script src="/static/js/comments-widget.js" defer></script>
+        <script src="/static/js/video-player.js" defer></script>
+        <script src="/static/js/cookie-consent.js" defer></script>
+        <script src="/static/js/newsletter-form.js" defer></script>
+        <script src="/static/js/mobile-menu.js" defer></script>
+        <script src="/static/js/read-progress.js" defer></script>
+        <script src="/static/js/text-to-speech.js" defer></script>
+        <script src="/static/js/font-size-control.js" defer></script>
+        <script src="/static/js/print-article.js" defer></script>
+        <script src="/static/js/scroll-top.js" defer></script>
       </body>
     </html>
   )

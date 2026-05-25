@@ -242,6 +242,33 @@ api.post('/articles/:slug/comments', async (c) => {
   }
 })
 
+// ============ B20b: COMMENT SUBMIT (alias endpoint /comments) ============
+api.post('/comments', async (c) => {
+  try {
+    const body = await c.req.json<{ articleSlug?: string; name?: string; email?: string; text?: string; consent?: boolean }>()
+    if (!body.articleSlug) return c.json({ error: 'missing_fields', required: ['articleSlug'] }, 400)
+    const article = findArticle(body.articleSlug)
+    if (!article) return c.json({ error: 'article_not_found' }, 404)
+    if (!body.name || !body.text || !body.email) {
+      return c.json({ error: 'missing_fields', required: ['name', 'email', 'text'] }, 400)
+    }
+    if (body.text.length < 10 || body.text.length > 2000) {
+      return c.json({ error: 'text_length', detail: 'Komentarz: 10–2000 znaków.' }, 400)
+    }
+    if (body.consent !== true) {
+      return c.json({ error: 'consent_required' }, 400)
+    }
+    return c.json({
+      ok: true,
+      commentId: `c_${Date.now()}`,
+      status: 'pending_moderation',
+      timestamp: new Date().toISOString(),
+    })
+  } catch {
+    return c.json({ error: 'bad_request' }, 400)
+  }
+})
+
 // ============ B21: SHARE COUNT ============
 api.post('/articles/:slug/share', async (c) => {
   const slug = c.req.param('slug')
