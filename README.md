@@ -2,6 +2,20 @@
 
 **Działający prototyp** kompletnego portalu informacyjnego z silnikiem AI-newsroom + baza wiedzy projektu (RAG).
 
+## 📦 Artefakty backend N1-N6 (v1.0.0, 2026-05-25)
+
+| Pakiet | Rozmiar | Zawartość | Pobierz |
+|--------|---------|-----------|---------|
+| `izbica24-newsroom-1.0.0.zip` | 68 KB | WordPress plugin (28 plików PHP) — CPT, REST `/incoming`, Token/Rate/Dedup, Queue admin, PublishPress bridge, Prompts CPT z 12 polskimi promptami, Cost Guard, Telegram bot, Monthly PDF, WP-CLI | [⬇](public/downloads/izbica24-newsroom-1.0.0.zip) |
+| `izbica24-n8n-stack-1.0.0.tar.gz` | 23 KB | n8n stack na osobny VPS (Hetzner CX22) — docker-compose (n8n + 2 workery + Postgres 16 + Redis 7 + Caddy), 17 workflowów JSON, scripts (setup/backup/restore/update/cron), migracje SQL | [⬇](public/downloads/izbica24-n8n-stack-1.0.0.tar.gz) |
+
+**Status wszystkich 6 sesji: ✓ ZIELONE** — szczegóły na stronie `/plan`.
+
+**Jakość kodu:**
+- PHP lint: **0 błędów** w 28 plikach (sprawdzone przez `php -l` na PHP 8.4)
+- JSON validation: **17/17 workflowów** OK
+- Reuters-tier visual: monochrome design + #fa6400 accent + Inter/Source Serif 4
+
 ## 🌐 URL serwisu (sandbox)
 
 - **Główna (makieta portalu)**: https://3000-ilphadxwtch7dg25penfb-ecea8f22.sandbox.novita.ai/

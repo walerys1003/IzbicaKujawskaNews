@@ -37,9 +37,33 @@ export const PlanPage = () => (
       <h2 style="color: white;">Faza 1 — Backend Newsroom (sesje N1-N6, 6-8 tyg.)</h2>
     </div>
 
+    <div style="border: 1px solid #10b981; background: #f0fdf6; padding: 16px 20px; margin: 0 0 24px 0;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+        <strong style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #10b981;">● Wdrożone i gotowe do pobrania</strong>
+        <span style="font-size: 11px; color: #666;">v1.0.0 · {new Date().toISOString().slice(0,10)}</span>
+      </div>
+      <p style="margin: 0 0 12px 0; font-size: 13px;">
+        Wszystkie 6 sesji backendowych N1-N6 zostały zaimplementowane: 28 plików PHP (WordPress plugin), docker-compose stack n8n na osobnym VPS oraz 17 workflowów JSON gotowych do importu. PHP lint: <strong>0 błędów</strong>. JSON validation: <strong>17/17 OK</strong>.
+      </p>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <a href="/downloads/izbica24-newsroom-1.0.0.zip"
+           style="display: inline-block; padding: 8px 14px; background: #1a1a1a; color: #fff; text-decoration: none; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid #1a1a1a;">
+          ⬇ izbica24-newsroom-1.0.0.zip <span style="opacity:0.6;">(68 KB)</span>
+        </a>
+        <a href="/downloads/izbica24-n8n-stack-1.0.0.tar.gz"
+           style="display: inline-block; padding: 8px 14px; background: #fa6400; color: #fff; text-decoration: none; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid #fa6400;">
+          ⬇ izbica24-n8n-stack-1.0.0.tar.gz <span style="opacity:0.7;">(23 KB)</span>
+        </a>
+        <a href="/wiedza"
+           style="display: inline-block; padding: 8px 14px; background: #fff; color: #1a1a1a; text-decoration: none; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid #1a1a1a;">
+          📚 Dokumentacja N1-N6
+        </a>
+      </div>
+    </div>
+
     <div class="session-card">
       <div class="head">
-        <div class="session-num">N1</div>
+        <div class="session-num" style="background: #10b981 !important;">N1 ✓</div>
         <div class="session-meta">
           <h3>Wtyczka izbica24-newsroom: szkielet, CPT, taksonomie, REST endpoint</h3>
           <div class="when">⏱ 1 dzień pracy · komponent fundamentalny</div>
@@ -59,7 +83,7 @@ export const PlanPage = () => (
 
     <div class="session-card">
       <div class="head">
-        <div class="session-num">N2</div>
+        <div class="session-num" style="background: #10b981 !important;">N2 ✓</div>
         <div class="session-meta">
           <h3>Admin „Newsroom Queue" + Dashboard Widget</h3>
           <div class="when">⏱ 1 dzień pracy · UX redakcji</div>
@@ -78,7 +102,7 @@ export const PlanPage = () => (
 
     <div class="session-card">
       <div class="head">
-        <div class="session-num">N3</div>
+        <div class="session-num" style="background: #10b981 !important;">N3 ✓</div>
         <div class="session-meta">
           <h3>Integracja z PublishPress — automatyczne kierowanie draftów</h3>
           <div class="when">⏱ 1 dzień pracy · workflow redakcyjny</div>
@@ -96,7 +120,7 @@ export const PlanPage = () => (
 
     <div class="session-card">
       <div class="head">
-        <div class="session-num">N4</div>
+        <div class="session-num" style="background: #10b981 !important;">N4 ✓</div>
         <div class="session-meta">
           <h3>Szablony promptów Claude jako CPT iz24_prompt_template</h3>
           <div class="when">⏱ 1 dzień pracy · edytowalne AI bez deploya</div>
@@ -116,7 +140,7 @@ export const PlanPage = () => (
 
     <div class="session-card">
       <div class="head">
-        <div class="session-num">N5</div>
+        <div class="session-num" style="background: #10b981 !important;">N5 ✓</div>
         <div class="session-meta">
           <h3>Instalacja n8n na drugim VPS + import 17 workflowów end-to-end</h3>
           <div class="when">⏱ 2 dni pracy · największa sesja techniczna</div>
@@ -138,7 +162,7 @@ export const PlanPage = () => (
 
     <div class="session-card">
       <div class="head">
-        <div class="session-num">N6</div>
+        <div class="session-num" style="background: #10b981 !important;">N6 ✓</div>
         <div class="session-meta">
           <h3>Monitoring: Cost Guard, Telegram alerts, dashboards, raporty</h3>
           <div class="when">⏱ 1 dzień pracy · must-have przed produkcją</div>

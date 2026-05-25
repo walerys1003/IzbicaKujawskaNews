@@ -1,0 +1,160 @@
+###############################################################################
+# izbica24 Newsroom — n8n Stack (Hetzner CX22 / 4 vCPU / 4 GB RAM / 40 GB SSD)
+#
+# Komponenty:
+#   • n8n (main)               — webhook + UI na :5678 (proxowane przez Caddy)
+#   • n8n-worker x2            — kolejka Redis (Bull) — równoległe wykonywanie
+#   • postgres 16              — baza n8n + cache scrapowania
+#   • redis 7                  — kolejka + rate limit
+#   • caddy                    — automatic HTTPS (Let's Encrypt) + reverse proxy
+#
+# Uruchomienie:
+#   cp .env.example .env  &&  edytuj sekrety
+#   docker compose up -d
+#   docker compose logs -f n8n
+#
+# Backup: ./scripts/backup.sh
+###############################################################################
+
+x-n8n-common: &n8n_common
+  image: n8nio/n8n:1.74.0
+  restart: unless-stopped
+  environment:
+    # === Database
+    DB_TYPE: postgresdb
+    DB_POSTGRESDB_HOST: postgres
+    DB_POSTGRESDB_PORT: 5432
+    DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+    DB_POSTGRESDB_USER: ${POSTGRES_USER}
+    DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+
+    # === Queue mode (Bull / Redis)
+    EXECUTIONS_MODE: queue
+    QUEUE_BULL_REDIS_HOST: redis
+    QUEUE_BULL_REDIS_PORT: 6379
+    QUEUE_BULL_REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+    # === Encryption
+    N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+
+    # === Logging
+    N8N_LOG_LEVEL: info
+    N8N_LOG_OUTPUT: console
+    N8N_METRICS: 'true'
+
+    # === Performance
+    NODE_OPTIONS: --max-old-space-size=1536
+    EXECUTIONS_TIMEOUT: 300
+    EXECUTIONS_TIMEOUT_MAX: 600
+    EXECUTIONS_DATA_PRUNE: 'true'
+    EXECUTIONS_DATA_MAX_AGE: 168          # 7 dni
+    EXECUTIONS_DATA_PRUNE_MAX_COUNT: 5000
+
+    # === Webhook & user auth
+    N8N_HOST: ${N8N_HOST}
+    N8N_PROTOCOL: https
+    WEBHOOK_URL: https://${N8N_HOST}/
+    N8N_EDITOR_BASE_URL: https://${N8N_HOST}/
+    N8N_RUNNERS_ENABLED: 'true'
+    GENERIC_TIMEZONE: Europe/Warsaw
+    TZ: Europe/Warsaw
+
+    # === Telemetry off
+    N8N_DIAGNOSTICS_ENABLED: 'false'
+    N8N_VERSION_NOTIFICATIONS_ENABLED: 'false'
+    N8N_HIRING_BANNER_ENABLED: 'false'
+    N8N_PERSONALIZATION_ENABLED: 'false'
+
+    # === Custom env do workflowów
+    IZBICA24_BASE_URL: ${IZBICA24_BASE_URL}
+    IZBICA24_API_TOKEN: ${IZBICA24_API_TOKEN}
+    ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+  volumes:
+    - n8n_data:/home/node/.n8n
+    - ./workflows:/home/node/workflows:ro
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  # ============================================================ POSTGRES
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: Europe/Warsaw
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================ REDIS
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================ N8N MAIN
+  n8n:
+    <<: *n8n_common
+    container_name: n8n_main
+    ports:
+      - "127.0.0.1:5678:5678"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ============================================================ N8N WORKERS (2)
+  n8n-worker-1:
+    <<: *n8n_common
+    container_name: n8n_worker_1
+    command: worker --concurrency=10
+
+  n8n-worker-2:
+    <<: *n8n_common
+    container_name: n8n_worker_2
+    command: worker --concurrency=10
+
+  # ============================================================ CADDY (HTTPS reverse proxy)
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      N8N_HOST: ${N8N_HOST}
+      ACME_EMAIL: ${ACME_EMAIL}
+    depends_on:
+      - n8n
+
+volumes:
+  n8n_data:
+  postgres_data:
+  redis_data:
+  caddy_data:
+  caddy_config:

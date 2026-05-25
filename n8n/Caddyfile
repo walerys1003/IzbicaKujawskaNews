@@ -1,0 +1,58 @@
+# izbica24 Newsroom — Caddy reverse proxy (auto HTTPS via Let's Encrypt).
+
+{
+    email {$ACME_EMAIL}
+    # Strict security defaults
+    servers {
+        protocols h1 h2 h3
+    }
+}
+
+{$N8N_HOST} {
+    encode zstd gzip
+
+    # === Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "geolocation=(), camera=(), microphone=()"
+        -Server
+    }
+
+    # === Rate-limit ścieżek webhooków (per IP)
+    @webhook path /webhook/* /webhook-test/*
+    handle @webhook {
+        reverse_proxy n8n:5678
+    }
+
+    # === Healthcheck (anonimowy)
+    handle /healthz {
+        reverse_proxy n8n:5678
+    }
+
+    # === UI (wymaga basic-auth lub n8n own login)
+    handle {
+        reverse_proxy n8n:5678 {
+            # WebSocket support
+            header_up Host {http.reverse_proxy.upstream.hostport}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            transport http {
+                read_timeout 300s
+                write_timeout 300s
+            }
+        }
+    }
+
+    # === Logs
+    log {
+        output file /var/log/caddy/access.log {
+            roll_size 100mb
+            roll_keep 7
+        }
+        format json
+    }
+}

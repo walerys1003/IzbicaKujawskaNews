@@ -1,0 +1,298 @@
+/**
+ * izbica24 Newsroom — Admin styles (Reuters-tier).
+ * Monochrome + #fa6400 accent. Hairlines, no shadows, tabular numerals.
+ */
+
+/* === Vars === */
+:root {
+  --iz-paper:   #ffffff;
+  --iz-ink:     #1a1a1a;
+  --iz-mute:    #666666;
+  --iz-rule:    #e5e5e5;
+  --iz-rule-soft: #f0f0f0;
+  --iz-accent:  #fa6400;
+  --iz-warn:    #f59e0b;
+  --iz-ok:      #10b981;
+  --iz-danger:  #dc2626;
+  --iz-info:    #3b82f6;
+}
+
+/* === Top-level === */
+.iz24-wrap {
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  color: var(--iz-ink);
+  max-width: 1400px;
+}
+.iz24-wrap h1,
+.iz24-wrap h2,
+.iz24-wrap h3 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.iz24-wrap h1 {
+  font-size: 22px;
+  border-bottom: 1px solid var(--iz-rule);
+  padding-bottom: 10px;
+  margin-bottom: 18px;
+}
+.iz24-wrap h2 {
+  font-size: 16px;
+  margin-top: 24px;
+  margin-bottom: 10px;
+}
+
+/* === Eyebrow labels === */
+.iz24-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--iz-mute);
+  margin-bottom: 4px;
+}
+
+/* === KPI cards === */
+.iz24-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0;
+  border: 1px solid var(--iz-rule);
+  margin-bottom: 24px;
+}
+.iz24-kpi {
+  padding: 16px 18px;
+  border-right: 1px solid var(--iz-rule);
+  background: var(--iz-paper);
+}
+.iz24-kpi:last-child { border-right: 0; }
+.iz24-kpi .label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--iz-mute);
+  margin-bottom: 6px;
+}
+.iz24-kpi .value {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.iz24-kpi .delta {
+  font-size: 11px;
+  margin-top: 4px;
+  color: var(--iz-mute);
+  font-variant-numeric: tabular-nums;
+}
+.iz24-kpi .delta.up { color: var(--iz-ok); }
+.iz24-kpi .delta.down { color: var(--iz-danger); }
+
+/* === Progress bars === */
+.iz24-progress {
+  position: relative;
+  height: 6px;
+  background: var(--iz-rule-soft);
+  margin-top: 6px;
+  overflow: hidden;
+}
+.iz24-progress .bar {
+  height: 100%;
+  background: var(--iz-accent);
+  transition: width 0.3s ease;
+}
+.iz24-progress.warn .bar { background: var(--iz-warn); }
+.iz24-progress.danger .bar { background: var(--iz-danger); }
+
+/* === Tables === */
+.iz24-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--iz-paper);
+  border-top: 1px solid var(--iz-rule);
+}
+.iz24-table th,
+.iz24-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--iz-rule);
+  font-size: 12px;
+}
+.iz24-table th {
+  background: var(--iz-rule-soft);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--iz-mute);
+  font-weight: 700;
+}
+.iz24-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.iz24-table tr:hover td { background: #fafafa; }
+
+/* === Status badges === */
+.iz24-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--iz-rule);
+  background: var(--iz-paper);
+  color: var(--iz-ink);
+  line-height: 1.4;
+}
+.iz24-badge.new        { color: var(--iz-info);   border-color: var(--iz-info); }
+.iz24-badge.queued     { color: var(--iz-mute); }
+.iz24-badge.in_review  { color: var(--iz-warn);   border-color: var(--iz-warn); }
+.iz24-badge.rejected   { color: var(--iz-danger); border-color: var(--iz-danger); }
+.iz24-badge.promoted   { color: var(--iz-ok);     border-color: var(--iz-ok); }
+.iz24-badge.duplicate  { color: var(--iz-mute);   background: var(--iz-rule-soft); }
+.iz24-badge.accent     { color: var(--iz-accent); border-color: var(--iz-accent); }
+
+/* === Side panel (queue JSON viewer) === */
+.iz24-side-panel {
+  position: fixed;
+  top: 32px;
+  right: 0;
+  bottom: 0;
+  width: 480px;
+  background: var(--iz-paper);
+  border-left: 1px solid var(--iz-rule);
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 9999;
+  transform: translateX(100%);
+  transition: transform 0.2s ease;
+}
+.iz24-side-panel.open { transform: translateX(0); }
+.iz24-side-panel .close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--iz-mute);
+  background: none;
+  border: 0;
+}
+.iz24-side-panel pre {
+  background: #fafafa;
+  border: 1px solid var(--iz-rule);
+  padding: 12px;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, "Cascadia Code", Menlo, monospace;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* === Forms === */
+.iz24-form table { width: 100%; max-width: 760px; }
+.iz24-form table th { width: 200px; vertical-align: top; padding-top: 10px; }
+.iz24-form input[type=text],
+.iz24-form input[type=number],
+.iz24-form input[type=email],
+.iz24-form input[type=password],
+.iz24-form select,
+.iz24-form textarea {
+  border: 1px solid var(--iz-rule);
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  width: 100%;
+  max-width: 480px;
+}
+.iz24-form .description {
+  color: var(--iz-mute);
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+/* === Buttons === */
+.iz24-btn {
+  display: inline-block;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--iz-ink);
+  color: var(--iz-paper);
+  border: 1px solid var(--iz-ink);
+  cursor: pointer;
+  text-decoration: none;
+}
+.iz24-btn:hover { background: var(--iz-accent); border-color: var(--iz-accent); color: var(--iz-paper); }
+.iz24-btn.secondary {
+  background: var(--iz-paper);
+  color: var(--iz-ink);
+}
+.iz24-btn.secondary:hover { background: var(--iz-ink); color: var(--iz-paper); }
+.iz24-btn.danger { background: var(--iz-danger); border-color: var(--iz-danger); }
+.iz24-btn.accent { background: var(--iz-accent); border-color: var(--iz-accent); }
+
+/* === Notice strip === */
+.iz24-notice {
+  padding: 10px 14px;
+  border-left: 3px solid var(--iz-accent);
+  background: #fffaf3;
+  margin: 0 0 16px;
+  font-size: 13px;
+}
+.iz24-notice.info    { border-color: var(--iz-info);   background: #f0f7ff; }
+.iz24-notice.ok      { border-color: var(--iz-ok);     background: #f0fdf6; }
+.iz24-notice.warn    { border-color: var(--iz-warn);   background: #fff9eb; }
+.iz24-notice.danger  { border-color: var(--iz-danger); background: #fef2f2; }
+
+/* === Code / token boxes === */
+.iz24-token-box {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: #1a1a1a;
+  color: #fa6400;
+  padding: 14px 16px;
+  font-size: 12px;
+  word-break: break-all;
+  border: 1px solid #1a1a1a;
+  margin: 8px 0;
+}
+
+/* === Chart container === */
+.iz24-chart-wrap {
+  border: 1px solid var(--iz-rule);
+  padding: 14px;
+  background: var(--iz-paper);
+  margin: 16px 0;
+}
+.iz24-chart-wrap canvas { max-width: 100%; }
+
+/* === Kill switch indicator === */
+.iz24-kill-switch {
+  display: inline-block;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--iz-ok);
+  color: var(--iz-ok);
+}
+.iz24-kill-switch.active {
+  border-color: var(--iz-danger);
+  color: var(--iz-danger);
+  background: #fef2f2;
+}
+
+/* === Dashboard widget === */
+#iz24_dashboard_widget .progress-row {
+  margin: 10px 0;
+}
+#iz24_dashboard_widget .progress-row .label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+#iz24_dashboard_widget .progress-row .label strong {
+  font-variant-numeric: tabular-nums;
+}

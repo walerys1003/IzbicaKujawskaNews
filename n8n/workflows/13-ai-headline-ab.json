@@ -1,0 +1,268 @@
+{
+  "name": "13 AI — Headline A/B test",
+  "nodes": [
+    {
+      "id": "node_1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "wh-izbica24-ai-headline-ab",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "izbica24/ai/headline-ab",
+        "responseMode": "lastNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "node_2",
+      "name": "GET prompt template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=={{ $env.IZBICA24_BASE_URL }}/wp-json/iz24/v1/prompts/rewrite-news",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.IZBICA24_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": false,
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "node_3",
+      "name": "Normalize payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Renderuje prompt template — pobiera zmienne z payloadu webhook\nconst tpl = items[0].json;          // { slug, system, user, model, variant, variables_schema }\nconst vars = $('Webhook').first()?.json || {};\n\nconst interpolate = (str, ctx) => str.replace(/{{\\s*([\\w.]+)\\s*}}/g, (m, k) => {\n  const parts = k.split('.');\n  let v = ctx;\n  for (const p of parts) v = v?.[p];\n  return v === undefined ? '' : String(v);\n});\n\nreturn [{\n  json: {\n    prompt_slug: tpl.slug,\n    raw_item_id: vars.raw_item_id || null,\n    system: interpolate(tpl.system, vars),\n    user:   interpolate(tpl.user, vars),\n    model:  tpl.model || 'claude-3-5-sonnet-20241022',\n    variant: tpl.variant || 'A',\n  },\n}];"
+      }
+    },
+    {
+      "id": "node_4",
+      "name": "Anthropic Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        950,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "\"={{ JSON.stringify({ model: $json.model || \\\"claude-3-5-sonnet-20241022\\\", max_tokens: 1500, system: $json.system, messages: [{ role: \\\"user\\\", content: $json.user }] }) }}\"",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "node_5",
+      "name": "Save AI result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.IZBICA24_BASE_URL }}/wp-json/iz24/v1/prompts/feedback",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.IZBICA24_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "\"={{ JSON.stringify({ slug: $node[\\\"Normalize payload\\\"].json.prompt_slug, raw_item_id: $node[\\\"Normalize payload\\\"].json.raw_item_id, output: $json.content[0].text, tokens_in: $json.usage.input_tokens, tokens_out: $json.usage.output_tokens, model: $json.model, variant: $node[\\\"Normalize payload\\\"].json.variant }) }}\"",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "node_6",
+      "name": "Log cost",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1450,
+        300
+      ],
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "cost_log",
+        "columns": {
+          "values": {
+            "values": [
+              {
+                "column": "workflow_id",
+                "value": "={{ $workflow.id }}"
+              },
+              {
+                "column": "execution_id",
+                "value": "={{ $execution.id }}"
+              },
+              {
+                "column": "service",
+                "value": "anthropic"
+              },
+              {
+                "column": "prompt_slug",
+                "value": "={{ $json.prompt_slug || null }}"
+              },
+              {
+                "column": "tokens_in",
+                "value": "={{ $json.tokens_in || 0 }}"
+              },
+              {
+                "column": "tokens_out",
+                "value": "={{ $json.tokens_out || 0 }}"
+              },
+              {
+                "column": "cost_usd",
+                "value": "={{ $json.cost_usd || 0 }}"
+              },
+              {
+                "column": "success",
+                "value": "={{ $json.success !== false }}"
+              }
+            ],
+            "mappingMode": "defineBelow"
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "GET prompt template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET prompt template": {
+      "main": [
+        [
+          {
+            "node": "Normalize payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize payload": {
+      "main": [
+        [
+          {
+            "node": "Anthropic Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Claude": {
+      "main": [
+        [
+          {
+            "node": "Save AI result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save AI result": {
+      "main": [
+        [
+          {
+            "node": "Log cost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "timezone": "Europe/Warsaw",
+    "errorWorkflow": ""
+  },
+  "tags": [
+    {
+      "name": "izbica24"
+    },
+    {
+      "name": "cat:system"
+    }
+  ],
+  "meta": {
+    "description": "Generuje 3 warianty nagłówków, log do prompt_runs do analizy A/B.",
+    "izbica24_id": "13",
+    "izbica24_slug": "ai-headline-ab"
+  },
+  "versionId": "1",
+  "triggerCount": 1,
+  "pinData": {}
+}

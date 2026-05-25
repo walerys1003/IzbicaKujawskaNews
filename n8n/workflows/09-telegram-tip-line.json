@@ -1,0 +1,280 @@
+{
+  "name": "09 Telegram — Linia zgłoszeń",
+  "nodes": [
+    {
+      "id": "node_1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "wh-izbica24-telegram-tip",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "izbica24/telegram-tip",
+        "responseMode": "lastNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "node_2",
+      "name": "Pass through",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// pobiera payload bezpośrednio z webhooka\nreturn items;"
+      }
+    },
+    {
+      "id": "node_3",
+      "name": "Normalize payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Telegram tip — wiadomość z bota\nconst crypto = require('crypto');\nconst msg = items[0].json.message || items[0].json;\nconst text = msg.text || msg.caption || '';\nconst fromId = msg.from?.id || 0;\nif (!text) throw new Error('Empty Telegram message');\nconst hash = crypto.createHash('sha256').update(text + '|' + fromId).digest('hex');\nreturn [{\n  json: {\n    source: 'form_user_submission',\n    category: 'wiadomosci',\n    title: text.split('\\n')[0].slice(0, 200),\n    content: text,\n    url: '',\n    author_name: msg.from?.username || ('telegram:' + fromId),\n    published_at: new Date().toISOString(),\n    external_id: 'tg:' + msg.message_id,\n    hash,\n    idempotency_key: hash,\n    priority_score: 5,\n    is_duplicate: false,\n  },\n}];"
+      }
+    },
+    {
+      "id": "node_4",
+      "name": "IF not duplicate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        950,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ !$json.is_duplicate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "node_5",
+      "name": "POST /incoming",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.IZBICA24_BASE_URL }}/wp-json/iz24/v1/incoming",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.IZBICA24_API_TOKEN }}"
+            },
+            {
+              "name": "X-Idempotency-Key",
+              "value": "={{ $json.idempotency_key }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "node_6",
+      "name": "Log cost",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1450,
+        200
+      ],
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "cost_log",
+        "columns": {
+          "values": {
+            "values": [
+              {
+                "column": "workflow_id",
+                "value": "={{ $workflow.id }}"
+              },
+              {
+                "column": "execution_id",
+                "value": "={{ $execution.id }}"
+              },
+              {
+                "column": "service",
+                "value": "scrape"
+              },
+              {
+                "column": "prompt_slug",
+                "value": "={{ $json.prompt_slug || null }}"
+              },
+              {
+                "column": "tokens_in",
+                "value": "={{ $json.tokens_in || 0 }}"
+              },
+              {
+                "column": "tokens_out",
+                "value": "={{ $json.tokens_out || 0 }}"
+              },
+              {
+                "column": "cost_usd",
+                "value": "={{ $json.cost_usd || 0 }}"
+              },
+              {
+                "column": "success",
+                "value": "={{ $json.success !== false }}"
+              }
+            ],
+            "mappingMode": "defineBelow"
+          }
+        }
+      }
+    },
+    {
+      "id": "node_7",
+      "name": "Notify error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        500
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={ \"chat_id\": \"{{ $env.TELEGRAM_CHAT_ID }}\", \"text\": \"⚠️ Workflow {{ $workflow.name }} error: {{ $json.error || 'unknown' }}\", \"parse_mode\": \"HTML\" }"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Pass through",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pass through": {
+      "main": [
+        [
+          {
+            "node": "Normalize payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize payload": {
+      "main": [
+        [
+          {
+            "node": "IF not duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF not duplicate": {
+      "main": [
+        [
+          {
+            "node": "POST /incoming",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /incoming": {
+      "main": [
+        [
+          {
+            "node": "Log cost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "timezone": "Europe/Warsaw",
+    "errorWorkflow": ""
+  },
+  "tags": [
+    {
+      "name": "izbica24"
+    },
+    {
+      "name": "cat:wiadomosci"
+    }
+  ],
+  "meta": {
+    "description": "Odbiera wiadomości od mieszkańców przez Telegram Bot, transkrybuje audio.",
+    "izbica24_id": "09",
+    "izbica24_slug": "telegram-tip-line"
+  },
+  "versionId": "1",
+  "triggerCount": 1,
+  "pinData": {}
+}

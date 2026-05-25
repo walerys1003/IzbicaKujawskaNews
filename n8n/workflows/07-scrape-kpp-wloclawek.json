@@ -1,0 +1,288 @@
+{
+  "name": "07 Scrape — KPP Włocławek",
+  "nodes": [
+    {
+      "id": "node_1",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ],
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "custom",
+              "cronExpression": "0 0 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node_2",
+      "name": "Fetch HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://wloclawek.policja.gov.pl/",
+        "sendHeaders": false,
+        "sendBody": false,
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "node_3",
+      "name": "Normalize payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Parse HTML — uproszczona ekstrakcja przez regex (produkcyjnie: Cheerio)\nconst crypto = require('crypto');\nconst html = items[0].json.data || items[0].json.body || '';\nconst out = [];\n\n// Bardzo prosty parser nagłówków linków — dostosuj do konkretnego źródła!\nconst matches = [...html.matchAll(/<h[1-3][^>]*>\\s*<a[^>]*href=\"([^\"]+)\"[^>]*>([^<]+)<\\/a>/gi)];\nfor (const m of matches.slice(0, 30)) {\n  const url = m[1].startsWith('http') ? m[1] : new URL(m[1], \"https://wloclawek.policja.gov.pl\").href;\n  const title = m[2].trim();\n  if (!title) continue;\n  const hash = crypto.createHash('sha256').update(url).digest('hex');\n  out.push({\n    json: {\n      source: \"scrape_kpp_wloclawek\",\n      category: \"na_sygnale\",\n      title,\n      content: '',\n      url,\n      published_at: new Date().toISOString(),\n      external_id: url,\n      hash,\n      idempotency_key: hash,\n      priority_score: 7,\n      is_duplicate: false,\n    },\n  });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "node_4",
+      "name": "IF not duplicate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        950,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ !$json.is_duplicate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "node_5",
+      "name": "POST /incoming",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.IZBICA24_BASE_URL }}/wp-json/iz24/v1/incoming",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.IZBICA24_API_TOKEN }}"
+            },
+            {
+              "name": "X-Idempotency-Key",
+              "value": "={{ $json.idempotency_key }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "node_6",
+      "name": "Log cost",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1450,
+        200
+      ],
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "cost_log",
+        "columns": {
+          "values": {
+            "values": [
+              {
+                "column": "workflow_id",
+                "value": "={{ $workflow.id }}"
+              },
+              {
+                "column": "execution_id",
+                "value": "={{ $execution.id }}"
+              },
+              {
+                "column": "service",
+                "value": "scrape"
+              },
+              {
+                "column": "prompt_slug",
+                "value": "={{ $json.prompt_slug || null }}"
+              },
+              {
+                "column": "tokens_in",
+                "value": "={{ $json.tokens_in || 0 }}"
+              },
+              {
+                "column": "tokens_out",
+                "value": "={{ $json.tokens_out || 0 }}"
+              },
+              {
+                "column": "cost_usd",
+                "value": "={{ $json.cost_usd || 0 }}"
+              },
+              {
+                "column": "success",
+                "value": "={{ $json.success !== false }}"
+              }
+            ],
+            "mappingMode": "defineBelow"
+          }
+        }
+      }
+    },
+    {
+      "id": "node_7",
+      "name": "Notify error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        500
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={ \"chat_id\": \"{{ $env.TELEGRAM_CHAT_ID }}\", \"text\": \"⚠️ Workflow {{ $workflow.name }} error: {{ $json.error || 'unknown' }}\", \"parse_mode\": \"HTML\" }"
+      }
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch HTML": {
+      "main": [
+        [
+          {
+            "node": "Normalize payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize payload": {
+      "main": [
+        [
+          {
+            "node": "IF not duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF not duplicate": {
+      "main": [
+        [
+          {
+            "node": "POST /incoming",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /incoming": {
+      "main": [
+        [
+          {
+            "node": "Log cost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "timezone": "Europe/Warsaw",
+    "errorWorkflow": ""
+  },
+  "tags": [
+    {
+      "name": "izbica24"
+    },
+    {
+      "name": "cat:na_sygnale"
+    }
+  ],
+  "meta": {
+    "description": "Scrapuje komunikaty KPP Włocławek, filtruje po nazwach gmin powiatu.",
+    "izbica24_id": "07",
+    "izbica24_slug": "scrape-kpp-wloclawek"
+  },
+  "versionId": "1",
+  "triggerCount": 1,
+  "pinData": {}
+}
