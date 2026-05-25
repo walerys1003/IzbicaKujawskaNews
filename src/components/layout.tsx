@@ -1,16 +1,19 @@
 import { SITE, NAV } from '../data'
+import { Icon } from './icons'
 
 export const SuperHeader = () => (
   <div id="super-header">
     <div class="sh-inner">
       <div class="sh-left">{SITE.today}</div>
       <div class="sh-mid">
-        <span>☀️</span>
+        <Icon.Sun size={12} className="svg-icon" />
         <span class="temp">{SITE.weather.temp}°C</span>
         <span class="sep">·</span>
         <span>{SITE.weather.city}</span>
       </div>
-      <div class="sh-right">📧 Newsletter tygodniowy</div>
+      <div class="sh-right">
+        <Icon.Mail size={12} className="svg-icon" /> NEWSLETTER TYGODNIOWY
+      </div>
     </div>
   </div>
 )
@@ -30,7 +33,7 @@ export const MainNav = () => (
       <nav class="main-menu" id="mainMenu">
         <ul>
           {NAV.map((item) => (
-            <li style={`--cat: ${item.color}`}>
+            <li class="has-children" style={`--cat: ${item.color}`}>
               <a href={item.href}>{item.label}</a>
               <div class="dropdown" role="menu">
                 {item.sub.map((s) => (<a href={s.href}>{s.label}</a>))}
@@ -41,9 +44,13 @@ export const MainNav = () => (
       </nav>
 
       <div class="nav-right">
-        <button class="nav-btn" aria-label="Wyszukaj" id="searchBtn">🔍</button>
-        <button class="nav-btn bell" aria-label="Powiadomienia">🔔</button>
-        <button class="nav-cta">+ Ogłoś</button>
+        <button class="nav-btn" aria-label="Wyszukaj" id="searchBtn">
+          <Icon.Search size={16} className="svg-icon" />
+        </button>
+        <button class="nav-btn bell" aria-label="Powiadomienia">
+          <Icon.Megaphone size={16} className="svg-icon" />
+        </button>
+        <button class="nav-cta">+ OGŁOŚ</button>
         <button class="hamburger" aria-label="Menu" id="hamburger">
           <span></span><span></span><span></span>
         </button>
@@ -54,19 +61,27 @@ export const MainNav = () => (
 
 export const DemoStrip = ({ active }: { active: string }) => (
   <div class="demo-pages-strip">
-    <a href="/" class={active === 'home' ? 'active' : ''}>🏠 Strona Główna (Makieta)</a>
-    <a href="/plan" class={active === 'plan' ? 'active' : ''}>📋 Plan wdrożenia</a>
-    <a href="/wiedza" class={active === 'wiedza' ? 'active' : ''}>🧠 Baza wiedzy (RAG)</a>
-    <span class="info">izbica24.pl — prototyp v1.0 / 25 maja 2026</span>
+    <div class="container demo-inner">
+      <a href="/" class={`demo-pill ${active === 'home' ? 'active' : ''}`}>
+        <Icon.Home size={12} className="svg-icon" /> Strona główna
+      </a>
+      <a href="/plan" class={`demo-pill ${active === 'plan' ? 'active' : ''}`}>
+        <Icon.Clipboard size={12} className="svg-icon" /> Plan wdrożenia
+      </a>
+      <a href="/wiedza" class={`demo-pill ${active === 'wiedza' ? 'active' : ''}`}>
+        <Icon.Book size={12} className="svg-icon" /> Baza wiedzy · RAG
+      </a>
+      <span class="info">izbica24.pl · prototyp v1.1 · 25 maja 2026</span>
+    </div>
   </div>
 )
 
 export const Footer = () => (
   <footer id="footer">
     <div class="footer-top-rule"></div>
-    <div class="footer-main">
-      <div class="footer-col">
-        <div class="footer-logo">izbica<span>24</span></div>
+    <div class="footer-inner footer-main">
+      <div class="footer-col footer-brand">
+        <div class="footer-logo"><span class="logo-main">izbica</span><span class="logo-num">24</span></div>
         <div class="footer-mission">
           Niezależny portal informacyjny Gminy Izbica Kujawska. Tworzony przez mieszkańców, dla mieszkańców — z pomocą sztucznej inteligencji pod ścisłą kontrolą redakcyjną.
         </div>
@@ -104,8 +119,8 @@ export const Footer = () => (
         </div>
       </div>
     </div>
-    <div class="footer-sub">
-      <div class="footer-sub-inner">
+    <div class="footer-bottom footer-sub">
+      <div class="footer-sub-inner container">
         <div>
           <a href="/regulamin">Regulamin</a> ·{' '}
           <a href="/polityka-prywatnosci">Polityka prywatności</a> ·{' '}

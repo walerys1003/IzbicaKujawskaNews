@@ -3,7 +3,7 @@ import { renderer } from './renderer'
 import { SuperHeader, MainNav, DemoStrip, Footer } from './components/layout'
 import {
   BreakingBar, Hero, Wiadomosci, NaSygnaleFull, Kujawianka,
-  SamorzadMedia, KulturaHistoria, Ludzie, ZycieCodzienne,
+  SamorzadMedia, KulturaHistoria, Historia, Ludzie, ZycieCodzienne,
   DzisWIzbicy, Solectwa, Ogloszenia, Multimedia, Sidebar,
 } from './components/home'
 import { PlanPage } from './components/plan'
@@ -31,6 +31,7 @@ app.get('/', (c) => {
             <Kujawianka />
             <SamorzadMedia />
             <KulturaHistoria />
+            <Historia />
             <Ludzie />
             <ZycieCodzienne />
             <DzisWIzbicy />
