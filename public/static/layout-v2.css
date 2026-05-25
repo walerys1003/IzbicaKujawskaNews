@@ -1,0 +1,387 @@
+/* =============================================================================
+ * izbica24 — Layout v2 (full-bleed sections + wider content + 4-col grid)
+ *
+ * Cele:
+ *  1. ZERO marginesów po bokach: header, breaking ticker, sekcje akcentowe
+ *     i footer wypełniają 100vw — kolor/tło rozciąga się od krawędzi do krawędzi.
+ *  2. Treść właściwa contained do max 1440px (większy oddech na monitorach FHD),
+ *     ale na bardzo szerokich ekranach (4K) nadal czytelne kolumny.
+ *  3. Asymetryczny grid główny: 3 kolumny treści + 1 kolumna sidebar.
+ *  4. Sticky sidebar — towarzyszy scrollowi.
+ * ============================================================================= */
+
+:root {
+  /* Override: szersza wersja, bez bocznych „pustek" na FHD */
+  --max-w: 1440px;
+  --gutter: 32px;
+  --content-grid-gap: 28px;
+}
+
+/* === FULL-BLEED PATTERN ====================================================
+ * Sekcje top-level (#superheader, #breaking-bar, #na-sygnale, footer, .full-bleed)
+ * mają tło rozciągnięte na 100vw. Wewnątrz każdej z nich `.container` lub
+ * `.bleed-inner` ogranicza treść do --max-w i wycentrowuje.
+ * ============================================================================ */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Universal full-bleed wrapper */
+.full-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  position: relative;
+}
+
+/* Inner container — wycentrowuje treść w pełnej szerokości */
+.bleed-inner,
+.full-bleed > .container,
+.full-bleed > .inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+  box-sizing: border-box;
+}
+
+/* === HEADER / NAVIGATION =================================================== */
+
+#superheader,
+#super-header,
+.super-header {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  background: #1a1a1a;
+  color: #ffffff;
+}
+#superheader > div,
+#super-header > div,
+#super-header .sh-inner,
+.super-header > div,
+.super-header .super-inner {
+  max-width: var(--max-w) !important;
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+#main-nav,
+.main-nav {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  background: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+}
+#main-nav > div,
+.main-nav > div,
+.main-nav .nav-inner {
+  max-width: var(--max-w) !important;
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+/* === BREAKING BAR — full bleed, orange band ================================ */
+
+#breaking-bar,
+.breaking-bar {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  background: #fa6400;
+  color: #ffffff;
+  padding: 0;
+}
+#breaking-bar > div,
+.breaking-bar > div,
+.breaking-bar .breaking-inner {
+  max-width: var(--max-w) !important;
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+/* === DEMO STRIP =========================================================== */
+
+.demo-strip {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+.demo-inner {
+  max-width: var(--max-w) !important;
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+/* === MAIN GRID — asymetryczny 3+1 ========================================= */
+
+.main-wrap,
+main.main-wrap,
+section.main-wrap,
+[id="main"],
+main#main {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+  box-sizing: border-box;
+}
+
+/* .cont — generic centered inner container (used inside .main-wrap sections) */
+.cont {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* .section-zebra — light gray full-bleed background (alternates with white) */
+.section-zebra {
+  background: #fafafa;
+  border-top: 1px solid #ececec;
+  border-bottom: 1px solid #ececec;
+  padding-top: 32px;
+  padding-bottom: 32px;
+  position: relative;
+}
+/* full-bleed background tint while keeping content centered */
+.section-zebra::before {
+  content: '';
+  position: absolute;
+  left: calc(50% - 50vw);
+  right: calc(50% - 50vw);
+  top: 0;
+  bottom: 0;
+  background: #fafafa;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* .sidebar-col — alias for aside sidebar slot in .main-grid */
+.sidebar-col {
+  min-width: 0;
+}
+
+/* Vertical rhythm between top-level sections on the homepage */
+.main-wrap + .main-wrap,
+.main-wrap + section.main-wrap,
+section.main-wrap + section.main-wrap {
+  margin-top: 48px;
+}
+
+/* Reuters.css zdefiniował już .main-grid — wzmacniamy proporcje */
+.main-grid,
+.content-with-sidebar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 40px;
+  align-items: start;
+  padding: 0;
+  width: 100%;
+}
+/* When .main-grid is direct child of .main-wrap, inherit gutter from wrapper */
+.main-wrap > .main-grid,
+section.main-wrap > .main-grid {
+  padding: 0;
+}
+
+/* #page-main wraps content; ensure it constrains to max-w and centers */
+#page-main {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1280px) {
+  .main-grid,
+  .content-with-sidebar {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 48px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .main-grid,
+  .content-with-sidebar {
+    grid-template-columns: minmax(0, 1fr) 400px;
+  }
+}
+
+/* Sidebar sticky — towarzyszy scrollowi */
+.main-grid > aside,
+.main-grid > .sidebar,
+.main-grid > .sidebar-col,
+.content-with-sidebar > aside,
+.content-with-sidebar > .sidebar {
+  position: sticky;
+  top: 88px; /* sticky pod main-nav */
+  align-self: start;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* #content-col within .content-with-sidebar */
+#content-col {
+  min-width: 0;
+}
+
+/* === HERO — full-bleed wariant ============================================ */
+
+#hero {
+  width: 100vw;
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 0;
+}
+#hero > .container,
+#hero .container {
+  max-width: var(--max-w) !important;
+  margin: 0 auto;
+  padding: 36px var(--gutter) 28px;
+}
+
+/* === NA SYGNALE — full bleed czerwony pas ================================ */
+
+#na-sygnale {
+  width: 100vw;
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+  background: #1a1a1a;
+  color: #ffffff;
+  border-top: 3px solid #fa6400;
+  border-bottom: 3px solid #fa6400;
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+#na-sygnale .container {
+  max-width: var(--max-w) !important;
+  margin: 0 auto;
+  padding: 24px var(--gutter);
+}
+#na-sygnale h2,
+#na-sygnale .section-title,
+#na-sygnale .alert-title {
+  color: #ffffff !important;
+}
+#na-sygnale .eyebrow {
+  color: #fa6400 !important;
+}
+
+/* === FOOTER — full bleed ================================================= */
+
+footer,
+#footer,
+.site-footer {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  background: #1a1a1a;
+  color: #ffffff;
+  padding: 48px 0 24px;
+  margin-top: 48px;
+}
+footer > div,
+#footer > div,
+.site-footer > div {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+/* === 4-COL CARD GRID ===================================================== */
+
+.cards-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.cards-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.cards-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+@media (max-width: 1100px) {
+  .cards-grid-4 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .cards-grid-4,
+  .cards-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+}
+
+@media (max-width: 600px) {
+  .cards-grid-4,
+  .cards-grid-3,
+  .cards-grid-2 { grid-template-columns: 1fr; gap: 14px; }
+}
+
+/* === MOBILE / TABLET BREAKPOINTS ========================================== */
+
+@media (max-width: 1080px) {
+  :root {
+    --gutter: 20px;
+  }
+  .main-grid,
+  .content-with-sidebar {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .main-grid > aside,
+  .main-grid > .sidebar,
+  .content-with-sidebar > aside,
+  .content-with-sidebar > .sidebar {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 768px) {
+  :root { --gutter: 16px; }
+  #hero > .container,
+  #na-sygnale .container,
+  .super-header > div,
+  .main-nav > div,
+  footer > div { padding-left: 16px; padding-right: 16px; }
+}
+
+@media (max-width: 480px) {
+  :root { --gutter: 12px; }
+}
+
+/* === KILL OLD CONSTRAINTS (legacy style.css i reuters.css) ================ */
+
+/* Sekcje top-level nie mogą mieć max-width — to robi `.container` w środku */
+body > #superheader,
+body > #main-nav,
+body > #breaking-bar,
+body > #hero,
+body > #na-sygnale,
+body > footer,
+body > .demo-strip {
+  max-width: none !important;
+  width: 100vw !important;
+}

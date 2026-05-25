@@ -15,6 +15,10 @@ export const renderer = jsxRenderer(({ children, title }) => {
 
         <link href="/static/style.css" rel="stylesheet" />
         <link href="/static/reuters.css" rel="stylesheet" />
+        <link href="/static/layout-v2.css" rel="stylesheet" />
+        <link href="/static/modules-v2.css" rel="stylesheet" />
+      {/* Debug layout helper — aktywuje się tylko z ?debug=1 w URL */}
+      <script src="/static/_debug-layout.js" defer></script>
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ffffff'/%3E%3Ctext x='50' y='72' font-family='Inter,sans-serif' font-size='70' font-weight='700' text-anchor='middle' fill='%231a1a1a' letter-spacing='-3'%3Ei%3C/text%3E%3Crect x='32' y='84' width='36' height='4' fill='%23fa6400'/%3E%3C/svg%3E" />
       </head>
       <body>
