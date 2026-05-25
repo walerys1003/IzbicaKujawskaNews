@@ -40,6 +40,8 @@ import {
   generateManifest, generateHumansTxt, generateSecurityTxt,
 } from './seo'
 import apiV1 from './api/v1'
+import adminRoutes from './routes/admin'
+import aiNewsroomRoutes from './routes/ai-newsroom'
 import { responsePerformanceMiddleware } from './lib/performance'
 import type { AppEnv } from './types/env'
 // Sandbox 9: monitoring + observability routes
