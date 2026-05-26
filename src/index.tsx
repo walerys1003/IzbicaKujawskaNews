@@ -45,13 +45,12 @@ import { RodoPage } from './components/public/RodoPage'
 import { FaqPage } from './components/public/FaqPage'
 import { CookiePolicyPage } from './components/public/CookiePolicyPage'
 import { TagPage } from './components/public/TagPage'
-import { AuthorCard, type AuthorInfo } from './components/public/AuthorCard'
+import { AuthorCard, type AuthorData } from './components/public/AuthorCard'
 import { RelatedArticles } from './components/public/RelatedArticles'
-import { TableOfContents, extractTocItems } from './components/public/TableOfContents'
+import { TableOfContents } from './components/public/TableOfContents'
 import { PrzegladPage } from './components/public/PrzegladPage'
-import { NewsletterCTA } from './components/public/NewsletterCTA'
-import { LazyEmbed } from './components/public/LazyEmbed'
-import { SkipLink, A11yGlobalStyles } from './components/public/A11yEnhancements'
+import { NewsletterInlineWithFetch } from './components/public/NewsletterInlineFetch'
+import { LazyEmbed, YouTubeEmbed, VimeoEmbed, TwitterEmbed, FacebookEmbed } from './components/public/LazyEmbed'
 import {
   generateSitemap, generateNewsSitemap, generateRss, generateRobots,
   generateManifest, generateHumansTxt, generateSecurityTxt,

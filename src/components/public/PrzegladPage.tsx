@@ -1,242 +1,241 @@
-// SA8: /przeglad — full article browser with pagination, category filters, sort options
+// SA8: /przeglad — full article browser with pagination, filters, and sort
 import type { ArticleRow } from '../../repository'
+import type { ArticleData } from '../article'
 
-interface PrzegladPageProps {
-  articles: Pick<ArticleRow, 'slug' | 'title' | 'lead' | 'category' | 'hero_image_r2_key' | 'published_at' | 'author'>[]
+export interface PrzegladPageProps {
+  articles: Array<{
+    slug: string
+    title: string
+    category: string
+    categoryColor?: string
+    lead?: string
+    lede?: string
+    author: string
+    publishedAt?: string
+    published_at?: string
+    heroImage?: string
+    hero_image_r2_key?: string
+    readingMinutes?: number
+    tags?: string[]
+  }>
   total: number
   page: number
   perPage: number
-  activeCategory?: string
-  sort?: 'newest' | 'popular' | 'oldest'
-  categories: { slug: string; title: string; count: number }[]
+  query?: string
+  sort?: 'newest' | 'oldest' | 'popular'
 }
 
-export const PrzegladPage = ({
-  articles, total, page, perPage, activeCategory, sort = 'newest', categories,
-}: PrzegladPageProps) => {
+export const PrzegladPage = ({ articles, total, page, perPage, query, sort = 'newest' }: PrzegladPageProps) => {
   const totalPages = Math.max(1, Math.ceil(total / perPage))
+  const baseUrl = query ? `/szukaj?q=${encodeURIComponent(query)}` : '/przeglad'
 
   return (
     <main id="page-main" class="main-wrap przeglad-page">
-      <header style={{ padding: '32px 0 20px', borderBottom: '1px solid #dee2e6', marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1a1a2e', margin: 0 }}>
-          Przegląd artykułów
-        </h1>
-        <p style={{ fontSize: '14px', color: '#6c757d', margin: '8px 0 0' }}>
-          {total} {total === 1 ? 'artykuł' : total >= 2 && total <= 4 ? 'artykuły' : 'artykułów'}
-          {activeCategory && <> w kategorii <strong>{activeCategory}</strong></>}
-        </p>
-      </header>
+      <div class="container" style="max-width: 1100px; margin: 0 auto; padding: 0 20px;">
 
-      <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-        {/* Sidebar filters */}
-        <aside style={{ flex: '0 0 220px', minWidth: '200px' }}>
-          <nav aria-label="Filtry kategorii" style={{ position: 'sticky', top: '20px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a2e', marginBottom: '12px' }}>
-              Kategorie
-            </h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '4px' }}>
-                <a href="/przeglad" style={{
-                  display: 'block',
-                  padding: '6px 10px',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  fontWeight: !activeCategory ? 700 : 400,
-                  color: !activeCategory ? '#e94560' : '#495057',
-                  background: !activeCategory ? 'rgba(233,69,96,0.08)' : 'transparent',
-                  textDecoration: 'none',
-                }}>
-                  Wszystkie ({total})
-                </a>
-              </li>
-              {categories.map(cat => (
-                <li key={cat.slug} style={{ marginBottom: '4px' }}>
-                  <a href={`/przeglad?category=${cat.slug}`} style={{
-                    display: 'block',
-                    padding: '6px 10px',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    fontWeight: activeCategory === cat.slug ? 700 : 400,
-                    color: activeCategory === cat.slug ? '#e94560' : '#495057',
-                    background: activeCategory === cat.slug ? 'rgba(233,69,96,0.08)' : 'transparent',
-                    textDecoration: 'none',
-                  }}>
-                    {cat.title} ({cat.count})
-                  </a>
-                </li>
-              ))}
-            </ul>
-
-            {/* Sort */}
-            <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a2e', margin: '20px 0 12px' }}>
-              Sortowanie
-            </h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {[
-                { value: 'newest', label: 'Najnowsze' },
-                { value: 'popular', label: 'Najpopularniejsze' },
-                { value: 'oldest', label: 'Najstarsze' },
-              ].map(opt => {
-                const params = new URLSearchParams()
-                if (activeCategory) params.set('category', activeCategory)
-                if (opt.value !== 'newest') params.set('sort', opt.value)
-                const qs = params.toString()
-                return (
-                  <li key={opt.value} style={{ marginBottom: '4px' }}>
-                    <a href={`/przeglad${qs ? '?' + qs : ''}`} style={{
-                      display: 'block',
-                      padding: '6px 10px',
-                      borderRadius: '6px',
-                      fontSize: '13px',
-                      fontWeight: sort === opt.value ? 700 : 400,
-                      color: sort === opt.value ? '#e94560' : '#495057',
-                      background: sort === opt.value ? 'rgba(233,69,96,0.08)' : 'transparent',
-                      textDecoration: 'none',
-                    }}>
-                      {opt.label}
-                    </a>
-                  </li>
-                )
-              })}
-            </ul>
-          </nav>
-        </aside>
-
-        {/* Article grid */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {articles.length === 0 ? (
-            <p style={{ textAlign: 'center', padding: '60px 0', color: '#6c757d' }}>
-              Brak artykułów do wyświetlenia.
+        {/* Header */}
+        <header class="przeglad-header" style="padding: 32px 0 20px; border-bottom: 3px solid #e94560; margin-bottom: 28px;">
+          <h1 style="margin: 0 0 8px; font-size: 32px; font-weight: 800; color: #0a2540;">
+            {query ? `Wyniki dla: „${query}”` : 'Przegląd artykułów'}
+          </h1>
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <p style="margin: 0; font-size: 14px; color: #6c757d;">
+              Znaleziono <strong style="color: #0a2540;">{total}</strong> {total === 1 ? 'artykuł' : total >= 2 && total <= 4 ? 'artykuły' : 'artykułów'}
+              {query ? ` dla zapytania „${query}”` : ''}
             </p>
-          ) : (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              gap: '24px',
-            }}>
-              {articles.map(article => (
-                <article
-                  key={article.slug}
-                  class="przeglad-card"
-                  style={{
-                    background: '#fff',
-                    borderRadius: '10px',
-                    overflow: 'hidden',
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-                    transition: 'transform 0.2s ease',
-                  }}
+            {/* Sort controls */}
+            <div class="przeglad-sort" style="display: flex; gap: 4px;">
+              {(['newest', 'oldest', 'popular'] as const).map(s => (
+                <a
+                  href={`${baseUrl}?sort=${s}${page > 1 ? `&page=${page}` : ''}`}
+                  class={`sort-btn ${sort === s ? 'active' : ''}`}
+                  style={`
+                    padding: 6px 14px; font-size: 12px; border-radius: 6px; text-decoration: none;
+                    font-weight: 600; transition: all 0.15s;
+                    ${sort === s
+                      ? 'background: #0a2540; color: #fff;'
+                      : 'background: #f1f3f5; color: #495057;'
+                    }
+                  `}
                 >
-                  {article.hero_image_r2_key && (
-                    <a href={`/wiadomosci/${article.slug}`} aria-hidden="true" tabIndex={-1}>
-                      <img
-                        src={article.hero_image_r2_key}
-                        alt=""
-                        loading="lazy"
-                        style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }}
-                      />
-                    </a>
-                  )}
-                  <div style={{ padding: '16px 18px 20px' }}>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '3px 10px',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      background: '#e94560',
-                      color: '#fff',
-                      marginBottom: '8px',
-                    }}>
-                      {article.category}
-                    </span>
-                    <h3 style={{ margin: '6px 0 8px', fontSize: '17px', lineHeight: 1.4 }}>
-                      <a href={`/wiadomosci/${article.slug}`} style={{ color: '#1a1a2e', textDecoration: 'none' }}>
-                        {article.title}
-                      </a>
-                    </h3>
-                    {article.lead && (
-                      <p style={{ fontSize: '13px', color: '#6c757d', lineHeight: 1.5, margin: 0 }}>
-                        {article.lead.length > 140 ? article.lead.slice(0, 137) + '…' : article.lead}
-                      </p>
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', fontSize: '12px', color: '#adb5bd' }}>
-                      <span>{article.author}</span>
-                      {article.published_at && (
-                        <time dateTime={typeof article.published_at === 'string' ? article.published_at : ''}>
-                          {new Date(article.published_at as string).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}
-                        </time>
-                      )}
-                    </div>
-                  </div>
-                </article>
+                  {s === 'newest' ? 'Najnowsze' : s === 'oldest' ? 'Najstarsze' : 'Popularne'}
+                </a>
               ))}
             </div>
-          )}
+          </div>
+        </header>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <nav aria-label="Stronicowanie" style={{ marginTop: '40px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
-              {page > 1 && (
-                <a
-                  href={buildPageUrl(page - 1, activeCategory, sort)}
-                  style={{ padding: '8px 16px', border: '1px solid #dee2e6', borderRadius: '6px', textDecoration: 'none', color: '#1a1a2e', fontSize: '14px', fontWeight: 600 }}
-                >
-                  ← Poprzednia
-                </a>
-              )}
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
-                .reduce<(number | '...')[]>((acc, p, idx, arr) => {
-                  if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('...')
-                  acc.push(p)
-                  return acc
-                }, [])
-                .map((p, idx) =>
-                  p === '...' ? (
-                    <span key={`ellipsis-${idx}`} style={{ padding: '8px 12px', color: '#adb5bd' }}>…</span>
-                  ) : (
-                    <a
-                      key={p}
-                      href={buildPageUrl(p, activeCategory, sort)}
-                      style={{
-                        padding: '8px 14px',
-                        border: p === page ? '2px solid #e94560' : '1px solid #dee2e6',
-                        borderRadius: '6px',
-                        textDecoration: 'none',
-                        color: p === page ? '#e94560' : '#1a1a2e',
-                        fontWeight: p === page ? 700 : 400,
-                        fontSize: '14px',
-                        background: p === page ? 'rgba(233,69,96,0.06)' : 'transparent',
-                      }}
-                      aria-current={p === page ? 'page' : undefined}
-                    >
-                      {p}
-                    </a>
-                  )
+        {/* Article grid */}
+        <div class="przeglad-grid" style={`
+          display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+          gap: 24px; margin-bottom: 40px;
+        `}>
+          {articles.map(article => {
+            const imgSrc = article.heroImage || article.hero_image_r2_key
+            const pubDate = article.publishedAt || article.published_at
+            const leadText = article.lead || article.lede || ''
+            const catColor = article.categoryColor || '#8b1d2a'
+
+            return (
+              <article
+                key={article.slug}
+                class="przeglad-card"
+                style={`
+                  background: #fff; border-radius: 10px; overflow: hidden;
+                  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+                  transition: transform 0.2s, box-shadow 0.2s;
+                  display: flex; flex-direction: column;
+                `}
+              >
+                {/* Image */}
+                {imgSrc ? (
+                  <a href={`/wiadomosci/${article.slug}`} style="display: block; overflow: hidden;">
+                    <img
+                      src={imgSrc}
+                      alt=""
+                      loading="lazy"
+                      width="400" height="225"
+                      style="width: 100%; height: 200px; object-fit: cover; display: block; transition: transform 0.3s;"
+                    />
+                  </a>
+                ) : (
+                  <a href={`/wiadomosci/${article.slug}`} style="display: block; height: 200px; background: linear-gradient(135deg, #0a2540, #1a3a6c); display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                    <span style="color: #c8a951; font-size: 18px; font-weight: 700;">izbica24.pl</span>
+                  </a>
                 )}
-              {page < totalPages && (
-                <a
-                  href={buildPageUrl(page + 1, activeCategory, sort)}
-                  style={{ padding: '8px 16px', border: '1px solid #dee2e6', borderRadius: '6px', textDecoration: 'none', color: '#1a1a2e', fontSize: '14px', fontWeight: 600 }}
-                >
-                  Następna →
-                </a>
-              )}
-            </nav>
+
+                {/* Content */}
+                <div style="padding: 16px 18px 20px; flex: 1; display: flex; flex-direction: column;">
+                  {/* Category badge */}
+                  <span style={`
+                    display: inline-block; align-self: flex-start;
+                    padding: 3px 10px; border-radius: 4px; font-size: 10px;
+                    font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+                    background: ${catColor}; color: #fff; margin-bottom: 10px;
+                  `}>
+                    {article.category}
+                  </span>
+
+                  {/* Title */}
+                  <h3 style="margin: 0 0 8px; font-size: 17px; line-height: 1.4; color: #0a2540;">
+                    <a href={`/wiadomosci/${article.slug}`} style="text-decoration: none; color: inherit;">
+                      {article.title.length > 80 ? article.title.slice(0, 77) + '…' : article.title}
+                    </a>
+                  </h3>
+
+                  {/* Lead */}
+                  {leadText && (
+                    <p style="margin: 0 0 14px; font-size: 13px; color: #6c757d; line-height: 1.5; flex: 1;">
+                      {leadText.length > 120 ? leadText.slice(0, 117) + '…' : leadText}
+                    </p>
+                  )}
+
+                  {/* Meta footer */}
+                  <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #888;">
+                    <span>{article.author}</span>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                      {pubDate && (
+                        <time datetime={pubDate}>
+                          {new Date(pubDate).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
+                        </time>
+                      )}
+                      {article.readingMinutes && <span>{article.readingMinutes} min</span>}
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  {article.tags && article.tags.length > 0 && (
+                    <div style="margin-top: 10px; display: flex; gap: 4px; flex-wrap: wrap;">
+                      {article.tags.slice(0, 3).map(tag => (
+                        <a
+                          href={`/tag/${tag.toLowerCase()}`}
+                          style="font-size: 10px; padding: 2px 7px; border-radius: 3px; background: #f1f3f5; color: #6c757d; text-decoration: none;"
+                        >
+                          #{tag}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </article>
+            )
+          })}
+
+          {/* Empty state */}
+          {articles.length === 0 && (
+            <div class="przeglad-empty" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #6c757d;">
+              <p style="font-size: 48px; margin: 0 0 12px;">🔍</p>
+              <h2 style="margin: 0 0 8px; font-size: 20px; color: #0a2540;">Nic nie znaleziono</h2>
+              <p style="margin: 0; font-size: 14px;">
+                {query ? `Brak wyników dla "${query}". Spróbuj innych słów kluczowych.` : 'Brak artykułów do wyświetlenia.'}
+              </p>
+            </div>
           )}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <nav class="pagination" aria-label="Stronicowanie" style={`
+            display: flex; justify-content: center; align-items: center; gap: 6px;
+            padding: 24px 0 40px;
+          `}>
+            {page > 1 && (
+              <a
+                href={`${baseUrl}&page=${page - 1}${sort !== 'newest' ? `&sort=${sort}` : ''}`.replace('&page=1', '')}
+                class="pagination-prev"
+                aria-label="Poprzednia strona"
+                style="padding: 8px 16px; border: 1px solid #dee2e6; border-radius: 6px; text-decoration: none; color: #0a2540; font-weight: 600; font-size: 13px;"
+              >
+                ← Poprzednia
+              </a>
+            )}
+
+            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+              const pageNum = totalPages <= 7
+                ? i + 1
+                : page <= 4
+                  ? i + 1
+                  : page >= totalPages - 3
+                    ? totalPages - 6 + i
+                    : page - 3 + i
+
+              const url = pageNum === 1
+                ? `${baseUrl}${sort !== 'newest' ? `?sort=${sort}` : ''}`
+                : `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}page=${pageNum}${sort !== 'newest' ? `&sort=${sort}` : ''}`
+
+              return (
+                <a
+                  key={pageNum}
+                  href={url}
+                  aria-label={`Strona ${pageNum}`}
+                  aria-current={pageNum === page ? 'page' : undefined}
+                  style={`
+                    padding: 8px 14px; border-radius: 6px; text-decoration: none;
+                    font-weight: 600; font-size: 13px; min-width: 40px; text-align: center;
+                    ${pageNum === page
+                      ? 'background: #0a2540; color: #fff; border: 1px solid #0a2540;'
+                      : 'border: 1px solid #dee2e6; color: #0a2540;'
+                    }
+                  `}
+                >
+                  {pageNum}
+                </a>
+              )
+            })}
+
+            {page < totalPages && (
+              <a
+                href={`${baseUrl}&page=${page + 1}${sort !== 'newest' ? `&sort=${sort}` : ''}`}
+                class="pagination-next"
+                aria-label="Następna strona"
+                style="padding: 8px 16px; border: 1px solid #dee2e6; border-radius: 6px; text-decoration: none; color: #0a2540; font-weight: 600; font-size: 13px;"
+              >
+                Następna →
+              </a>
+            )}
+          </nav>
+        )}
       </div>
     </main>
   )
-}
-
-function buildPageUrl(p: number, category?: string, sort?: string): string {
-  const params = new URLSearchParams()
-  if (p > 1) params.set('page', String(p))
-  if (category) params.set('category', category)
-  if (sort && sort !== 'newest') params.set('sort', sort)
-  const qs = params.toString()
-  return `/przeglad${qs ? '?' + qs : ''}`
 }

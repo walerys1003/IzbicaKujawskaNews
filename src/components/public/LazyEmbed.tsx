@@ -1,141 +1,69 @@
-// SA6: LazyEmbed — consent-based lazy loading for YouTube, Vimeo, Twitter/X embeds
-// GDPR-compliant: no third-party requests until user clicks "load"
+// SA7.2: LazyEmbed — consent-gated GDPR-safe embed for YouTube/Vimeo/Twitter
+export type EmbedType = 'youtube' | 'vimeo' | 'twitter' | 'facebook'
 
-type EmbedType = 'youtube' | 'vimeo' | 'twitter'
-
-interface LazyEmbedProps {
+export interface LazyEmbedProps {
   type: EmbedType
-  id: string // YouTube: video ID, Vimeo: video ID, Twitter: tweet ID
+  id: string
   title?: string
-  aspectRatio?: string
+  thumbnail?: string
 }
 
-const embedConfig: Record<EmbedType, { label: string; color: string; icon: string; url: (id: string) => string }> = {
-  youtube: {
-    label: 'YouTube',
-    color: '#ff0000',
-    icon: '▶',
-    url: (id) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1`,
-  },
-  vimeo: {
-    label: 'Vimeo',
-    color: '#1ab7ea',
-    icon: '▶',
-    url: (id) => `https://player.vimeo.com/video/${id}?autoplay=1`,
-  },
-  twitter: {
-    label: 'Twitter / X',
-    color: '#1da1f2',
-    icon: '🐦',
-    url: (id) => `https://platform.twitter.com/embed/Tweet.html?id=${id}`,
-  },
+function embedUrl(type: EmbedType, id: string): string {
+  switch (type) {
+    case 'youtube': return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1`
+    case 'vimeo': return `https://player.vimeo.com/video/${id}?dnt=1`
+    case 'twitter': return `https://platform.twitter.com/embed/Tweet.html?id=${id}`
+    case 'facebook': return `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(id)}&show_text=true`
+  }
 }
 
-export const LazyEmbed = ({
-  type,
-  id,
-  title = 'Osadzona treść',
-  aspectRatio = type === 'twitter' ? 'auto' : '16 / 9',
-}: LazyEmbedProps) => {
-  const cfg = embedConfig[type]
-  const uniqueId = `lazy-embed-${type}-${id}`
+function thumbUrl(type: EmbedType, id: string, fallback?: string): string | undefined {
+  if (fallback) return fallback
+  if (type === 'youtube') return `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+  return undefined
+}
+
+export const LazyEmbed = ({ type, id, title, thumbnail }: LazyEmbedProps) => {
+  const uid = `embed-${type}-${id.replace(/[^a-zA-Z0-9]/g, '_')}`
+  const thumb = thumbUrl(type, id, thumbnail)
+  const label = title || (type === 'youtube' ? 'YouTube' : type === 'vimeo' ? 'Vimeo' : type === 'twitter' ? 'Twitter/X' : 'Facebook')
 
   return (
-    <div
-      class="lazy-embed"
-      style={{
-        position: 'relative',
-        width: '100%',
-        aspectRatio,
-        background: '#1a1a2e',
-        borderRadius: '10px',
-        overflow: 'hidden',
-        margin: '24px 0',
-      }}
-    >
-      {/* Placeholder overlay */}
-      <div
-        id={`${uniqueId}-placeholder`}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px',
-          cursor: 'pointer',
-          zIndex: 1,
-          background: `linear-gradient(135deg, ${cfg.color}22 0%, #0a0a1a 100%)`,
-        }}
-      >
-        <span style={{ fontSize: '40px', opacity: 0.9 }}>{cfg.icon}</span>
-        <strong style={{ color: '#fff', fontSize: '15px' }}>
-          Kliknij, aby załadować treść z {cfg.label}
-        </strong>
-        <span style={{ color: '#aaa', fontSize: '12px', maxWidth: '280px', textAlign: 'center' }}>
-          Po kliknięciu nastąpi połączenie z serwerami {cfg.label}.{cfg.label} może używać plików cookie.{' '}
-          <a href="/polityka-prywatnosci" style={{ color: '#e94560' }}>Polityka prywatności</a>
-        </span>
-        <button
-          style={{
-            padding: '10px 24px',
-            borderRadius: '6px',
-            border: 'none',
-            background: cfg.color,
-            color: '#fff',
-            fontSize: '14px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            marginTop: '4px',
-          }}
-        >
-          Załaduj {cfg.label}
-        </button>
+    <div class={`lazy-embed lazy-embed-${type}`} id={uid} style={`
+      position: relative; margin: 28px 0; border-radius: 12px; overflow: hidden;
+      background: #0d1b2a; min-height: 400px; box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+    `}>
+      <div class="lazy-embed-bg" style={`
+        position: absolute; inset: 0; cursor: pointer;
+        ${thumb ? `background: url(${thumb}) center/cover no-repeat;` : ''}
+      `}>
+        {thumb && <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.45);" />}
       </div>
-
-      {/* iframe container (hidden until activated) */}
-      <div
-        id={`${uniqueId}-content`}
-        style={{ position: 'absolute', inset: 0, display: 'none', zIndex: 2 }}
-      />
-
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-(function() {
-  var placeholder = document.getElementById('${uniqueId}-placeholder');
-  var content = document.getElementById('${uniqueId}-content');
-  if (!placeholder || !content) return;
-
-  placeholder.addEventListener('click', function() {
-    placeholder.style.display = 'none';
-    content.style.display = 'block';
-    var iframe = document.createElement('iframe');
-    iframe.src = '${cfg.url(id)}';
-    iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
-    iframe.setAttribute('allowfullscreen', '');
-    iframe.setAttribute('loading', 'lazy');
-    iframe.setAttribute('title', '${title.replace(/'/g, "\\'")}');
-    iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;';
-    iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-    content.appendChild(iframe);
-  });
-})();
-          `.trim(),
-        }}
-      />
+      <div style="position: relative; z-index: 1; text-align: center; padding: 40px 20px;">
+        {(type === 'youtube' || type === 'vimeo') && (
+          <div aria-hidden="true" style="width: 68px; height: 68px; border-radius: 50%; background: rgba(200,169,81,0.92); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+            <span style="color: #0a2540; font-size: 26px;">▶</span>
+          </div>
+        )}
+        <p style="color: #fff; font-size: 15px; font-weight: 700; margin: 0 0 6px;">{label}</p>
+        <p style="color: rgba(255,255,255,0.55); font-size: 12px; margin: 0 0 18px;">
+          Kliknij aby załadować treść z {type === 'twitter' ? 'Twitter/X' : type === 'facebook' ? 'Facebook' : type === 'youtube' ? 'YouTube' : 'Vimeo'}
+        </p>
+        <button
+          onclick={`document.getElementById('${uid}').innerHTML='<iframe src="${embedUrl(type, id)}" width="100%" height="400" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen style="border:0;display:block;" title="${label}"></iframe>'`}
+          style="padding: 10px 28px; background: #c8a951; color: #0a2540; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer;"
+        >
+          Załaduj treść
+        </button>
+        <p style="color: rgba(255,255,255,0.3); font-size: 10px; margin: 10px 0 0;">
+          Ładując treść akceptujesz politykę prywatności {type === 'youtube' ? 'YouTube' : type === 'vimeo' ? 'Vimeo' : type === 'twitter' ? 'Twitter/X' : 'Facebook'}
+        </p>
+      </div>
     </div>
   )
 }
 
-/** Shorthand embed components */
-export const YouTubeEmbed = ({ id, title }: { id: string; title?: string }) => (
-  <LazyEmbed type="youtube" id={id} title={title} />
-)
-export const VimeoEmbed = ({ id, title }: { id: string; title?: string }) => (
-  <LazyEmbed type="vimeo" id={id} title={title} />
-)
-export const TwitterEmbed = ({ id }: { id: string }) => (
-  <LazyEmbed type="twitter" id={id} />
-)
+export const YouTubeEmbed = (p: { id: string; title?: string }) => <LazyEmbed type="youtube" {...p} />
+export const VimeoEmbed = (p: { id: string; title?: string }) => <LazyEmbed type="vimeo" {...p} />
+export const TwitterEmbed = (p: { id: string }) => <LazyEmbed type="twitter" {...p} />
+export const FacebookEmbed = (p: { id: string }) => <LazyEmbed type="facebook" {...p} />
