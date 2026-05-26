@@ -45,6 +45,12 @@ import { RodoPage } from './components/public/RodoPage'
 import { FaqPage } from './components/public/FaqPage'
 import { CookiePolicyPage } from './components/public/CookiePolicyPage'
 import { TagPage } from './components/public/TagPage'
+import { AuthorCard, type AuthorData } from './components/public/AuthorCard'
+import { RelatedArticles } from './components/public/RelatedArticles'
+import { TableOfContents } from './components/public/TableOfContents'
+import { PrzegladPage } from './components/public/PrzegladPage'
+import { NewsletterInlineWithFetch } from './components/public/NewsletterInlineFetch'
+import { LazyEmbed, YouTubeEmbed, VimeoEmbed, TwitterEmbed, FacebookEmbed } from './components/public/LazyEmbed'
 import {
   generateSitemap, generateNewsSitemap, generateRss, generateRobots,
   generateManifest, generateHumansTxt, generateSecurityTxt,
@@ -163,6 +169,68 @@ app.get('/tag/:slug', (c) => {
   const slug = c.req.param('slug')
   const articles = ARTICLES.filter(a => a.tags?.some(t => t.toLowerCase() === slug.toLowerCase()))
   return renderPublicShell(c, <TagPage tag={slug} articles={articles} total={articles.length} />, `Tag: ${slug} — izbica24.pl`)
+})
+
+// ============ SA6: PRZEGLAD PAGE ============
+app.get('/przeglad', (c) => {
+  const category = c.req.query('category')
+  const sort = (c.req.query('sort') || 'newest') as 'newest' | 'popular' | 'oldest'
+  const page = parseInt(c.req.query('page') || '1')
+  const perPage = 12
+
+  let articles = category ? articlesByCategory(category) : ARTICLES
+  if (sort === 'oldest') articles = [...articles].reverse()
+  const total = articles.length
+  articles = articles.slice((page - 1) * perPage, page * perPage)
+
+  const allCategories = Object.entries(CATEGORIES_MAP).map(([slug, data]) => ({
+    slug, title: data.title, count: articlesByCategory(slug).length,
+  }))
+
+  return renderPublicShell(c,
+    <PrzegladPage
+      articles={articles.map(a => ({
+        slug: a.slug, title: a.title, lead: a.lede, category: a.category,
+        hero_image_r2_key: a.heroImage, published_at: a.publishedAt, author: a.author,
+      }))}
+      total={total} page={page} perPage={perPage}
+      activeCategory={category} sort={sort}
+      categories={allCategories}
+    />,
+    'Przegląd artykułów — izbica24.pl'
+  )
+})
+
+// ============ SA6: AUTHOR PAGE ============
+app.get('/autor/:slug', (c) => {
+  const slug = c.req.param('slug')
+  const authorArticles = ARTICLES.filter(a => a.author.toLowerCase().replace(/\s+/g, '-') === slug)
+  if (authorArticles.length === 0) {
+    c.status(404)
+    return renderPublicShell(c, <main id="page-main" class="main-wrap"><Error404 path={`/autor/${slug}`} /></main>, '404 — izbica24.pl')
+  }
+  const authorName = authorArticles[0].author
+  const author: AuthorInfo = {
+    name: authorName, slug,
+    role: authorArticles[0].authorRole || 'Redaktor',
+    articleCount: authorArticles.length,
+    joinedAt: '2024-01-01',
+    bio: `Dziennikarz portalu izbica24.pl. ${authorArticles.length} opublikowanych artykułów.`,
+  }
+  return renderPublicShell(c,
+    <>
+      <AuthorCard author={author} />
+      <PrzegladPage
+        articles={authorArticles.map(a => ({
+          slug: a.slug, title: a.title, lead: a.lede, category: a.category,
+          hero_image_r2_key: a.heroImage, published_at: a.publishedAt, author: a.author,
+        }))}
+        total={authorArticles.length} page={1} perPage={100}
+        categories={[]}
+      />
+    </>,
+    `Autor: ${authorName} — izbica24.pl`
+  )
 })
 // Sandbox 9: monitoring + admin observability routes
 app.route('/', healthRoutes)
