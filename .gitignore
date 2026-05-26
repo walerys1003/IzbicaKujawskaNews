@@ -10,3 +10,4 @@ pids/
 logs/
 .DS_Store
 *.tar.gz
+.github/workflows/
