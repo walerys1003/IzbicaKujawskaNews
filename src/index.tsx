@@ -1,6 +1,9 @@
 import { Hono } from 'hono'
 import aiRouter from './routes/ai'
 import ragRouter from './routes/rag'
+import newsletterRouter from './routes/newsletter'
+import pushRouter from './routes/push'
+import searchRouter from './routes/search'
 import { renderer } from './renderer'
 import { SuperHeader, MainNav, DemoStrip, Footer } from './components/layout'
 import {
@@ -35,6 +38,13 @@ import dlaPrasyRoute from './routes/public/dla-prasy'
 import dostepnoscRoute from './routes/public/dostepnosc'
 import { ragStats } from './rag'
 import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory, searchArticles } from './data-articles'
+import { createRepository } from './repository'
+import { securityHeaders, corsHeaders } from './middleware/security-headers'
+import { renderCookieConsentBanner, gdprRouter } from './middleware/cookie-consent'
+import { RodoPage } from './components/public/RodoPage'
+import { FaqPage } from './components/public/FaqPage'
+import { CookiePolicyPage } from './components/public/CookiePolicyPage'
+import { TagPage } from './components/public/TagPage'
 import {
   generateSitemap, generateNewsSitemap, generateRss, generateRobots,
   generateManifest, generateHumansTxt, generateSecurityTxt,
@@ -59,6 +69,8 @@ import adminBackupVerifyRoutes from './routes/admin/backup-verify'
 
 const app = new Hono<AppEnv>()
 
+app.use('*', securityHeaders)
+app.use('/api/*', corsHeaders)
 app.use('*', responsePerformanceMiddleware)
 app.use(renderer)
 
@@ -66,6 +78,10 @@ app.use(renderer)
 app.route('/api/v1', apiV1)
 app.route('/api/ai', aiRouter)
 app.route('/api/rag', ragRouter)
+app.route('/api/v1/newsletter', newsletterRouter)
+app.route('/api/v1/gdpr', gdprRouter)
+app.route('/api/push', pushRouter)
+app.route('/api/search', searchRouter)
 // Public pages (HEAD)
 app.route('/', aboutRoute)
 app.route('/', contactRoute)
@@ -77,6 +93,77 @@ app.route('/', reklamaRoute)
 app.route('/', karieraRoute)
 app.route('/', dlaPrasyRoute)
 app.route('/', dostepnoscRoute)
+// SA4: GDPR/RODO public pages
+import { renderPublicShell } from './routes/public/shared'
+app.get('/rodo', (c) => renderPublicShell(c, <RodoPage />, 'RODO — izbica24.pl'))
+app.get('/polityka-cookies', (c) => renderPublicShell(c, <CookiePolicyPage />, 'Polityka Cookies — izbica24.pl'))
+app.get('/faq', (c) => renderPublicShell(c, <FaqPage />, 'FAQ — izbica24.pl'))
+// SA8: Additional public pages — placeholder routes
+import { SimpleInfoPage } from './components/public/SimpleInfoPage'
+app.get('/pomoc', (c) => renderPublicShell(c, <SimpleInfoPage
+  title="Pomoc"
+  lead="Centrum pomocy portalu izbica24.pl. Znajdziesz tutaj odpowiedzi na najczęściej zadawane pytania."
+  slugLabel="Pomoc"
+  sections={[{ heading: 'Kontakt', body: 'Masz pytania? Skontaktuj się z nami przez formularz na stronie /kontakt lub mailowo: redakcja@izbica24.pl.' }]}
+/>, 'Pomoc — izbica24.pl'))
+app.get('/mapa-strony', (c) => renderPublicShell(c, <SimpleInfoPage
+  title="Mapa strony"
+  lead="Mapa strony portalu izbica24.pl — wszystkie kategorie i podstrony w jednym miejscu."
+  slugLabel="Mapa strony"
+  sections={[
+    { heading: 'Kategorie', body: 'Aktualności, Samorząd, Sport, Kultura, Historia, Ludzie, Życie codzienne, Sołectwa' },
+    { heading: 'Strony', body: 'O nas, Kontakt, Regulamin, Polityka prywatności, RODO, FAQ, Reklama, Kariera' },
+  ]}
+/>, 'Mapa strony — izbica24.pl'))
+app.get('/telefony', (c) => renderPublicShell(c, <SimpleInfoPage
+  title="Ważne telefony"
+  lead="Numery alarmowe i ważne kontakty dla mieszkańców Gminy Izbica Kujawska."
+  slugLabel="Telefony"
+  sections={[
+    { heading: 'Numery alarmowe', body: '112 — Centrum Powiadamiania Ratunkowego\n997 — Policja\n998 — Straż Pożarna\n999 — Pogotowie Ratunkowe' },
+    { heading: 'Urząd Miasta i Gminy', body: 'ul. Piłsudskiego 32, 87-865 Izbica Kujawska\nTel: 54 287 12 34' },
+  ]}
+/>, 'Ważne telefony — izbica24.pl'))
+app.get('/linki', (c) => renderPublicShell(c, <SimpleInfoPage
+  title="Przydatne linki"
+  lead="Zbiór przydatnych linków do instytucji i organizacji w regionie."
+  slugLabel="Linki"
+  sections={[
+    { heading: 'Instytucje', body: 'Urząd Miasta i Gminy, Starostwo Powiatowe, Urząd Wojewódzki' },
+    { heading: 'Organizacje', body: 'OSP, KGW, MGCK, Biblioteka, Szkoły' },
+  ]}
+/>, 'Przydatne linki — izbica24.pl'))
+app.get('/dolacz', (c) => renderPublicShell(c, <SimpleInfoPage
+  title="Dołącz do nas"
+  lead="Chcesz tworzyć z nami izbica24.pl? Sprawdź, jak możesz się zaangażować."
+  slugLabel="Dołącz"
+  sections={[
+    { heading: 'Zostań redaktorem', body: 'Masz ciekawą historię do opowiedzenia? Dołącz do redakcji izbica24.pl. Napisz do nas na redakcja@izbica24.pl' },
+    { heading: 'Zgłoś wydarzenie', body: 'Organizujesz wydarzenie w gminie? Daj nam znać, a my je opublikujemy.' },
+  ]}
+/>, 'Dołącz do nas — izbica24.pl'))
+app.get('/sponsorzy', (c) => renderPublicShell(c, <SimpleInfoPage
+  title="Sponsorzy"
+  lead="Poznaj partnerów i sponsorów portalu izbica24.pl."
+  slugLabel="Sponsorzy"
+  sections={[
+    { heading: 'Zostań sponsorem', body: 'Chcesz wesprzeć lokalne media? Skontaktuj się z nami: reklama@izbica24.pl' },
+  ]}
+/>, 'Sponsorzy — izbica24.pl'))
+app.get('/o-portalu', (c) => renderPublicShell(c, <SimpleInfoPage
+  title="O portalu"
+  lead="izbica24.pl — niezależny portal informacyjny Gminy Izbica Kujawska. Aktualności, sport, kultura, historia i życie codzienne."
+  slugLabel="O portalu"
+  sections={[
+    { heading: 'Misja', body: 'Dostarczamy rzetelne informacje z życia gminy Izbica Kujawska. Naszym celem jest budowanie zaangażowanej społeczności lokalnej.' },
+  ]}
+/>, 'O portalu — izbica24.pl'))
+// SA6: Tag page
+app.get('/tag/:slug', (c) => {
+  const slug = c.req.param('slug')
+  const articles = ARTICLES.filter(a => a.tags?.some(t => t.toLowerCase() === slug.toLowerCase()))
+  return renderPublicShell(c, <TagPage tag={slug} articles={articles} total={articles.length} />, `Tag: ${slug} — izbica24.pl`)
+})
 // Sandbox 9: monitoring + admin observability routes
 app.route('/', healthRoutes)
 app.route('/', metricsRoutes)

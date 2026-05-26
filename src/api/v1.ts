@@ -1,8 +1,8 @@
 // SANDBOX B — task B7-B20: REST API v1 — endpointy backendu
-// Hono sub-app mounted at /api/v1 — articles, categories, search, newsletter,
-// incoming (n8n bridge), alerts, weather, fuel, comments, share-count
+// Hono sub-app mounted at /api/v1 — articles, categories, newsletter (mounted router),
+// search (mounted router), incoming (n8n bridge), alerts, weather, fuel, comments, share-count
 import { Hono } from 'hono'
-import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory, searchArticles } from '../data-articles'
+import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory } from '../data-articles'
 import type { AppEnv } from '../types/env'
 import registerRoute from '../routes/auth/register'
 import loginRoute from '../routes/auth/login'
@@ -38,6 +38,8 @@ import galleryCreateRoute from '../routes/v1/gallery-create'
 import galleryAddImageRoute from '../routes/v1/gallery-add-image'
 import galleryReorderRoute from '../routes/v1/gallery-reorder'
 import galleryPublishRoute from '../routes/v1/gallery-publish'
+import newsletterRouter from '../routes/newsletter'
+import searchRouter from '../routes/search'
 
 const api = new Hono<AppEnv>()
 
@@ -75,6 +77,10 @@ api.route('/galleries/create', galleryCreateRoute)
 api.route('/galleries/add-image', galleryAddImageRoute)
 api.route('/galleries/reorder', galleryReorderRoute)
 api.route('/galleries/publish', galleryPublishRoute)
+
+// Mount standalone routers (newsletter + search) for D1-backed endpoints
+api.route('/newsletter', newsletterRouter)
+api.route('/search', searchRouter)
 
 // ============ B7: HEALTH ============
 api.get('/health', (c) =>
@@ -154,57 +160,6 @@ api.get('/categories/:slug', (c) => {
   })
 })
 
-// ============ B12: SEARCH ============
-api.get('/search', (c) => {
-  const q = c.req.query('q') || ''
-  const limit = Math.min(parseInt(c.req.query('limit') || '20'), 50)
-  const items = searchArticles(q).slice(0, limit)
-  return c.json({
-    query: q,
-    total: items.length,
-    items: items.map(a => ({
-      slug: a.slug,
-      title: a.title,
-      lede: a.lede,
-      category: a.category,
-      publishedAt: a.publishedAt,
-      url: `/wiadomosci/${a.slug}`,
-    })),
-  })
-})
-
-// ============ B13: NEWSLETTER SUBSCRIBE ============
-api.post('/newsletter/subscribe', async (c) => {
-  try {
-    const body = await c.req.json<{ email?: string; consent?: boolean }>()
-    const email = (body.email || '').trim().toLowerCase()
-    const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/
-    if (!emailRegex.test(email)) {
-      return c.json({ error: 'invalid_email', detail: 'Nieprawidłowy adres e-mail.' }, 400)
-    }
-    if (body.consent !== true) {
-      return c.json({ error: 'consent_required', detail: 'Wymagana zgoda RODO.' }, 400)
-    }
-    // Mock: w produkcji → KV.put / D1 INSERT / Resend API
-    return c.json({
-      ok: true,
-      email,
-      status: 'pending_confirmation',
-      message: 'Wysłaliśmy link aktywacyjny na podany adres.',
-      timestamp: new Date().toISOString(),
-    })
-  } catch {
-    return c.json({ error: 'bad_request' }, 400)
-  }
-})
-
-// ============ B14: NEWSLETTER UNSUBSCRIBE ============
-api.get('/newsletter/unsubscribe', (c) => {
-  const token = c.req.query('token')
-  if (!token || token.length < 16) return c.json({ error: 'invalid_token' }, 400)
-  return c.json({ ok: true, message: 'Wypisano z newslettera.' })
-})
-
 // ============ B15: ALERTS (Awarie/utrudnienia) ============
 api.get('/alerts', (c) =>
   c.json({
@@ -273,7 +228,6 @@ api.post('/incoming', async (c) => {
     if (!body.source || !body.payload) {
       return c.json({ error: 'missing_fields', required: ['source', 'payload'] }, 400)
     }
-    // Mock: tu n8n → kolejka publikacji w WordPress lub do D1
     return c.json({
       ok: true,
       received: { source: body.source, items: Array.isArray(body.payload) ? body.payload.length : 1 },
@@ -344,7 +298,6 @@ api.post('/articles/:slug/share', async (c) => {
   const slug = c.req.param('slug')
   const a = findArticle(slug)
   if (!a) return c.json({ error: 'article_not_found' }, 404)
-  // Mock: w produkcji → KV INCREMENT
   const fake = Math.floor(Math.random() * 200) + 50
   return c.json({ slug, shareCount: fake, ts: new Date().toISOString() })
 })
