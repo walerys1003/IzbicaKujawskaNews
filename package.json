@@ -20,7 +20,7 @@
     "health-check": "bash scripts/health-check.sh"
   },
   "dependencies": {
-    "hono": "^4.12.23"
+    "hono": "^4.12.26"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
