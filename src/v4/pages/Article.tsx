@@ -216,7 +216,10 @@ const ArticleSidebar: FC<{
 }> = ({ cat, mostRead, sameCategory }) => (
   <aside class="art-side">
     <div class="side-box">
-      <div class="side-box-head">🔥 Najczęściej czytane</div>
+      <div class="side-box-head">
+        <svg class="sec-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 1s.5 3-1.5 5.5S8 10 8 13a4 4 0 008 0c0-1.5-.5-2.5-1-3.5 2 1 4 3 4 6a7 7 0 11-14 0C5 9 10 7 13.5 1z"/></svg>
+        Najczęściej czytane
+      </div>
       <div class="side-box-body">
         {mostRead.map((a, i) => (
           <a class="side-num" href={articleUrl(a)}>
@@ -243,7 +246,10 @@ const ArticleSidebar: FC<{
     </div>
 
     <div class="side-box">
-      <div class="side-box-head">📬 Newsletter</div>
+      <div class="side-box-head">
+        <svg class="sec-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Newsletter
+      </div>
       <div class="side-box-body">
         <p style="font:400 13.5px/1.6 var(--serif);color:var(--ink-3);margin-bottom:12px">
           „Tydzień w Izbicy” — podsumowanie najważniejszych wydarzeń, co piątek wieczorem.

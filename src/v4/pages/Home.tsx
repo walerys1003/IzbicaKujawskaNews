@@ -70,7 +70,10 @@ const Hero: FC = () => {
         </article>
 
         <aside class="hero-side">
-          <div class="hero-side-header">⭐ Najważniejsze dziś</div>
+          <div class="hero-side-header">
+            <svg class="sec-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z"/></svg>
+            Najważniejsze dziś
+          </div>
           <div class="hero-side-list">
             {side.map((a) => {
               const cat = findCategory(a.category)!
@@ -845,7 +848,7 @@ const MultimediaSection: FC = () => {
 
         <div class="mm-podcast" data-mmtype="podcast">
           <div class="mm-podcast-head">
-            <span class="tag dark">🎙 Podcast · odc. {pod.audio?.episode}</span>
+            <span class="tag dark">Podcast · odc. {pod.audio?.episode}</span>
           </div>
           <h3>
             <a href={articleUrl(pod)}>{pod.title}</a>

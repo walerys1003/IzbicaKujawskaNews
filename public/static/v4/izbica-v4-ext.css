@@ -442,3 +442,41 @@
   .gal-grid{ grid-template-columns:1fr 1fr; }
   .subcat-tiles{ grid-template-columns:1fr; }
 }
+
+/* ==========================================================================
+   POPRAWKI INTEGRACYJNE
+   W szacie źródłowej karty były elementami nieklikalnymi; w portalu każda
+   karta jest linkiem, dlatego opakowanie <a> musi dziedziczyć układ flex
+   rodzica, aby zachować identyczne wysokości i wyrównanie stopek kart.
+   ========================================================================== */
+.news-feat > a, .news-card > a, .cult-card > a, .media-card > a,
+.portrait-card > a, .lc > a, .sygnale-md > a, .mm-item > a,
+.hero-main > a, .feature-full > a, .samorzad-img > a, .subcat-tile > a{
+  display:flex; flex-direction:column; flex:1; min-height:0; color:inherit;
+}
+/* Karty pozostają kolumnami flex — stopka .meta zawsze przy dolnej krawędzi */
+.news-feat, .news-card, .cult-card, .media-card, .portrait-card, .lc,
+.sygnale-md, .mm-item, .zycie-card, .subcat-tile{ height:100%; }
+.news-grid, .cards-3, .media-grid-big, .media-grid-small, .zycie-grid,
+.list-grid, .mm-list, .subcat-tiles, .sygnale-grid-small, .sygnale-grid-big{
+  align-items:stretch;
+}
+/* Hero i feature-full: link wypełnia kadr, overlay pozostaje pozycjonowany */
+.hero-main > a, .feature-full > a{ position:absolute; inset:0; }
+.hero-main > a > img, .feature-full > a > img{ width:100%; height:100%; object-fit:cover; }
+.samorzad-img > a{ position:absolute; inset:0; }
+.samorzad-img > a > img{ width:100%; height:100%; object-fit:cover; }
+
+/* Ikony sekcji — zamiast emoji używamy inline SVG (spójny rendering) */
+.sec-ico{ width:16px; height:16px; flex-shrink:0; }
+.hero-side-header .sec-ico{ width:15px; height:15px; color:#f0c040; }
+.side-box-head{ display:flex; align-items:center; gap:8px; }
+.side-box-head .sec-ico{ width:14px; height:14px; }
+
+/* Ticker: elementy są linkami — zachowaj układ inline z szaty */
+.ticker-item{ text-decoration:none; }
+.breaking-label{ text-decoration:none; }
+
+/* Tytuł sekcji w karcie — link nie zmienia typografii */
+.mm-podcast h3 > a, .mm-gallery h3 > a, .lrow-body h3 > a{ color:inherit; }
+.mm-podcast h3 > a:hover, .mm-gallery h3 > a:hover{ color:var(--red); }
