@@ -1,34 +1,70 @@
+/**
+ * POST /api/v1/auth/refresh
+ *
+ * FAZA 1 / A2 — odnowienie tokenu dostepu z rotacja tokenu odnowien.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * NAPRAWIANY BLAD — KLIENT MUSIAL PODAC `userId` W ADRESIE
+ * ══════════════════════════════════════════════════════════════════════════
+ * Poprzednia wersja odczytywala identyfikator uzytkownika z parametru zapytania
+ *
+ *     const userId = String(c.req.query('userId') || '')
+ *     if (!userId) return c.json({ error: 'missing_user_id' }, 400)
+ *
+ * Byly z tym dwa problemy. Praktyczny: klient musial pamietac i przesylac
+ * `userId`, choc token odnowien juz zawiera identyfikator sesji — nadmiarowy
+ * parametr, ktory laczyl sie z sesja tylko przez zaufanie do klienta.
+ * Powazniejszy: identyfikator uzytkownika trafial do adresu URL, a wiec do
+ * logow serwera, historii przegladarki i naglowka Referer.
+ *
+ * Teraz jedynym wejsciem jest token odnowien. Sesja i wlasciciel wynikaja
+ * z jego tresci, sprawdzanej po stronie serwera.
+ */
+
 import { Hono } from 'hono'
 import { validator } from 'hono/validator'
 import type { AppEnv } from '../../types/env'
-import { createJwtPair, getSession, getUserById, parseRefreshToken, revokeSession, saveSession, sha256Hex } from './helpers/password-utils'
+import { fail, ok } from '../../lib/http/envelope'
+import { publicUser, rotateSession } from '../../lib/auth/store'
 
 const route = new Hono<AppEnv>()
 
-route.post('/refresh', validator('json', (value, c) => {
-  const refreshToken = String((value as Record<string, unknown>).refreshToken || '')
-  if (!refreshToken) return c.json({ error: 'missing_refresh_token' }, 400)
-  return { refreshToken }
-}), async (c) => {
-  const { refreshToken } = c.req.valid('json')
-  const parsed = parseRefreshToken(refreshToken)
-  if (!parsed) return c.json({ error: 'invalid_refresh_token' }, 400)
+route.post(
+  '/refresh',
+  validator('json', (value, c) => {
+    const body = (value ?? {}) as Record<string, unknown>
+    const refreshToken = String(body.refreshToken ?? '')
+    if (!refreshToken) {
+      return fail(c, 'validation_error', 'Brak tokenu odnowien.', { fields: { refreshToken: 'wymagane' } })
+    }
+    return { refreshToken }
+  }),
+  async (c) => {
+    if (!c.env?.DB) return fail(c, 'database_unavailable')
+    const { refreshToken } = c.req.valid('json')
 
-  const userId = String(c.req.query('userId') || '')
-  if (!userId) return c.json({ error: 'missing_user_id' }, 400)
+    const result = await rotateSession(c.env, refreshToken)
 
-  const session = await getSession(c.env, userId, parsed.sessionId)
-  const user = await getUserById(c.env, userId)
-  if (!session || !user) return c.json({ error: 'session_not_found' }, 404)
-  if (session.refreshTokenHash !== await sha256Hex(parsed.secret)) return c.json({ error: 'refresh_token_mismatch' }, 401)
+    if (!result.ok) {
+      // Wszystkie przypadki niepowodzenia zwracaja 401 z tym samym komunikatem.
+      // Rozroznienie 'not_found' od 'invalid_secret' informowaloby atakujacego,
+      // czy trafil na istniejacy identyfikator sesji.
+      // Powod pozostaje w polu diagnostycznym — przydatnym w logach, a nie
+      // ujawniajacym stanu innych sesji.
+      return fail(c, 'unauthorized', 'Token odnowien jest nieprawidlowy lub wygasl. Zaloguj sie ponownie.', {
+        powod: result.reason,
+      })
+    }
 
-  const pair = await createJwtPair(c.env, user, parsed.sessionId)
-  const nextParsed = parseRefreshToken(pair.refreshToken)
-  if (!nextParsed) return c.json({ error: 'invalid_refresh_token' }, 500)
-
-  await revokeSession(c.env, userId, parsed.sessionId)
-  await saveSession(c.env, { ...session, refreshTokenHash: await sha256Hex(nextParsed.secret), lastSeenAt: new Date().toISOString() })
-  return c.json({ ok: true, accessToken: pair.accessToken, refreshToken: pair.refreshToken, sessionId: parsed.sessionId })
-})
+    return ok(c, {
+      tokenType: result.tokenType,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      sessionId: result.sessionId,
+      accessTokenExpiresIn: result.accessTokenExpiresIn,
+      user: publicUser(result.user),
+    })
+  },
+)
 
 export default route
