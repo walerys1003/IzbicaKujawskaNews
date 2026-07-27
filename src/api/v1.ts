@@ -41,6 +41,7 @@ import newsletterRouter from '../routes/newsletter'
 import searchRouter from '../routes/search'
 // FAZA 1 / A7 — komentarze z sanityzacją, limitem tempa i realnym zapisem do D1
 import commentsRoute from '../routes/v1/comments'
+import commentsModerationRoute from '../routes/v1/comments-moderation'
 // FAZA 1 / I4b — zadania cykliczne wywoływane przez zewnętrzny harmonogram
 import cronRoute from '../routes/v1/cron'
 // FAZA 2 / A4 + B4 + D9 — artykuły na D1: odczyt publiczny i pełny cykl życia
@@ -93,6 +94,8 @@ api.route('/galleries/publish', galleryPublishRoute)
 // Komentarze — moduł definiuje własne pełne ścieżki
 // (/articles/:slug/comments oraz alias /comments), dlatego montowany w korzeniu.
 api.route('/', commentsRoute)
+// A6 — moderacja: kolejka, decyzje, zgloszenia, publiczna lista zatwierdzonych.
+api.route('/comments', commentsModerationRoute)
 // Zadania cykliczne — POST /api/v1/cron/run, chronione sekretem CRON_SECRET.
 api.route('/cron', cronRoute)
 

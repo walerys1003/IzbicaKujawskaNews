@@ -43,6 +43,8 @@ import { fail, created } from '../../lib/http/envelope'
 import { sanitizeHtml, stripHtml } from '../../lib/security/sanitize-html'
 import { validateComment } from '../../lib/validators/comment'
 import { commentRateLimit } from '../../middleware/rate-limit'
+import { detectSpam } from '../../lib/moderation/spam-detector'
+import { hasProfanity, sanitizeProfanity } from '../../lib/moderation/profanity-filter'
 
 const route = new Hono<AppEnv>()
 
@@ -128,17 +130,50 @@ const handleSubmit = async (c: Parameters<Parameters<typeof route.post>[1]>[0], 
     (c.req.header('x-forwarded-for') || '').split(',')[0].trim() ||
     'unknown'
 
+  // ── Ocena tresci (A6) ─────────────────────────────────────────────────
+  // Moduly filtra i detektora istnialy w src/lib/moderation, ale nie byly
+  // przez nikogo wywolywane — kolumny spam_score, spam_reasons_json i
+  // profanity_hits zostawaly zerowe, wiec moderator nie mial zadnej
+  // przeslanki, ktory wpis obejrzec pierwszy.
+  const plain = stripHtml(content, 4_000)
+  const spam = detectSpam(plain)
+  const profanity = hasProfanity(plain)
+
+  // Wulgaryzmy sa maskowane, nie odrzucane. Odrzucenie zamykaloby droge
+  // mieszkancowi, ktory napisal rzeczowa uwage i jedno mocne slowo; decyzje
+  // podejmuje moderator, widzac oznaczenie.
+  const storedContent = profanity ? sanitizeProfanity(content) : content
+
+  // Oczywisty spam nie zasmieca kolejki — trafia wprost do kosza z zapisanym
+  // uzasadnieniem, zeby decyzja byla odwracalna.
+  const initialStatus = spam.isSpam && spam.score >= 8 ? 'spam' : 'pending'
+
   try {
     const result = await db
       .prepare(
-        `INSERT INTO comments (article_id, author_name, author_email, content, status, ip_hash)
-         VALUES (?1, ?2, ?3, ?4, 'pending', ?5)`,
+        `INSERT INTO comments (article_id, author_name, author_email, content, status, ip_hash,
+                               spam_score, spam_reasons_json, profanity_hits)
+         VALUES (?1, ?2, ?3, ?4, ?6, ?5, ?7, ?8, ?9)`,
       )
-      .bind(articleRow.id, authorName, validation.data.email, content, await hashIp(ip))
+      .bind(
+        articleRow.id,
+        authorName,
+        validation.data.email,
+        storedContent,
+        await hashIp(ip),
+        initialStatus,
+        spam.score,
+        spam.reasons.length ? JSON.stringify(spam.reasons) : null,
+        profanity ? 1 : 0,
+      )
       .run()
 
     const commentId = (result as { meta?: { last_row_id?: number } }).meta?.last_row_id
 
+    // Zglaszajacy widzi zawsze „oczekuje na moderacje”, takze gdy wpis
+    // zostal oznaczony jako spam. Informacja „rozpoznano cie jako spamera”
+    // jest dla autora spamu wskazowka, jak obejsc filtr, a dla omylkowo
+    // oznaczonego mieszkanca — obraza.
     return created(c, {
       commentId,
       status: 'pending_moderation',
