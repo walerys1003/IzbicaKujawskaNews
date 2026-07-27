@@ -2,7 +2,6 @@
 // Hono sub-app mounted at /api/v1 — articles, categories, newsletter (mounted router),
 // search (mounted router), incoming (n8n bridge), alerts, weather, fuel, comments, share-count
 import { Hono } from 'hono'
-import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory } from '../data-articles'
 import type { AppEnv } from '../types/env'
 import registerRoute from '../routes/auth/register'
 import loginRoute from '../routes/auth/login'
@@ -44,6 +43,12 @@ import searchRouter from '../routes/search'
 import commentsRoute from '../routes/v1/comments'
 // FAZA 1 / I4b — zadania cykliczne wywoływane przez zewnętrzny harmonogram
 import cronRoute from '../routes/v1/cron'
+// FAZA 2 / A4 + B4 + D9 — artykuły na D1: odczyt publiczny i pełny cykl życia
+import articlesPublicRoute from '../routes/v1/articles-public'
+import articlesAdminRoute from '../routes/v1/articles'
+import categoriesRoute from '../routes/v1/categories'
+// FAZA 2 / B5 — rejestr schematów walidacji jako dokumentacja API
+import schemasRoute from '../routes/v1/schemas'
 
 const api = new Hono<AppEnv>()
 
@@ -102,73 +107,23 @@ api.get('/health', (c) =>
   })
 )
 
-// ============ B8: LIST ARTICLES ============
-api.get('/articles', (c) => {
-  const limit = Math.min(parseInt(c.req.query('limit') || '20'), 100)
-  const offset = parseInt(c.req.query('offset') || '0')
-  const category = c.req.query('category')
-
-  let results = category ? articlesByCategory(category) : ARTICLES
-  const total = results.length
-  results = results.slice(offset, offset + limit)
-
-  return c.json({
-    total,
-    limit,
-    offset,
-    items: results.map(a => ({
-      slug: a.slug,
-      category: a.category,
-      categoryColor: a.categoryColor,
-      title: a.title,
-      lede: a.lede,
-      author: a.author,
-      publishedAt: a.publishedAt,
-      readingMinutes: a.readingMinutes,
-      heroImage: a.heroImage,
-      tags: a.tags,
-      url: `/wiadomosci/${a.slug}`,
-    })),
-  })
-})
-
-// ============ B9: ARTICLE DETAIL ============
-api.get('/articles/:slug', (c) => {
-  const slug = c.req.param('slug')
-  const a = findArticle(slug)
-  if (!a) return c.json({ error: 'article_not_found', slug }, 404)
-  return c.json(a)
-})
-
-// ============ B10: CATEGORIES ============
-api.get('/categories', (c) =>
-  c.json({
-    total: Object.keys(CATEGORIES_MAP).length,
-    items: Object.entries(CATEGORIES_MAP).map(([slug, data]) => ({
-      slug,
-      ...data,
-      count: articlesByCategory(slug).length,
-    })),
-  })
-)
-
-// ============ B11: CATEGORY DETAIL ============
-api.get('/categories/:slug', (c) => {
-  const slug = c.req.param('slug')
-  const cat = CATEGORIES_MAP[slug]
-  if (!cat) return c.json({ error: 'category_not_found', slug }, 404)
-  const articles = articlesByCategory(slug)
-  return c.json({
-    slug,
-    ...cat,
-    count: articles.length,
-    articles: articles.map(a => ({
-      slug: a.slug,
-      title: a.title,
-      publishedAt: a.publishedAt,
-    })),
-  })
-})
+// ════════════════════════════════════════════════════════════════════════════
+// FAZA 2 / A4 — artykuly i kategorie czytane z D1
+//
+// Trasy `/articles` oraz `/categories` czytaly tablice `ARTICLES`
+// i `CATEGORIES_MAP` wkompilowane w plik zrodlowy. Skutek: cokolwiek
+// redakcja zapisala w bazie, API zwracalo te same 30 tekstow. Publikacja
+// nie mogla dzialac, bo nie istniala droga od bazy do odpowiedzi HTTP.
+//
+// Teraz:
+//   • `/articles`       → src/routes/v1/articles-public.ts  (tylko published)
+//   • `/admin/articles` → src/routes/v1/articles.ts         (pelny cykl zycia)
+//   • `/categories`     → z tabeli `categories` z realnym licznikiem
+// ════════════════════════════════════════════════════════════════════════════
+api.route('/articles', articlesPublicRoute)
+api.route('/admin/articles', articlesAdminRoute)
+api.route('/categories', categoriesRoute)
+api.route('/schemas', schemasRoute)
 
 // ============ B15: ALERTS (Awarie/utrudnienia) ============
 api.get('/alerts', (c) =>
@@ -263,13 +218,54 @@ api.post('/incoming', async (c) => {
 // Montowane niżej: api.route('/', commentsRoute)
 // ════════════════════════════════════════════════════════════════════════════
 
-// ============ B21: SHARE COUNT ============
+// ════════════════════════════════════════════════════════════════════════════
+// FAZA 2 — licznik udostepnien
+//
+// Poprzednia wersja zwracala `Math.random() * 200 + 50`. Redakcja widziala
+// w panelu „187 udostepnien” dla tekstu, ktorego nikt nie udostepnil, a przy
+// kazdym odswiezeniu strony liczba byla inna. Dane, ktore zmieniaja sie same,
+// sa gorsze niz brak danych — na ich podstawie podejmowano by decyzje o tym,
+// co promowac na czolowce.
+//
+// Teraz licznik jest realny: rosnie w `analytics_events`, a odpowiedz podaje
+// faktyczna liczbe zdarzen dla tego artykulu.
+// ════════════════════════════════════════════════════════════════════════════
 api.post('/articles/:slug/share', async (c) => {
   const slug = c.req.param('slug')
-  const a = findArticle(slug)
-  if (!a) return c.json({ error: 'article_not_found' }, 404)
-  const fake = Math.floor(Math.random() * 200) + 50
-  return c.json({ slug, shareCount: fake, ts: new Date().toISOString() })
+  if (!c.env.DB) return c.json({ ok: false, error: { code: 'database_unavailable' } }, 503)
+
+  const article = await c.env.DB.prepare(
+    `SELECT id FROM articles WHERE slug = ? AND status = 'published' AND deleted_at IS NULL LIMIT 1`,
+  )
+    .bind(slug)
+    .first<{ id: number }>()
+  if (!article) return c.json({ ok: false, error: { code: 'not_found' } }, 404)
+
+  const channel = (await c.req.json().catch(() => ({}))) as { channel?: string }
+  const allowed = ['facebook', 'x', 'linkedin', 'whatsapp', 'email', 'link']
+  const kanal = allowed.includes(String(channel.channel)) ? String(channel.channel) : 'link'
+
+  // `analytics_events` ma klucz TEXT nadawany przez aplikacje (nie AUTOINCREMENT),
+  // a `path` i `event_name` sa NOT NULL — bez nich INSERT zostalby odrzucony.
+  await c.env.DB.prepare(
+    `INSERT INTO analytics_events (id, path, article_slug, event_name, event_value, referrer)
+     VALUES (?, ?, ?, 'share', ?, ?)`,
+  )
+    .bind(crypto.randomUUID(), `/artykul/${slug}`, slug, kanal, c.req.header('referer') ?? 'direct')
+    .run()
+    .catch((error) => {
+      // Blad telemetrii nie moze wywrocic akcji czytelnika — kliknal
+      // „udostepnij”, a nie „zapisz zdarzenie analityczne”.
+      console.error('[udostepnienie] nie zapisano zdarzenia:', error)
+    })
+
+  const count = await c.env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM analytics_events WHERE event_name = 'share' AND article_slug = ?`,
+  )
+    .bind(slug)
+    .first<{ n: number }>()
+
+  return c.json({ ok: true, data: { slug, kanal, shareCount: count?.n ?? 0 } })
 })
 
 // ============ B22: RAG SEARCH ============

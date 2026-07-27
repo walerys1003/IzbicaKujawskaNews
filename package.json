@@ -25,10 +25,12 @@
     "db:reset": "rm -rf .wrangler/state/v3/d1 && npm run db:migrate:local",
     "db:console:local": "wrangler d1 execute izbica24-production --local --command",
     "db:console:prod": "wrangler d1 execute izbica24-production --remote --command",
-    "clean-port": "fuser -k 3000/tcp 2>/dev/null || true"
+    "clean-port": "fuser -k 3000/tcp 2>/dev/null || true",
+    "db:verify": "node scripts/db-verify.mjs"
   },
   "dependencies": {
-    "hono": "^4.12.23"
+    "hono": "^4.12.23",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@hono/vite-build": "^1.2.0",
