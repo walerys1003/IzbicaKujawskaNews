@@ -6,6 +6,7 @@
 
 import type { FC } from 'hono/jsx'
 import { SOLECTWA, findCategory } from '../taxonomy'
+import { GMINA } from '../gmina-fakty'
 import {
   byCategory,
   bySubcategory,
@@ -540,8 +541,8 @@ const StatsBar: FC = () => (
         <p>Powiat włocławski · województwo kujawsko-pomorskie · maj 2026</p>
       </div>
       <div class="stats-bar">
-        <div class="stat"><div class="num">5 400</div><div class="lbl">Mieszkańców</div><div class="sub">w 34 sołectwach</div></div>
-        <div class="stat"><div class="num">34</div><div class="lbl">Sołectw</div><div class="sub">na 147 km²</div></div>
+        <div class="stat"><div class="num">{GMINA.ludnosc.tekst}</div><div class="lbl">Mieszkańców</div><div class="sub">w {SOLECTWA.length} sołectwach</div></div>
+        <div class="stat"><div class="num">{SOLECTWA.length}</div><div class="lbl">Sołectw</div><div class="sub">na {GMINA.powierzchnia.tekst}</div></div>
         <div class="stat"><div class="num">1750</div><div class="lbl">Lokacja miasta</div><div class="sub">prawa miejskie od króla</div></div>
         <div class="stat"><div class="num">12 847</div><div class="lbl">Artykułów</div><div class="sub">w bazie portalu</div></div>
       </div>
@@ -776,10 +777,10 @@ const SolectwaSection: FC = () => (
     <div class="solectwa">
       <div class="sol-map-col">
         <h2>
-          34 sołectwa. <span class="red">Jedna gmina.</span>
+          {SOLECTWA.length} sołectw. <span class="red">Jedna gmina.</span>
         </h2>
         <p>
-          Gmina Izbica Kujawska to nie tylko miasto. To <strong>34 sołectwa</strong> rozsiane wokół
+          Gmina Izbica Kujawska to nie tylko miasto. To <strong>{SOLECTWA.length} sołectw</strong> rozsianych wokół
           rynku — Sadłno, Bierzyn, Pasieka, Wietrzychowice, Modzerowo, Sarnowo, Mchówek i wiele
           innych. Każde z własną historią, sołtysem, świetlicą i Kołem Gospodyń Wiejskich. Kliknij
           sołectwo, by zobaczyć wszystkie wpisy z jego okolic.
@@ -787,7 +788,7 @@ const SolectwaSection: FC = () => (
         <div class="sol-stats-row">
           <div class="sstat"><div class="num">34</div><div class="lbl">Sołectw</div></div>
           <div class="sstat"><div class="num">5,4 tys.</div><div class="lbl">Mieszkańców</div></div>
-          <div class="sstat"><div class="num">147 km²</div><div class="lbl">Powierzchnia</div></div>
+          <div class="sstat"><div class="num">{GMINA.powierzchnia.tekst}</div><div class="lbl">Powierzchnia</div></div>
         </div>
       </div>
       <div class="sol-list-col">

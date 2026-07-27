@@ -311,46 +311,66 @@ export const MEDIA_KINDS = ['image', 'video', 'audio', 'document'] as const
 export const mediaKind = z.enum(MEDIA_KINDS)
 
 /**
- * Lista 34 sołectw gminy Izbica Kujawska. Wykorzystywana zarówno przy
- * walidacji tagu `solectwo`, jak i w AI9 do wykrywania nazw wymyślonych
- * przez model językowy — dlatego mieszka w warstwie walidacji, a nie
- * w module AI.
+ * Slugi miejscowości gminy Izbica Kujawska — 37 pozycji
+ * (36 sołectw + siedziba gminy).
+ *
+ * ══════════════════════════════════════════════════════════════════════
+ * LISTA GENEROWANA — nie edytuj ręcznie.
+ *   node scripts/i10-generuj-walidacje.mjs
+ * Źródło: data/solectwa-osm.json (Wikipedia + OpenStreetMap, relacja
+ * 2643810, TERYT 0418083).
+ *
+ * Poprzednia zawartość tej stałej zawierała nazwy nieistniejące
+ * w gminie: 'bugaj', 'dzwierzchno', 'gagowy', 'kotowo', 'naklo',
+ * 'narty', 'rzeczyca', 'slaskie', 'smolniki', 'swiatniki',
+ * 'wieszczyce', 'zdziary', a także 'josefowo' (literówka od Józefowo).
+ *
+ * To był błąd o podwójnym skutku, bo ta lista pełni dwie funkcje:
+ *   1. waliduje tag `solectwo` — więc odrzucała nazwy prawdziwe
+ *      (Chociszewo, Ślazewo, Śmieły…) jako niepoprawne,
+ *   2. służy w AI9 do wykrywania nazw WYMYŚLONYCH przez model
+ *      językowy — a sama zawierała nazwy wymyślone, czyli
+ *      przepuszczała halucynację i blokowała fakt jednocześnie.
+ * ══════════════════════════════════════════════════════════════════════
  */
 export const SOLECTWA = [
   'augustynowo',
   'blenna',
-  'bugaj',
-  'chotel',
+  'blenna-a',
+  'blenna-b',
+  'chociszewo',
+  'cieplinki',
   'ciepliny',
-  'dziewczopolka',
-  'dzwierzchno',
-  'gagowy',
+  'dlugie',
+  'gasiorowo',
   'grochowiska',
   'helenowo',
+  'hulanka',
   'izbica-kujawska',
-  'josefowo',
+  'joasin',
+  'jozefowo',
+  'kazanki',
   'kazimierowo',
   'komorowo',
-  'kotowo',
   'mchowek',
+  'mieczyslawowo',
   'modzerowo',
-  'naklo',
-  'narty',
+  'naczachowo',
+  'nowa-wies',
   'obalki',
   'pasieka',
-  'podtymien',
-  'rzeczyca',
   'skarbanowo',
-  'slaskie',
-  'smolniki',
+  'slazewo',
+  'smiely',
   'sokolowo',
-  'swiatniki',
+  'swietoslawice',
+  'swiszewy',
   'szczkowek',
   'tymien',
-  'wieszczyce',
   'wietrzychowice',
   'wiszczelice',
-  'zdziary',
+  'wolka-komorowska',
+  'zdzislawin',
 ] as const
 
 export const solectwoSlug = z.enum(SOLECTWA)

@@ -6,6 +6,7 @@
 import type { FC } from 'hono/jsx'
 import { raw } from 'hono/html'
 import { CATEGORIES, SOLECTWA } from '../taxonomy'
+import { GMINA } from '../gmina-fakty'
 import { Breadcrumbs, SectionHeader } from '../components/Layout'
 
 export interface InfoSection {
@@ -279,8 +280,8 @@ export const MapaGminyPageV4: FC = () => (
       <span class="tag samorzad">Gmina Izbica Kujawska</span>
       <h1 style="margin-top:12px">Mapa gminy — instytucje i sołectwa</h1>
       <p class="cat-lead">
-        Najważniejsze instytucje publiczne, placówki oświatowe i zdrowotne oraz 34 sołectwa gminy
-        Izbica Kujawska. Powiat włocławski, województwo kujawsko-pomorskie, 147 km².
+        Najważniejsze instytucje publiczne, placówki oświatowe i zdrowotne oraz {SOLECTWA.length} sołectw gminy
+        Izbica Kujawska. Powiat włocławski, województwo kujawsko-pomorskie, {GMINA.powierzchnia.tekst}.
       </p>
     </header>
 
@@ -315,7 +316,7 @@ export const MapaGminyPageV4: FC = () => (
     </section>
 
     <section class="section reveal">
-      <SectionHeader title="34 sołectwa" moreHref="/solectwa" moreLabel="Zobacz wszystkie" colorVar="var(--c-samorzad)" />
+      <SectionHeader title={`${SOLECTWA.length} sołectw`} moreHref="/solectwa" moreLabel="Zobacz wszystkie" colorVar="var(--c-samorzad)" />
       <div class="sol-page-grid">
         {SOLECTWA.map((s) => (
           <a class="sol-card" href={`/solectwa/${s.slug}`}>

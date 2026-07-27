@@ -5,6 +5,7 @@
 
 import type { FC } from 'hono/jsx'
 import { SOLECTWA, CATEGORIES, findCategory } from '../taxonomy'
+import { GMINA } from '../gmina-fakty'
 import { bySolectwo, mostRead } from '../content-db'
 import type { Article } from '../content-types'
 import { Breadcrumbs, SectionHeader } from '../components/Layout'
@@ -17,21 +18,21 @@ export const SolectwaPageV4: FC = () => (
 
     <header class="cat-hero reveal" style="--c:var(--c-samorzad)">
       <span class="tag samorzad">Samorząd</span>
-      <h1 style="margin-top:12px">34 sołectwa. Jedna gmina.</h1>
+      <h1 style="margin-top:12px">{SOLECTWA.length} sołectw. Jedna gmina.</h1>
       <p class="cat-lead">
-        Gmina Izbica Kujawska to nie tylko miasto. To 34 sołectwa rozsiane wokół rynku, każde z własną
+        Gmina Izbica Kujawska to nie tylko miasto. To {SOLECTWA.length} sołectw rozsianych wokół rynku, każde z własną
         historią, sołtysem, świetlicą i Kołem Gospodyń Wiejskich. Wybierz sołectwo, aby zobaczyć
         wszystkie materiały z jego okolic.
       </p>
       <div class="cat-stats">
         <span>
-          <strong>34</strong> sołectw
+          <strong>{SOLECTWA.length}</strong> sołectw
         </span>
         <span>
-          <strong>5 400</strong> mieszkańców
+          <strong>{GMINA.ludnosc.tekst}</strong> mieszkańców
         </span>
         <span>
-          <strong>147 km²</strong> powierzchni
+          <strong>{GMINA.powierzchnia.tekst}</strong> powierzchni
         </span>
       </div>
     </header>

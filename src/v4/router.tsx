@@ -16,6 +16,10 @@ import {
 } from './pages/Category'
 import { ArticlePageV4, GalleryPageV4 } from './pages/Article'
 import { SolectwaPageV4, SearchPageV4, NotFoundV4 } from './pages/Misc'
+// Etap D5 — wyniki z indeksu FTS5 mają własny komponent, bo dysponują
+// fragmentem z zaznaczonym trafieniem, czego karta ListCard nie obsługuje.
+import { SearchResultsV4 } from './pages/SearchResults'
+import { szukaj, podpowiedzi } from '../lib/search/search-service'
 import {
   CATEGORIES,
   SOLECTWA,
@@ -84,9 +88,52 @@ app.get('/', (c) =>
 )
 
 // ════════════════════════════════════════════════════════ WYSZUKIWANIE
-app.get('/szukaj', (c) => {
+/**
+ * Etap D5 — wyszukiwanie oparte o indeks FTS5 w D1, z zapasem w pamięci.
+ *
+ * Dlaczego nie samo FTS5: strona wyszukiwania jest jedną z najczęściej
+ * odwiedzanych, a jej awaria jest dla czytelnika nieodróżnialna od awarii
+ * całego portalu. Gdy indeks nie odpowie (brak bindingu, błąd zapytania),
+ * spadamy do starego filtra `searchV4()` — wyniki są wtedy gorsze, ale
+ * strona działa. Rozstrzygające jest pole `zrodlo` w odpowiedzi usługi.
+ *
+ * Dlaczego nie sam filtr w pamięci: nie znajduje odmienionych form
+ * („izbica" nie trafia w „w Izbicy"), nie składa polskich liter
+ * („sadlno" nie trafia w „Sadłno") i nie widzi artykułów dodanych przez
+ * redakcję do bazy — a to trzy najczęstsze rzeczy, jakie wpisze
+ * mieszkaniec gminy.
+ */
+app.get('/szukaj', async (c) => {
   const q = c.req.query('q') || ''
   const page = pageParam(c.req.query('page'))
+  const kategoria = c.req.query('kategoria') || undefined
+  const solectwo = c.req.query('solectwo') || undefined
+
+  const odp = await szukaj(c.env?.DB, q, { strona: page, kategoria, solectwo })
+
+  // Indeks zwrócił wyniki — mapujemy je na karty szaty v4.
+  if (odp.zrodlo === 'fts') {
+    return c.render(
+      <Shell>
+        <SearchResultsV4
+          query={q}
+          wyniki={odp.wyniki}
+          total={odp.total}
+          page={odp.strona}
+          stron={odp.stron}
+          terminy={odp.terminy}
+        />
+      </Shell>,
+      {
+        title: q ? `Szukaj: ${q} — Izbica24.pl` : 'Wyszukiwarka — Izbica24.pl',
+        description: q
+          ? `Wyniki wyszukiwania dla frazy „${q}” na portalu Izbica24.pl`
+          : 'Wyszukiwarka portalu Izbica24.pl — wiadomości z gminy Izbica Kujawska.',
+      }
+    )
+  }
+
+  // Wariant zapasowy: pusta fraza albo niedostępny indeks.
   const results = searchV4(q)
   return c.render(
     <Shell>
@@ -104,6 +151,20 @@ app.get('/szukaj', (c) => {
   )
 })
 
+/**
+ * Podpowiedzi do pola wyszukiwania. Zwraca JSON, nie HTML — pole w nagłówku
+ * odpytuje ten adres przy pisaniu.
+ */
+app.get('/szukaj/podpowiedzi', async (c) => {
+  const q = c.req.query('q') || ''
+  if (q.trim().length < 2) return c.json({ items: [] })
+  const items = await podpowiedzi(c.env?.DB, q, 8)
+  // Krótki cache: te same prefiksy powtarzają się masowo między czytelnikami,
+  // a 30 s nieaktualności podpowiedzi nikomu nie szkodzi.
+  c.header('cache-control', 'public, max-age=30')
+  return c.json({ items })
+})
+
 // ══════════════════════════════════════════════════════════ SOŁECTWA
 app.get('/solectwa', (c) =>
   c.render(
@@ -111,9 +172,14 @@ app.get('/solectwa', (c) =>
       <SolectwaPageV4 />
     </Shell>,
     {
-      title: '34 sołectwa gminy Izbica Kujawska — Izbica24.pl',
-      description:
-        'Sadłno, Bierzyn, Pasieka, Wietrzychowice, Modzerowo i pozostałe sołectwa gminy Izbica Kujawska.',
+      title: `${SOLECTWA.length} sołectw gminy Izbica Kujawska — Izbica24.pl`,
+      // Opis wyliczany z listy, nie wpisany: poprzednio wymieniał
+      // „Sadłno, Bierzyn…" — nazwy, które nie są sołectwami tej gminy
+      // (Bierzyn należy do gminy Boniewo). Opis meta trafia do Google,
+      // więc błąd był widoczny w wynikach wyszukiwania.
+      description: `${SOLECTWA.slice(0, 5)
+        .map((s) => s.name)
+        .join(', ')} i pozostałe sołectwa gminy Izbica Kujawska.`,
     }
   )
 )

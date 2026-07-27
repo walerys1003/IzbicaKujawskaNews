@@ -1,0 +1,857 @@
+{
+  "zrodla": {
+    "listaSolectw": "Wikipedia (pl), „Izbica Kujawska (gmina)\", sekcja Sołectwa",
+    "wspolrzedne": "OpenStreetMap / Overpass, relacja 2643810 (TERYT 0418083)",
+    "licencjaOsm": "ODbL — wymagane oznaczenie „© OpenStreetMap contributors\""
+  },
+  "wygenerowano": "2026-07-27T16:22:01.527Z",
+  "liczbaSolectw": 36,
+  "punkty": [
+    {
+      "slug": "izbica-kujawska",
+      "nazwa": "Izbica Kujawska",
+      "lat": 52.41925,
+      "lon": 18.76435,
+      "rodzajOsm": "town",
+      "osmId": 31623062,
+      "solectwo": false,
+      "siedzibaGminy": true
+    },
+    {
+      "slug": "augustynowo",
+      "nazwa": "Augustynowo",
+      "lat": 52.433223,
+      "lon": 18.770186,
+      "rodzajOsm": "village",
+      "osmId": 31628025,
+      "solectwo": true
+    },
+    {
+      "slug": "blenna",
+      "nazwa": "Błenna",
+      "lat": 52.3844,
+      "lon": 18.87943,
+      "rodzajOsm": "village",
+      "osmId": 31627624,
+      "solectwo": true
+    },
+    {
+      "slug": "blenna-a",
+      "nazwa": "Błenna A",
+      "lat": 52.379596,
+      "lon": 18.895338,
+      "rodzajOsm": "village",
+      "osmId": 692624282,
+      "solectwo": true
+    },
+    {
+      "slug": "blenna-b",
+      "nazwa": "Błenna B",
+      "lat": 52.367476,
+      "lon": 18.897395,
+      "rodzajOsm": "village",
+      "osmId": 31621458,
+      "solectwo": true
+    },
+    {
+      "slug": "chociszewo",
+      "nazwa": "Chociszewo",
+      "lat": 52.382706,
+      "lon": 18.811295,
+      "rodzajOsm": "village",
+      "osmId": 31626353,
+      "solectwo": true
+    },
+    {
+      "slug": "cieplinki",
+      "nazwa": "Cieplinki",
+      "lat": 52.34738,
+      "lon": 18.833333,
+      "rodzajOsm": "village",
+      "osmId": 3009696106,
+      "solectwo": true
+    },
+    {
+      "slug": "ciepliny",
+      "nazwa": "Ciepliny",
+      "lat": 52.36706,
+      "lon": 18.84293,
+      "rodzajOsm": "village",
+      "osmId": 31626122,
+      "solectwo": true
+    },
+    {
+      "slug": "dlugie",
+      "nazwa": "Długie",
+      "lat": 52.399561,
+      "lon": 18.751802,
+      "rodzajOsm": "village",
+      "osmId": 3009701209,
+      "solectwo": true
+    },
+    {
+      "slug": "gasiorowo",
+      "nazwa": "Gąsiorowo",
+      "lat": 52.378889,
+      "lon": 18.921111,
+      "rodzajOsm": "village",
+      "osmId": 3009707823,
+      "solectwo": true
+    },
+    {
+      "slug": "grochowiska",
+      "nazwa": "Grochowiska",
+      "lat": 52.413656,
+      "lon": 18.72514,
+      "rodzajOsm": "village",
+      "osmId": 31623547,
+      "solectwo": true
+    },
+    {
+      "slug": "helenowo",
+      "nazwa": "Helenowo",
+      "lat": 52.386898,
+      "lon": 18.860833,
+      "rodzajOsm": "village",
+      "osmId": 3009708764,
+      "solectwo": true
+    },
+    {
+      "slug": "hulanka",
+      "nazwa": "Hulanka",
+      "lat": 52.430556,
+      "lon": 18.725278,
+      "rodzajOsm": "hamlet",
+      "osmId": 3009709081,
+      "solectwo": true
+    },
+    {
+      "slug": "joasin",
+      "nazwa": "Joasin",
+      "lat": 52.355833,
+      "lon": 18.860556,
+      "rodzajOsm": "village",
+      "osmId": 3009710188,
+      "solectwo": true
+    },
+    {
+      "slug": "jozefowo",
+      "nazwa": "Józefowo",
+      "lat": 52.415493,
+      "lon": 18.781631,
+      "rodzajOsm": "village",
+      "osmId": 3925459436,
+      "solectwo": true
+    },
+    {
+      "slug": "kazanki",
+      "nazwa": "Kazanki",
+      "lat": 52.401535,
+      "lon": 18.817473,
+      "rodzajOsm": "village",
+      "osmId": 31621948,
+      "solectwo": true
+    },
+    {
+      "slug": "kazimierowo",
+      "nazwa": "Kazimierowo",
+      "lat": 52.442222,
+      "lon": 18.738056,
+      "rodzajOsm": "village",
+      "osmId": 3009713372,
+      "solectwo": true
+    },
+    {
+      "slug": "komorowo",
+      "nazwa": "Komorowo",
+      "lat": 52.390983,
+      "lon": 18.797281,
+      "rodzajOsm": "village",
+      "osmId": 692623998,
+      "solectwo": true
+    },
+    {
+      "slug": "mchowek",
+      "nazwa": "Mchówek",
+      "lat": 52.41867,
+      "lon": 18.68712,
+      "rodzajOsm": "village",
+      "osmId": 31618331,
+      "solectwo": true
+    },
+    {
+      "slug": "mieczyslawowo",
+      "nazwa": "Mieczysławowo",
+      "lat": 52.357205,
+      "lon": 18.790692,
+      "rodzajOsm": "village",
+      "osmId": 31618120,
+      "solectwo": true
+    },
+    {
+      "slug": "modzerowo",
+      "nazwa": "Modzerowo",
+      "lat": 52.34794,
+      "lon": 18.77023,
+      "rodzajOsm": "village",
+      "osmId": 31617408,
+      "solectwo": true
+    },
+    {
+      "slug": "naczachowo",
+      "nazwa": "Naczachowo",
+      "lat": 52.406093,
+      "lon": 18.842876,
+      "rodzajOsm": "village",
+      "osmId": 31617231,
+      "solectwo": true
+    },
+    {
+      "slug": "nowa-wies",
+      "nazwa": "Nowa Wieś",
+      "lat": 52.369248,
+      "lon": 18.818298,
+      "rodzajOsm": "village",
+      "osmId": 31616734,
+      "solectwo": true
+    },
+    {
+      "slug": "obalki",
+      "nazwa": "Obałki",
+      "lat": 52.42133,
+      "lon": 18.838957,
+      "rodzajOsm": "village",
+      "osmId": 692624086,
+      "solectwo": true
+    },
+    {
+      "slug": "pasieka",
+      "nazwa": "Pasieka",
+      "lat": 52.45184,
+      "lon": 18.79812,
+      "rodzajOsm": "village",
+      "osmId": 31615671,
+      "solectwo": true
+    },
+    {
+      "slug": "skarbanowo",
+      "nazwa": "Skarbanowo",
+      "lat": 52.43007,
+      "lon": 18.820894,
+      "rodzajOsm": "village",
+      "osmId": 31611128,
+      "solectwo": true
+    },
+    {
+      "slug": "sokolowo",
+      "nazwa": "Sokołowo",
+      "lat": 52.423594,
+      "lon": 18.796992,
+      "rodzajOsm": "village",
+      "osmId": 31610271,
+      "solectwo": true
+    },
+    {
+      "slug": "szczkowek",
+      "nazwa": "Szczkówek",
+      "lat": 52.380003,
+      "lon": 18.840546,
+      "rodzajOsm": "village",
+      "osmId": 31608793,
+      "solectwo": true
+    },
+    {
+      "slug": "slazewo",
+      "nazwa": "Ślazewo",
+      "lat": 52.4006,
+      "lon": 18.731061,
+      "rodzajOsm": "village",
+      "osmId": 31610860,
+      "solectwo": true
+    },
+    {
+      "slug": "smiely",
+      "nazwa": "Śmieły",
+      "lat": 52.40169,
+      "lon": 18.8743,
+      "rodzajOsm": "village",
+      "osmId": 31610597,
+      "solectwo": true
+    },
+    {
+      "slug": "swietoslawice",
+      "nazwa": "Świętosławice",
+      "lat": 52.388768,
+      "lon": 18.73885,
+      "rodzajOsm": "village",
+      "osmId": 31609038,
+      "solectwo": true
+    },
+    {
+      "slug": "swiszewy",
+      "nazwa": "Świszewy",
+      "lat": 52.43781,
+      "lon": 18.72736,
+      "rodzajOsm": "village",
+      "osmId": 31609002,
+      "solectwo": true
+    },
+    {
+      "slug": "tymien",
+      "nazwa": "Tymień",
+      "lat": 52.400744,
+      "lon": 18.774493,
+      "rodzajOsm": "village",
+      "osmId": 31607550,
+      "solectwo": true
+    },
+    {
+      "slug": "wietrzychowice",
+      "nazwa": "Wietrzychowice",
+      "lat": 52.41238,
+      "lon": 18.85958,
+      "rodzajOsm": "village",
+      "osmId": 692624244,
+      "solectwo": true
+    },
+    {
+      "slug": "wiszczelice",
+      "nazwa": "Wiszczelice",
+      "lat": 52.370456,
+      "lon": 18.874961,
+      "rodzajOsm": "village",
+      "osmId": 31606128,
+      "solectwo": true
+    },
+    {
+      "slug": "wolka-komorowska",
+      "nazwa": "Wólka Komorowska",
+      "lat": 52.381547,
+      "lon": 18.775993,
+      "rodzajOsm": "village",
+      "osmId": 692623792,
+      "solectwo": true
+    },
+    {
+      "slug": "zdzislawin",
+      "nazwa": "Zdzisławin",
+      "lat": 52.368,
+      "lon": 18.855525,
+      "rodzajOsm": "village",
+      "osmId": 692624328,
+      "solectwo": true
+    }
+  ],
+  "wszystkieMiejscowosci": [
+    {
+      "nazwa": "Augustynowo",
+      "rodzaj": "village",
+      "lat": 52.4332233,
+      "lon": 18.770186
+    },
+    {
+      "nazwa": "Błenna",
+      "rodzaj": "village",
+      "lat": 52.3844,
+      "lon": 18.87943
+    },
+    {
+      "nazwa": "Błenna A",
+      "rodzaj": "village",
+      "lat": 52.3795956,
+      "lon": 18.895338
+    },
+    {
+      "nazwa": "Błenna B",
+      "rodzaj": "village",
+      "lat": 52.3674759,
+      "lon": 18.8973945
+    },
+    {
+      "nazwa": "Bratkowo",
+      "rodzaj": "neighbourhood",
+      "lat": 52.4194444,
+      "lon": 18.7708333
+    },
+    {
+      "nazwa": "Chociszewo",
+      "rodzaj": "village",
+      "lat": 52.3827063,
+      "lon": 18.811295
+    },
+    {
+      "nazwa": "Chotel",
+      "rodzaj": "village",
+      "lat": 52.4107,
+      "lon": 18.8107
+    },
+    {
+      "nazwa": "Chotel-Kolonia",
+      "rodzaj": "hamlet",
+      "lat": 52.4175,
+      "lon": 18.8183333
+    },
+    {
+      "nazwa": "Cieplinki",
+      "rodzaj": "village",
+      "lat": 52.3473795,
+      "lon": 18.8333333
+    },
+    {
+      "nazwa": "Ciepliny",
+      "rodzaj": "village",
+      "lat": 52.36706,
+      "lon": 18.84293
+    },
+    {
+      "nazwa": "Ciepliny-Budy",
+      "rodzaj": "hamlet",
+      "lat": 52.3744444,
+      "lon": 18.8416667
+    },
+    {
+      "nazwa": "Dębianki",
+      "rodzaj": "village",
+      "lat": 52.3975441,
+      "lon": 18.8580728
+    },
+    {
+      "nazwa": "Długie",
+      "rodzaj": "village",
+      "lat": 52.3995609,
+      "lon": 18.7518017
+    },
+    {
+      "nazwa": "Długie Parcele",
+      "rodzaj": "village",
+      "lat": 52.3825099,
+      "lon": 18.7604159
+    },
+    {
+      "nazwa": "Dziewczopole",
+      "rodzaj": "village",
+      "lat": 52.3895066,
+      "lon": 18.9070313
+    },
+    {
+      "nazwa": "Felicyn",
+      "rodzaj": "hamlet",
+      "lat": 52.4001134,
+      "lon": 18.7945501
+    },
+    {
+      "nazwa": "Folusz",
+      "rodzaj": "isolated_dwelling",
+      "lat": 52.4208489,
+      "lon": 18.7117087
+    },
+    {
+      "nazwa": "Gaj Stolarski",
+      "rodzaj": "village",
+      "lat": 52.3808852,
+      "lon": 18.747113
+    },
+    {
+      "nazwa": "Gąsiorowo",
+      "rodzaj": "village",
+      "lat": 52.3788889,
+      "lon": 18.9211111
+    },
+    {
+      "nazwa": "Gogoły",
+      "rodzaj": "village",
+      "lat": 52.3916667,
+      "lon": 18.8958333
+    },
+    {
+      "nazwa": "Gołębiowo",
+      "rodzaj": "hamlet",
+      "lat": 52.4427778,
+      "lon": 18.7066667
+    },
+    {
+      "nazwa": "Góralewo",
+      "rodzaj": "hamlet",
+      "lat": 52.405501,
+      "lon": 18.7975713
+    },
+    {
+      "nazwa": "Góry",
+      "rodzaj": "hamlet",
+      "lat": 52.3733333,
+      "lon": 18.7663889
+    },
+    {
+      "nazwa": "Góry Komorowskie",
+      "rodzaj": "hamlet",
+      "lat": 52.3918545,
+      "lon": 18.792179
+    },
+    {
+      "nazwa": "Grochowiska",
+      "rodzaj": "village",
+      "lat": 52.4136557,
+      "lon": 18.7251401
+    },
+    {
+      "nazwa": "Helenowo",
+      "rodzaj": "village",
+      "lat": 52.386898,
+      "lon": 18.8608333
+    },
+    {
+      "nazwa": "Hulanka",
+      "rodzaj": "hamlet",
+      "lat": 52.4305556,
+      "lon": 18.7252778
+    },
+    {
+      "nazwa": "Ignacewo",
+      "rodzaj": "hamlet",
+      "lat": 52.3735726,
+      "lon": 18.7912498
+    },
+    {
+      "nazwa": "Izbica Kujawska",
+      "rodzaj": "town",
+      "lat": 52.41925,
+      "lon": 18.76435
+    },
+    {
+      "nazwa": "Joasin",
+      "rodzaj": "village",
+      "lat": 52.3558333,
+      "lon": 18.8605556
+    },
+    {
+      "nazwa": "Józefowo",
+      "rodzaj": "village",
+      "lat": 52.4154932,
+      "lon": 18.7816307
+    },
+    {
+      "nazwa": "Kalisz",
+      "rodzaj": "hamlet",
+      "lat": 52.3405882,
+      "lon": 18.7641419
+    },
+    {
+      "nazwa": "Kazanki",
+      "rodzaj": "village",
+      "lat": 52.4015347,
+      "lon": 18.8174733
+    },
+    {
+      "nazwa": "Kazimierowo",
+      "rodzaj": "village",
+      "lat": 52.4422222,
+      "lon": 18.7380556
+    },
+    {
+      "nazwa": "Komorowo",
+      "rodzaj": "village",
+      "lat": 52.3909833,
+      "lon": 18.7972806
+    },
+    {
+      "nazwa": "Komorowo-Majątek",
+      "rodzaj": "hamlet",
+      "lat": 52.4023387,
+      "lon": 18.8011606
+    },
+    {
+      "nazwa": "Krajki",
+      "rodzaj": "hamlet",
+      "lat": 52.3743113,
+      "lon": 18.8234199
+    },
+    {
+      "nazwa": "Lelechowo",
+      "rodzaj": "hamlet",
+      "lat": 52.3338889,
+      "lon": 18.7572222
+    },
+    {
+      "nazwa": "Libnerówka",
+      "rodzaj": "hamlet",
+      "lat": 52.439402,
+      "lon": 18.7742808
+    },
+    {
+      "nazwa": "Martanowo-Folwark",
+      "rodzaj": "isolated_dwelling",
+      "lat": 52.4480556,
+      "lon": 18.7172222
+    },
+    {
+      "nazwa": "Mchówek",
+      "rodzaj": "village",
+      "lat": 52.41867,
+      "lon": 18.68712
+    },
+    {
+      "nazwa": "Mieczysławowo",
+      "rodzaj": "village",
+      "lat": 52.357205,
+      "lon": 18.7906919
+    },
+    {
+      "nazwa": "Modzerowo",
+      "rodzaj": "village",
+      "lat": 52.34794,
+      "lon": 18.77023
+    },
+    {
+      "nazwa": "Morele",
+      "rodzaj": "neighbourhood",
+      "lat": 52.4145849,
+      "lon": 18.7560764
+    },
+    {
+      "nazwa": "Naczachowo",
+      "rodzaj": "village",
+      "lat": 52.4060927,
+      "lon": 18.842876
+    },
+    {
+      "nazwa": "Nowa Wieś",
+      "rodzaj": "village",
+      "lat": 52.3692482,
+      "lon": 18.8182983
+    },
+    {
+      "nazwa": "Nowe Wietrzychowice",
+      "rodzaj": "hamlet",
+      "lat": 52.4201126,
+      "lon": 18.8543816
+    },
+    {
+      "nazwa": "Obałki",
+      "rodzaj": "village",
+      "lat": 52.4213297,
+      "lon": 18.8389566
+    },
+    {
+      "nazwa": "Ogrody",
+      "rodzaj": "neighbourhood",
+      "lat": 52.4206841,
+      "lon": 18.7475146
+    },
+    {
+      "nazwa": "Pasieka",
+      "rodzaj": "village",
+      "lat": 52.45184,
+      "lon": 18.79812
+    },
+    {
+      "nazwa": "Pięć Chałup",
+      "rodzaj": "hamlet",
+      "lat": 52.4225,
+      "lon": 18.7302778
+    },
+    {
+      "nazwa": "Podhulanka",
+      "rodzaj": "village",
+      "lat": 52.4263889,
+      "lon": 18.7383333
+    },
+    {
+      "nazwa": "Podtymień",
+      "rodzaj": "village",
+      "lat": 52.4122059,
+      "lon": 18.7750838
+    },
+    {
+      "nazwa": "Podtymin",
+      "rodzaj": "neighbourhood",
+      "lat": 52.4175,
+      "lon": 18.7705556
+    },
+    {
+      "nazwa": "Pustki",
+      "rodzaj": "hamlet",
+      "lat": 52.4178857,
+      "lon": 18.6874755
+    },
+    {
+      "nazwa": "Pustynia",
+      "rodzaj": "hamlet",
+      "lat": 52.4113889,
+      "lon": 18.7994444
+    },
+    {
+      "nazwa": "Rogóżki",
+      "rodzaj": "village",
+      "lat": 52.4001979,
+      "lon": 18.8909084
+    },
+    {
+      "nazwa": "Skarbanowo",
+      "rodzaj": "village",
+      "lat": 52.4300705,
+      "lon": 18.8208939
+    },
+    {
+      "nazwa": "Słubin",
+      "rodzaj": "isolated_dwelling",
+      "lat": 52.3658346,
+      "lon": 18.8092321
+    },
+    {
+      "nazwa": "Sobierajewo",
+      "rodzaj": "hamlet",
+      "lat": 52.4411111,
+      "lon": 18.715
+    },
+    {
+      "nazwa": "Sokołowo",
+      "rodzaj": "village",
+      "lat": 52.4235943,
+      "lon": 18.7969922
+    },
+    {
+      "nazwa": "Szczkowo",
+      "rodzaj": "village",
+      "lat": 52.3917064,
+      "lon": 18.8447489
+    },
+    {
+      "nazwa": "Szczkowo-Kolonia",
+      "rodzaj": "hamlet",
+      "lat": 52.3784424,
+      "lon": 18.8519546
+    },
+    {
+      "nazwa": "Szczkówek",
+      "rodzaj": "village",
+      "lat": 52.3800034,
+      "lon": 18.8405461
+    },
+    {
+      "nazwa": "Szczkówek-Parcele",
+      "rodzaj": "hamlet",
+      "lat": 52.3890054,
+      "lon": 18.8294274
+    },
+    {
+      "nazwa": "Ślazewo",
+      "rodzaj": "village",
+      "lat": 52.4005998,
+      "lon": 18.7310614
+    },
+    {
+      "nazwa": "Śmielnik",
+      "rodzaj": "village",
+      "lat": 52.3666667,
+      "lon": 18.7833333
+    },
+    {
+      "nazwa": "Śmieły",
+      "rodzaj": "village",
+      "lat": 52.40169,
+      "lon": 18.8743
+    },
+    {
+      "nazwa": "Świętosławice",
+      "rodzaj": "village",
+      "lat": 52.3887685,
+      "lon": 18.7388504
+    },
+    {
+      "nazwa": "Świętosławice Drugie",
+      "rodzaj": "hamlet",
+      "lat": 52.3930009,
+      "lon": 18.7307672
+    },
+    {
+      "nazwa": "Świętosławice Pierwsze",
+      "rodzaj": "hamlet",
+      "lat": 52.3801883,
+      "lon": 18.7368065
+    },
+    {
+      "nazwa": "Świszewy",
+      "rodzaj": "village",
+      "lat": 52.43781,
+      "lon": 18.72736
+    },
+    {
+      "nazwa": "Świszewy-Kolonia",
+      "rodzaj": "hamlet",
+      "lat": 52.4516667,
+      "lon": 18.7047222
+    },
+    {
+      "nazwa": "Tymień",
+      "rodzaj": "village",
+      "lat": 52.400744,
+      "lon": 18.774493
+    },
+    {
+      "nazwa": "Wietrzychowice",
+      "rodzaj": "village",
+      "lat": 52.41238,
+      "lon": 18.85958
+    },
+    {
+      "nazwa": "Wiszczelice",
+      "rodzaj": "village",
+      "lat": 52.3704558,
+      "lon": 18.8749613
+    },
+    {
+      "nazwa": "Wólka Komorowska",
+      "rodzaj": "village",
+      "lat": 52.3815469,
+      "lon": 18.7759933
+    },
+    {
+      "nazwa": "Zaborowo",
+      "rodzaj": "hamlet",
+      "lat": 52.4109493,
+      "lon": 18.786228
+    },
+    {
+      "nazwa": "Zagrodnica",
+      "rodzaj": "hamlet",
+      "lat": 52.4191667,
+      "lon": 18.7338889
+    },
+    {
+      "nazwa": "Zagrodnica",
+      "rodzaj": "neighbourhood",
+      "lat": 52.4205556,
+      "lon": 18.7558333
+    },
+    {
+      "nazwa": "Zagrodnica-Kolonia",
+      "rodzaj": "neighbourhood",
+      "lat": 52.4158333,
+      "lon": 18.7622222
+    },
+    {
+      "nazwa": "Zakręty",
+      "rodzaj": "village",
+      "lat": 52.4304186,
+      "lon": 18.7372673
+    },
+    {
+      "nazwa": "Zdrojówka",
+      "rodzaj": "village",
+      "lat": 52.4377778,
+      "lon": 18.7472222
+    },
+    {
+      "nazwa": "Zdzisławin",
+      "rodzaj": "village",
+      "lat": 52.3680002,
+      "lon": 18.8555255
+    },
+    {
+      "nazwa": "Zosinek",
+      "rodzaj": "hamlet",
+      "lat": 52.3927802,
+      "lon": 18.7513908
+    }
+  ]
+}

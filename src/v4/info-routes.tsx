@@ -4,7 +4,8 @@
 // ============================================================================
 
 import { Hono } from 'hono'
-import { CATEGORIES } from './taxonomy'
+import { CATEGORIES, SOLECTWA } from './taxonomy'
+import { GMINA } from './gmina-fakty'
 import { rendererV4 } from './renderer'
 import { Shell } from './components/Layout'
 import {
@@ -76,7 +77,7 @@ app.get('/mapa-gminy', (c) =>
     </Shell>,
     {
       title: 'Mapa gminy — instytucje i sołectwa — Izbica24.pl',
-      description: 'Instytucje publiczne i 34 sołectwa gminy Izbica Kujawska — adresy, telefony, godziny.',
+      description: `Instytucje publiczne i ${SOLECTWA.length} sołectw gminy Izbica Kujawska — adresy, telefony, godziny.`,
     }
   )
 )
@@ -130,7 +131,7 @@ page(
 page(
   '/o-portalu',
   'O portalu Izbica24.pl',
-  'Niezależny portal informacyjny gminy Izbica Kujawska. Codziennie świeże wiadomości dla mieszkańców 34 sołectw.',
+  `Niezależny portal informacyjny gminy Izbica Kujawska. Codziennie świeże wiadomości dla mieszkańców ${SOLECTWA.length} sołectw.`,
   [
     {
       heading: 'Nasza misja',
@@ -159,9 +160,9 @@ page(
       table: {
         head: ['Wskaźnik', 'Wartość'],
         rows: [
-          ['Mieszkańcy', '5 400'],
+          ['Mieszkańcy', `${GMINA.ludnosc.tekst} (${GMINA.ludnosc.naDzien})`],
           ['Sołectwa', '34'],
-          ['Powierzchnia', '147 km²'],
+          ['Powierzchnia', GMINA.powierzchnia.tekst],
           ['Prawa miejskie', 'od 1750 roku'],
           ['Powiat', 'włocławski'],
           ['Województwo', 'kujawsko-pomorskie'],
@@ -188,7 +189,7 @@ page(
   [
     {
       heading: 'Zostań korespondentem sołeckim',
-      body: 'Mieszkasz w jednym z 34 sołectw i wiesz, co się w nim dzieje? <strong>Zostań naszym korespondentem.</strong> Nie musisz być dziennikarzem — wystarczy, że prześlesz informację, zdjęcie lub relację z zebrania wiejskiego. Redakcja zajmie się resztą.',
+      body: 'Mieszkasz w jednym z sołectw gminy i wiesz, co się w nim dzieje? <strong>Zostań naszym korespondentem.</strong> Nie musisz być dziennikarzem — wystarczy, że prześlesz informację, zdjęcie lub relację z zebrania wiejskiego. Redakcja zajmie się resztą.',
       list: [
         'Relacje z zebrań wiejskich i inicjatyw sołeckich',
         'Zdjęcia z wydarzeń w sołectwie',
@@ -588,7 +589,7 @@ page(
   [
     {
       heading: 'Dlaczego warto wspierać lokalne media',
-      body: 'Niezależny portal informacyjny w gminie liczącej 5 400 mieszkańców nie utrzyma się z samych wyświetleń. <strong>Wsparcie lokalnych firm pozwala nam pracować rzetelnie</strong> — bez zależności od jednego źródła finansowania.',
+      body: 'Niezależny portal informacyjny w gminie liczącej niespełna 8 tysięcy mieszkańców nie utrzyma się z samych wyświetleń. <strong>Wsparcie lokalnych firm pozwala nam pracować rzetelnie</strong> — bez zależności od jednego źródła finansowania.',
     },
     {
       heading: 'Formy współpracy',

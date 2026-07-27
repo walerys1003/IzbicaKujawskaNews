@@ -100,7 +100,7 @@ export const CATEGORIES: Category[] = [
       sub('samorzad', 'urzad', 'Urząd Miejski', 'Zarządzenia burmistrza, informacje urzędowe, godziny pracy, zmiany kadrowe.'),
       sub('samorzad', 'rada', 'Rada Miejska', 'Relacje z sesji, uchwały z komentarzem, interpelacje radnych, komisje.'),
       sub('samorzad', 'budzet', 'Budżet i finanse', 'Budżet gminy, dotacje UE, fundusze rządowe, zmiany budżetowe.'),
-      sub('samorzad', 'solectwa', 'Sołectwa', 'Fundusz sołecki, zebrania wiejskie, inicjatywy, wybory sołtysów — 34 sołectwa.'),
+      sub('samorzad', 'solectwa', 'Sołectwa', 'Fundusz sołecki, zebrania wiejskie, inicjatywy, wybory sołtysów — wszystkie sołectwa gminy.'),
       sub('samorzad', 'powiat', 'Powiat włocławski', 'Starostwo: drogi powiatowe, pozwolenia, edukacja ponadpodstawowa, PUP.'),
       sub('samorzad', 'wybory', 'Wybory i referenda', 'Kandydaci, programy, wyniki, frekwencja, okręgi i komisje wyborcze.'),
     ],
@@ -288,48 +288,75 @@ export const CATEGORIES: Category[] = [
   },
 ]
 
-// ─────────────────────────────────────────────────────────────── SOŁECTWA (34)
+// ─────────────────────────────────────────────────────────── SOŁECTWA
+// Liczbę bierzemy z SOLECTWA.length, nigdy z liczby wpisanej w tekście —
+// wcześniej w nawiasie stało „(34)", a tablica po weryfikacji ma 36 wpisów.
 export interface Solectwo {
   slug: string
   name: string
   articleCount: number
+  /** Szerokość geograficzna wsi (OpenStreetMap, ODbL). */
+  lat?: number
+  /** Długość geograficzna wsi (OpenStreetMap, ODbL). */
+  lon?: number
 }
 
 export const SOLECTWA: Solectwo[] = [
-  { slug: 'sadlno', name: 'Sadłno', articleCount: 12 },
-  { slug: 'bierzyn', name: 'Bierzyn', articleCount: 8 },
-  { slug: 'pasieka', name: 'Pasieka', articleCount: 15 },
-  { slug: 'wietrzychowice', name: 'Wietrzychowice', articleCount: 23 },
-  { slug: 'modzerowo', name: 'Modzerowo', articleCount: 9 },
-  { slug: 'sarnowo', name: 'Sarnowo', articleCount: 11 },
-  { slug: 'mchowek', name: 'Mchówek', articleCount: 7 },
-  { slug: 'swiszewy', name: 'Świszewy', articleCount: 10 },
-  { slug: 'swietoslawice', name: 'Świętosławice', articleCount: 5 },
-  { slug: 'blenna', name: 'Błenna', articleCount: 14 },
-  { slug: 'lubomin', name: 'Lubomin', articleCount: 6 },
-  { slug: 'grochowiska', name: 'Grochowiska', articleCount: 8 },
-  { slug: 'kazimierowo', name: 'Kazimierowo', articleCount: 5 },
-  { slug: 'dlugie', name: 'Długie', articleCount: 7 },
-  { slug: 'komorowo', name: 'Komorowo', articleCount: 4 },
-  { slug: 'naczachowo', name: 'Naczachowo', articleCount: 9 },
-  { slug: 'jozefowo', name: 'Józefowo', articleCount: 6 },
-  { slug: 'cieszyno', name: 'Cieszyno', articleCount: 4 },
-  { slug: 'krzeszyn', name: 'Krzeszyn', articleCount: 3 },
-  { slug: 'rzezno', name: 'Rzeźno', articleCount: 5 },
-  { slug: 'bartlomiejowice', name: 'Bartłomiejowice', articleCount: 4 },
-  { slug: 'orle', name: 'Orle', articleCount: 6 },
-  { slug: 'smarliny', name: 'Smarliny', articleCount: 3 },
-  { slug: 'popowo', name: 'Popowo', articleCount: 5 },
-  { slug: 'szczerkowo', name: 'Szczerkowo', articleCount: 4 },
-  { slug: 'zagrodnica', name: 'Zagrodnica', articleCount: 11 },
-  { slug: 'augustowo', name: 'Augustowo', articleCount: 5 },
-  { slug: 'tymien', name: 'Tymień', articleCount: 4 },
-  { slug: 'skarbanowo', name: 'Skarbanowo', articleCount: 3 },
-  { slug: 'wiszczelice', name: 'Wiszczelice', articleCount: 6 },
-  { slug: 'konary', name: 'Konary', articleCount: 4 },
-  { slug: 'helenowo', name: 'Helenowo', articleCount: 2 },
-  { slug: 'debianki', name: 'Dębianki', articleCount: 2 },
-  { slug: 'wolka-komorowska', name: 'Wólka Komorowska', articleCount: 3 },
+  // ══════════════════════════════════════════════════════════════════════
+  // LISTA GENEROWANA — nie edytuj ręcznie.
+  //   node scripts/i10-generuj-taksonomie.mjs
+  // Źródło: data/solectwa-osm.json (Wikipedia + OpenStreetMap).
+  //
+  // Poprzednia zawartość tej tablicy zawierała 16 nazw, które NIE są
+  // sołectwami gminy Izbica Kujawska. Trzy z nich leżą w gminach
+  // sąsiednich (Bierzyn i Lubomin — Boniewo, Sarnowo — Lubraniec),
+  // pozostałych OpenStreetMap nie zna w tym rejonie. Jednocześnie
+  // brakowało 18 sołectw istniejących. Szczegóły i sposób weryfikacji:
+  // scripts/i10-geokoduj-solectwa.mjs
+  //
+  // `articleCount: 0` jest prawdą — żaden artykuł nie ma jeszcze
+  // ustawionego solectwo_slug. Wcześniejsze liczby były wymyślone
+  // i obiecywały czytelnikowi materiały, których nie było.
+  //
+  // Współrzędne: OpenStreetMap, licencja ODbL. Wyświetlając mapę
+  // trzeba pokazać „© OpenStreetMap contributors" — to warunek licencji.
+  // ══════════════════════════════════════════════════════════════════════
+  { slug: 'augustynowo',       name: 'Augustynowo',        articleCount: 0, lat: 52.433223, lon: 18.770186 },
+  { slug: 'blenna',            name: 'Błenna',             articleCount: 0, lat: 52.3844, lon: 18.87943 },
+  { slug: 'blenna-a',          name: 'Błenna A',           articleCount: 0, lat: 52.379596, lon: 18.895338 },
+  { slug: 'blenna-b',          name: 'Błenna B',           articleCount: 0, lat: 52.367476, lon: 18.897395 },
+  { slug: 'chociszewo',        name: 'Chociszewo',         articleCount: 0, lat: 52.382706, lon: 18.811295 },
+  { slug: 'cieplinki',         name: 'Cieplinki',          articleCount: 0, lat: 52.34738, lon: 18.833333 },
+  { slug: 'ciepliny',          name: 'Ciepliny',           articleCount: 0, lat: 52.36706, lon: 18.84293 },
+  { slug: 'dlugie',            name: 'Długie',             articleCount: 0, lat: 52.399561, lon: 18.751802 },
+  { slug: 'gasiorowo',         name: 'Gąsiorowo',          articleCount: 0, lat: 52.378889, lon: 18.921111 },
+  { slug: 'grochowiska',       name: 'Grochowiska',        articleCount: 0, lat: 52.413656, lon: 18.72514 },
+  { slug: 'helenowo',          name: 'Helenowo',           articleCount: 0, lat: 52.386898, lon: 18.860833 },
+  { slug: 'hulanka',           name: 'Hulanka',            articleCount: 0, lat: 52.430556, lon: 18.725278 },
+  { slug: 'joasin',            name: 'Joasin',             articleCount: 0, lat: 52.355833, lon: 18.860556 },
+  { slug: 'jozefowo',          name: 'Józefowo',           articleCount: 0, lat: 52.415493, lon: 18.781631 },
+  { slug: 'kazanki',           name: 'Kazanki',            articleCount: 0, lat: 52.401535, lon: 18.817473 },
+  { slug: 'kazimierowo',       name: 'Kazimierowo',        articleCount: 0, lat: 52.442222, lon: 18.738056 },
+  { slug: 'komorowo',          name: 'Komorowo',           articleCount: 0, lat: 52.390983, lon: 18.797281 },
+  { slug: 'mchowek',           name: 'Mchówek',            articleCount: 0, lat: 52.41867, lon: 18.68712 },
+  { slug: 'mieczyslawowo',     name: 'Mieczysławowo',      articleCount: 0, lat: 52.357205, lon: 18.790692 },
+  { slug: 'modzerowo',         name: 'Modzerowo',          articleCount: 0, lat: 52.34794, lon: 18.77023 },
+  { slug: 'naczachowo',        name: 'Naczachowo',         articleCount: 0, lat: 52.406093, lon: 18.842876 },
+  { slug: 'nowa-wies',         name: 'Nowa Wieś',          articleCount: 0, lat: 52.369248, lon: 18.818298 },
+  { slug: 'obalki',            name: 'Obałki',             articleCount: 0, lat: 52.42133, lon: 18.838957 },
+  { slug: 'pasieka',           name: 'Pasieka',            articleCount: 0, lat: 52.45184, lon: 18.79812 },
+  { slug: 'skarbanowo',        name: 'Skarbanowo',         articleCount: 0, lat: 52.43007, lon: 18.820894 },
+  { slug: 'sokolowo',          name: 'Sokołowo',           articleCount: 0, lat: 52.423594, lon: 18.796992 },
+  { slug: 'szczkowek',         name: 'Szczkówek',          articleCount: 0, lat: 52.380003, lon: 18.840546 },
+  { slug: 'slazewo',           name: 'Ślazewo',            articleCount: 0, lat: 52.4006, lon: 18.731061 },
+  { slug: 'smiely',            name: 'Śmieły',             articleCount: 0, lat: 52.40169, lon: 18.8743 },
+  { slug: 'swietoslawice',     name: 'Świętosławice',      articleCount: 0, lat: 52.388768, lon: 18.73885 },
+  { slug: 'swiszewy',          name: 'Świszewy',           articleCount: 0, lat: 52.43781, lon: 18.72736 },
+  { slug: 'tymien',            name: 'Tymień',             articleCount: 0, lat: 52.400744, lon: 18.774493 },
+  { slug: 'wietrzychowice',    name: 'Wietrzychowice',     articleCount: 0, lat: 52.41238, lon: 18.85958 },
+  { slug: 'wiszczelice',       name: 'Wiszczelice',        articleCount: 0, lat: 52.370456, lon: 18.874961 },
+  { slug: 'wolka-komorowska',  name: 'Wólka Komorowska',   articleCount: 0, lat: 52.381547, lon: 18.775993 },
+  { slug: 'zdzislawin',        name: 'Zdzisławin',         articleCount: 0, lat: 52.368, lon: 18.855525 },
 ]
 
 // ───────────────────────────────────────────────────────────────── LOOKUP API

@@ -47,6 +47,10 @@ import mediaV2Route from '../routes/v1/media-v2'
 import galleriesAdminRoute from '../routes/v1/galleries-admin'
 // FAZA 1 / I4b — zadania cykliczne wywoływane przez zewnętrzny harmonogram
 import cronRoute from '../routes/v1/cron'
+// FAZA 4 / I5 — pogoda i jakość powietrza z Open-Meteo (zamiast wartości zaszytych w kodzie)
+import pogodaRoute from '../routes/v1/pogoda'
+// FAZA 4 / I10 — punkty mapy gminy (wspolrzedne z OSM, migracja 0055)
+import mapaRoute from '../routes/v1/mapa'
 // FAZA 2 / A4 + B4 + D9 — artykuły na D1: odczyt publiczny i pełny cykl życia
 import articlesPublicRoute from '../routes/v1/articles-public'
 import articlesAdminRoute from '../routes/v1/articles'
@@ -105,6 +109,10 @@ api.route('/media2', mediaV2Route)
 api.route('/galleries-admin', galleriesAdminRoute)
 // Zadania cykliczne — POST /api/v1/cron/run, chronione sekretem CRON_SECRET.
 api.route('/cron', cronRoute)
+// FAZA 4 / I5
+api.route('/pogoda', pogodaRoute)
+// FAZA 4 / I10
+api.route('/mapa', mapaRoute)
 
 // Mount standalone routers (newsletter + search) for D1-backed endpoints
 api.route('/newsletter', newsletterRouter)
@@ -166,22 +174,52 @@ api.get('/roads', (c) =>
   })
 )
 
-// ============ B17: WEATHER ============
-api.get('/weather', (c) =>
-  c.json({
-    location: 'Izbica Kujawska',
-    coords: { lat: 52.4214, lon: 18.7714 },
-    current: { temp: 14, condition: 'częściowe zachmurzenie', humidity: 68, wind: 12 },
-    forecast: [
-      { day: 'wt', tempMin: 9, tempMax: 16, icon: 'cloud-sun' },
-      { day: 'śr', tempMin: 11, tempMax: 19, icon: 'sun' },
-      { day: 'cz', tempMin: 12, tempMax: 21, icon: 'sun' },
-      { day: 'pt', tempMin: 13, tempMax: 18, icon: 'cloud-rain' },
-      { day: 'so', tempMin: 11, tempMax: 17, icon: 'cloud' },
-    ],
-    source: 'mock', updatedAt: new Date().toISOString(),
+// ============ B17: WEATHER (etap I5) ============
+/**
+ * Poprzednio ta trasa zwracała liczby zaszyte w kodzie (14 °C, prognoza
+ * wt–so) z polem `source: 'mock'`. Strona główna pokazywała je bez
+ * oznaczenia, więc mieszkaniec widział „14 °C" także w mrozie.
+ *
+ * Teraz `/api/v1/pogoda` (Open-Meteo + KV) jest źródłem prawdy.
+ * `/api/v1/weather` zostaje jako alias tłumaczący odpowiedź na stary
+ * kształt pól — na portalu są skrypty i widgety odwołujące się do
+ * `current.temp`, a zerwanie ich bez potrzeby oznaczałoby puste miejsca
+ * na stronie. Alias NIE podstawia danych zastępczych: gdy dostawca
+ * milczy i pamięć podręczna jest pusta, przekazuje 503 dalej.
+ */
+api.get('/weather', async (c) => {
+  const odp = await pogodaRoute.fetch(
+    new Request(new URL('/', c.req.url).toString(), { headers: c.req.raw.headers }),
+    c.env as never,
+    c.executionCtx as never
+  )
+  const dane = (await odp.json()) as Record<string, any>
+
+  if (!odp.ok || !dane.teraz) {
+    return c.json({ location: dane.lokalizacja ?? 'Izbica Kujawska', current: null, forecast: [], error: dane.blad ?? 'unavailable' }, 503)
+  }
+
+  return c.json({
+    location: dane.lokalizacja,
+    coords: { lat: dane.wspolrzedne?.szerokosc, lon: dane.wspolrzedne?.dlugosc },
+    current: {
+      temp: dane.teraz.temperatura,
+      feelsLike: dane.teraz.odczuwalna,
+      condition: dane.teraz.opis,
+      humidity: dane.teraz.wilgotnosc,
+      wind: dane.teraz.wiatr,
+      icon: dane.teraz.ikona,
+    },
+    forecast: (dane.prognoza ?? []).map((d: any) => ({
+      day: d.dzien, date: d.data, tempMin: d.tempMin, tempMax: d.tempMax, icon: d.ikona, condition: d.opis,
+    })),
+    source: dane.zrodlo,
+    sourceUrl: dane.zrodloUrl,
+    cached: dane.zCache === true,
+    stale: dane.nieswieze === true,
+    updatedAt: dane.pobrano,
   })
-)
+})
 
 // ============ B18: FUEL PRICES ============
 api.get('/fuel', (c) =>

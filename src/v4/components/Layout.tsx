@@ -6,6 +6,7 @@
 
 import type { FC, Child } from 'hono/jsx'
 import { CATEGORIES, SOLECTWA, CATEGORY_BY_SLUG, findSubcategory, type Category } from '../taxonomy'
+import { GMINA } from '../gmina-fakty'
 import { bySubcategory, byCategory, tickerItems, latest } from '../content-db'
 import { articleUrl, type Article } from '../content-types'
 
@@ -276,7 +277,7 @@ export const Footer: FC = () => (
         </div>
         <div class="footer-mission">
           „Niezależny portal informacyjny gminy Izbica Kujawska. Codziennie świeże wiadomości, z
-          pierwszej ręki, dla wszystkich mieszkańców 34 sołectw.”
+          pierwszej ręki, dla wszystkich mieszkańców {SOLECTWA.length} sołectw.”
         </div>
         <div class="footer-cta">
           <a href="/newsletter" class="btn-r">
@@ -292,7 +293,7 @@ export const Footer: FC = () => (
         <h4>O portalu</h4>
         <p>
           Niezależny portal informacyjny dla gminy Izbica Kujawska. Powstał z myślą o mieszkańcach 34
-          sołectw i 5 400 izbiczan. Wiadomości, samorząd, sport, kultura — z lokalnej perspektywy.
+          sołectw i {GMINA.ludnosc.tekst} izbiczan. Wiadomości, samorząd, sport, kultura — z lokalnej perspektywy.
         </p>
         <div class="footer-socials">
           <a href="https://facebook.com" aria-label="Facebook">
