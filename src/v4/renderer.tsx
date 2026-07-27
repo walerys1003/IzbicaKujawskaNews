@@ -53,6 +53,21 @@ export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, 
       <body>
         {children}
         <script src="/static/v4/izbica-v4.js" defer></script>
+        {/*
+          Etap I5 — pogoda w pasku górnym. Osobny plik (~2 kB) zamiast
+          dopisku do izbica-v4.js: pasek jest pierwszym elementem strony,
+          więc im wcześniej się uzupełni, tym mniejszy przeskok układu.
+        */}
+        <script src="/static/v4/izbica-v4-pogoda.js" defer></script>
+        {/*
+          Etap I10 — mapa gminy. Skrypt jest ładowany na każdej podstronie,
+          ale waży ~3 kB i natychmiast kończy działanie, gdy w dokumencie
+          nie ma kontenera #mapa-gminy. Ciężka biblioteka MapLibre (~250 kB)
+          jest dokładana dopiero wtedy, gdy kontener istnieje — czyli
+          wyłącznie na /mapa. Dzięki temu strona główna i artykuły nie
+          płacą za mapę, której czytelnik nie otworzył (etap F4).
+        */}
+        <script src="/static/v4/izbica-v4-mapa.js" defer></script>
       </body>
     </html>
   )

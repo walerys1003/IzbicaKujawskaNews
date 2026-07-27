@@ -12,9 +12,14 @@ import {
   InfoPageV4,
   NewsletterPageV4,
   AddAnnouncementPageV4,
-  MapaGminyPageV4,
   type InfoSection,
 } from './pages/Info'
+// Etap I10 — wykaz instytucji ze zweryfikowanymi danymi teleadresowymi
+// (zastępuje numery wpisane wcześniej wprost w tabeli /telefony).
+import { INSTYTUCJE } from './instytucje'
+// Etap I5 — podstrona prognozy (dane pobierane serwerowo, patrz trasa /pogoda).
+import { PogodaPageV4 } from './pages/Pogoda'
+import { pogodaZPamieci, powietrzeZPamieci } from '../lib/integrations/pogoda-cache'
 
 const app = new Hono()
 app.use('*', rendererV4)
@@ -70,17 +75,80 @@ app.get('/ogloszenia/dodaj', (c) =>
 )
 
 // ─────────────────────────────────────────────────────── MAPA GMINY
-app.get('/mapa-gminy', (c) =>
-  c.render(
+/**
+ * Etap I10 — trasa /mapa została PRZENIESIONA do src/v4/router.tsx.
+ *
+ * Powód: strona mapy musi czytać punkty z tabeli `solectwa` w D1 (żeby lista
+ * pod mapą i dymki na mapie pokazywały te same dane, w tym sołtysów wpisanych
+ * przez redakcję), a więc handler musi być asynchroniczny i mieć dostęp do
+ * `c.env.DB`. Ten plik zawiera wyłącznie strony statyczne generowane
+ * pomocnikiem `page()`, który nie obsługuje pobierania danych.
+ *
+ * Przez chwilę trasa istniała w OBU plikach. `info-routes` jest montowany
+ * przed `router` (src/index.tsx: app.route('/', v4InfoRoutes) w linii przed
+ * app.route('/', v4Router)), więc wersja tutaj przechwytywała żądanie
+ * i wersja z bazy nigdy się nie wykonywała — strona renderowała się z pustą
+ * listą. Zostawiam tę adnotację, bo sama nieobecność trasy nie tłumaczy,
+ * dlaczego /mapa nie jest tam, gdzie pozostałe strony informacyjne.
+ */
+
+// ─────────────────────────────────────────────────────────── POGODA
+/**
+ * Etap I5 — podstrona prognozy.
+ *
+ * Jedyna trasa w tym pliku z `async`. Uzasadnienie: tutaj pogoda JEST
+ * treścią strony, więc czytelnik ma prawo dostać ją w pierwszym żądaniu,
+ * bez pustego prostokąta i przeskoku układu. Na pozostałych podstronach
+ * pogoda jest dodatkiem w pasku i uzupełnia się skryptem — inaczej
+ * KAŻDA trasa portalu płaciłaby za nią opóźnieniem.
+ *
+ * Dane pobieramy funkcją biblioteczną, a nie żądaniem HTTP do własnego
+ * `/api/v1/pogoda`: Worker odpytujący sam siebie zużywa podzapytanie
+ * i dokłada kilkadziesiąt milisekund, by ostatecznie sięgnąć do tego
+ * samego KV, do którego ma dostęp bezpośrednio.
+ *
+ * Powietrze pobieramy równolegle (`Promise.all`) — to dwaj różni
+ * dostawcy, więc szeregowanie podwoiłoby czas odpowiedzi. Awaria
+ * pomiaru pyłów nie może przy tym ukryć prognozy: `powietrzeZPamieci`
+ * zwraca `{ dane: null }` zamiast rzucać wyjątkiem, a karta pogodowa
+ * pokazuje wtedy samą pogodę, bez sekcji o powietrzu.
+ */
+app.get('/pogoda', async (c) => {
+  const env = c.env as { WEATHER_KV?: unknown; AIR_KV?: unknown } | undefined
+  const [pogoda, powietrze] = await Promise.all([
+    pogodaZPamieci(env?.WEATHER_KV),
+    powietrzeZPamieci(env?.AIR_KV ?? env?.WEATHER_KV),
+  ])
+
+  if (!pogoda.dane) c.status(503)
+
+  return c.render(
     <Shell>
-      <MapaGminyPageV4 />
+      <PogodaPageV4
+        dane={pogoda.dane}
+        powietrze={powietrze.dane}
+        blad={pogoda.dane ? undefined : pogoda.blad}
+      />
     </Shell>,
     {
-      title: 'Mapa gminy — instytucje i sołectwa — Izbica24.pl',
-      description: `Instytucje publiczne i ${SOLECTWA.length} sołectw gminy Izbica Kujawska — adresy, telefony, godziny.`,
+      title: `Pogoda ${GMINA.nazwa} — prognoza i jakość powietrza — Izbica24.pl`,
+      description: `Prognoza pogody dla ${GMINA.dopelniacz} na 7 dni oraz aktualna jakość powietrza (PM2.5, PM10). Dane Open-Meteo, odświeżane co 15 minut.`,
     }
   )
-)
+})
+
+/**
+ * Stary adres → przekierowanie stałe (301), nie druga równoległa strona.
+ *
+ * /mapa-gminy pokazywało wyłącznie listy tekstowe, bez mapy. Utrzymanie
+ * obu adresów oznaczałoby dwie strony o tej samej treści, czyli
+ * konkurowanie o tę samą frazę w wyszukiwarce (duplicate content) —
+ * i pytanie „która jest aktualna" przy każdej przyszłej zmianie danych.
+ *
+ * 301, a nie 302: adres nie wróci, więc wyszukiwarki mają przenieść
+ * na /mapa całą wypracowaną pozycję starego adresu.
+ */
+app.get('/mapa-gminy', (c) => c.redirect('/mapa', 301))
 
 // ─────────────────────────────────────────────── WAŻNE TELEFONY
 page(
@@ -109,13 +177,22 @@ page(
       table: {
         head: ['Instytucja', 'Telefon', 'Godziny'],
         rows: [
-          ['Urząd Miejski', '54 286 50 09', 'pon–pt 7:30–15:30, śr do 17:00'],
-          ['SPZOZ Izbica — rejestracja', '54 286 51 12', 'pon–pt od 7:30'],
-          ['Posterunek Policji', '47 725 42 30', 'pon–pt 8:00–15:00'],
-          ['MGOPS', '54 286 51 45', 'pon–pt 7:30–15:30'],
-          ['ZGKiW — awarie', '601 445 220', 'całodobowo'],
-          ['MGCK — Centrum Kultury', '54 286 50 41', 'pon–pt 9:00–19:00'],
-          ['Biblioteka Publiczna', '54 286 50 42', 'pon–pt 10:00–18:00'],
+          // Wykaz wyliczany ze zweryfikowanego źródła (src/v4/instytucje.ts),
+          // nie wpisany tutaj. Poprzednio ta tabela zawierała siedem numerów,
+          // których nie ma w żadnym źródle — m.in. „ZGKiW awarie 601 445 220"
+          // podane jako całodobowy numer awaryjny wodociągów. Mieszkaniec
+          // dzwoniący przy awarii wody trafiał w nikąd. Szczegóły korekty
+          // opisane w nagłówku instytucje.ts.
+          //
+          // Godziny: myślnik tam, gdzie jednostka ich nie publikuje —
+          // zamiast wartości prawdopodobnej. Pusta komórka w tabeli telefonów
+          // jest czytelnym sygnałem „nie wiemy", a godzina wymyślona wysyła
+          // ludzi pod zamknięte drzwi.
+          ...INSTYTUCJE.filter((i) => i.telefon).map((i) => [
+            i.nazwa,
+            i.telefon as string,
+            i.godziny ?? '—',
+          ]),
         ],
       },
     },

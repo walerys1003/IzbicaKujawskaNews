@@ -32,104 +32,30 @@
  */
 import { Hono } from 'hono'
 import type { AppEnv } from '../../types/env'
+import { kierunekNaSkrot } from '../../lib/integrations/pogoda'
+/**
+ * Logika pamięci podręcznej mieszka w `lib/integrations/pogoda-cache.ts`,
+ * bo korzysta z niej także renderowanie podstrony /pogoda. Trzymanie jej
+ * tutaj oznaczałoby dwie kopie tej samej decyzji — pasek górny i podstrona
+ * rozjechałyby się przy pierwszej poprawce TTL-a albo komunikatu.
+ */
 import {
   IZBICA_KUJAWSKA,
   TTL_POGODA,
   TTL_POWIETRZE,
-  pobierzPogode,
-  pobierzPowietrze,
-  kierunekNaSkrot,
-  type OdpowiedzPogody,
-  type JakoscPowietrza,
-} from '../../lib/integrations/pogoda'
+  pogodaZPamieci,
+  powietrzeZPamieci,
+} from '../../lib/integrations/pogoda-cache'
 
 const trasy = new Hono<AppEnv>()
-
-/** Klucz świeżej odpowiedzi (z TTL). */
-const KLUCZ_POGODA = 'pogoda:izbica'
-/** Klucz „ostatnia udana\" — bez TTL, ratunek przy awarii dostawcy. */
-const KLUCZ_POGODA_AWARIA = 'pogoda:izbica:ostatnia'
-const KLUCZ_POWIETRZE = 'powietrze:izbica'
-const KLUCZ_POWIETRZE_AWARIA = 'powietrze:izbica:ostatnia'
-
-/**
- * Odczyt z KV odporny na brak bindingu.
- *
- * `WEATHER_KV` jest w typach opcjonalne i w środowisku lokalnym bez
- * skonfigurowanego namespace'u faktycznie go nie ma. Brak cache'a nie
- * może wywracać widgetu pogodowego — degradujemy do zapytania na żywo.
- */
-const czytajKv = async <T>(kv: unknown, klucz: string): Promise<T | null> => {
-  if (!kv || typeof (kv as { get?: unknown }).get !== 'function') return null
-  try {
-    const surowe = await (kv as { get: (k: string, t: string) => Promise<unknown> }).get(klucz, 'json')
-    return (surowe as T) ?? null
-  } catch (blad) {
-    console.warn('[pogoda] odczyt KV nieudany', klucz, blad)
-    return null
-  }
-}
-
-const pisz2Kv = async (kv: unknown, klucz: string, wartosc: unknown, ttl?: number): Promise<void> => {
-  if (!kv || typeof (kv as { put?: unknown }).put !== 'function') return
-  try {
-    const opcje = ttl ? { expirationTtl: ttl } : undefined
-    await (kv as { put: (k: string, v: string, o?: unknown) => Promise<unknown> }).put(
-      klucz,
-      JSON.stringify(wartosc),
-      opcje
-    )
-  } catch (blad) {
-    console.warn('[pogoda] zapis KV nieudany', klucz, blad)
-  }
-}
-
-/** Wiek zapisu w minutach — liczony z pola `pobrano`, bez zależności od zegara klienta. */
-const wiekMinut = (pobrano: string): number | null => {
-  const t = Date.parse(pobrano)
-  if (Number.isNaN(t)) return null
-  return Math.max(0, Math.round((Date.now() - t) / 60000))
-}
 
 // ─────────────────────────────────────────────────────── GET /pogoda
 
 trasy.get('/', async (c) => {
-  const kv = c.env?.WEATHER_KV
+  const wynik = await pogodaZPamieci(c.env?.WEATHER_KV)
 
-  // 1. świeże z KV
-  const swieze = await czytajKv<OdpowiedzPogody>(kv, KLUCZ_POGODA)
-  if (swieze?.teraz) {
-    c.header('cache-control', `public, max-age=120, s-maxage=${TTL_POGODA}`)
-    return c.json({ ...swieze, zCache: true, wiekMinut: wiekMinut(swieze.pobrano) })
-  }
-
-  // 2. zapytanie do dostawcy
-  try {
-    const dane = await pobierzPogode()
-    // Zapis pod dwoma kluczami: świeżym (z TTL) i awaryjnym (bez TTL).
-    await Promise.all([
-      pisz2Kv(kv, KLUCZ_POGODA, dane, TTL_POGODA),
-      pisz2Kv(kv, KLUCZ_POGODA_AWARIA, dane),
-    ])
-    c.header('cache-control', `public, max-age=120, s-maxage=${TTL_POGODA}`)
-    return c.json({ ...dane, wiekMinut: 0 })
-  } catch (blad) {
-    console.error('[pogoda] Open-Meteo niedostępne', blad)
-
-    // 3. ratunek: ostatnia udana odpowiedź, jawnie oznaczona jako nieświeża
-    const stare = await czytajKv<OdpowiedzPogody>(kv, KLUCZ_POGODA_AWARIA)
-    if (stare?.teraz) {
-      c.header('cache-control', 'public, max-age=60')
-      return c.json({
-        ...stare,
-        zCache: true,
-        nieswieze: true,
-        wiekMinut: wiekMinut(stare.pobrano),
-        ostrzezenie: 'Dane z pamięci podręcznej — serwis pogodowy chwilowo nie odpowiada.',
-      })
-    }
-
-    // 4. uczciwy brak danych — nigdy wartości zaszyte w kodzie
+  if (!wynik.dane) {
+    // Uczciwy brak danych — NIGDY wartości zaszytych w kodzie.
     c.header('cache-control', 'no-store')
     return c.json(
       {
@@ -137,11 +63,19 @@ trasy.get('/', async (c) => {
         teraz: null,
         prognoza: [],
         zrodlo: 'Open-Meteo',
-        blad: 'Serwis pogodowy nie odpowiada. Nie pokazujemy danych zastępczych.',
+        blad: wynik.blad,
       },
       503
     )
   }
+
+  // Dane nieświeże cache'ujemy krótko: chcemy szybko wrócić do dostawcy,
+  // gdy tylko odzyska sprawność.
+  c.header(
+    'cache-control',
+    wynik.dane.nieswieze ? 'public, max-age=60' : `public, max-age=120, s-maxage=${TTL_POGODA}`
+  )
+  return c.json(wynik.dane)
 })
 
 // ────────────────────────────────────────────── GET /pogoda/powietrze
@@ -149,47 +83,21 @@ trasy.get('/', async (c) => {
 trasy.get('/powietrze', async (c) => {
   // Osobny namespace: pyły odświeżamy rzadziej i nie chcemy, żeby
   // wygaszenie pogody unieważniało pomiar powietrza.
-  const kv = c.env?.AIR_KV ?? c.env?.WEATHER_KV
+  const wynik = await powietrzeZPamieci(c.env?.AIR_KV ?? c.env?.WEATHER_KV)
 
-  const swieze = await czytajKv<JakoscPowietrza>(kv, KLUCZ_POWIETRZE)
-  if (swieze && swieze.pm25 !== undefined) {
-    c.header('cache-control', `public, max-age=300, s-maxage=${TTL_POWIETRZE}`)
-    return c.json({ ...swieze, zCache: true, wiekMinut: wiekMinut(swieze.pobrano) })
-  }
-
-  try {
-    const dane = await pobierzPowietrze()
-    await Promise.all([
-      pisz2Kv(kv, KLUCZ_POWIETRZE, dane, TTL_POWIETRZE),
-      pisz2Kv(kv, KLUCZ_POWIETRZE_AWARIA, dane),
-    ])
-    c.header('cache-control', `public, max-age=300, s-maxage=${TTL_POWIETRZE}`)
-    return c.json({ ...dane, wiekMinut: 0 })
-  } catch (blad) {
-    console.error('[pogoda] Air Quality niedostępne', blad)
-    const stare = await czytajKv<JakoscPowietrza>(kv, KLUCZ_POWIETRZE_AWARIA)
-    if (stare) {
-      c.header('cache-control', 'public, max-age=60')
-      return c.json({
-        ...stare,
-        zCache: true,
-        nieswieze: true,
-        wiekMinut: wiekMinut(stare.pobrano),
-        ostrzezenie: 'Dane z pamięci podręcznej — serwis pomiarowy chwilowo nie odpowiada.',
-      })
-    }
+  if (!wynik.dane) {
     c.header('cache-control', 'no-store')
     return c.json(
-      {
-        pm10: null,
-        pm25: null,
-        indeksEu: null,
-        ocena: 'brak danych',
-        blad: 'Serwis pomiarowy nie odpowiada.',
-      },
+      { pm10: null, pm25: null, indeksEu: null, ocena: 'brak danych', blad: wynik.blad },
       503
     )
   }
+
+  c.header(
+    'cache-control',
+    wynik.dane.nieswieze ? 'public, max-age=60' : `public, max-age=300, s-maxage=${TTL_POWIETRZE}`
+  )
+  return c.json(wynik.dane)
 })
 
 // ──────────────────────────────────────── GET /pogoda/pasek (topbar)
@@ -203,24 +111,15 @@ trasy.get('/powietrze', async (c) => {
  * mieści.
  */
 trasy.get('/pasek', async (c) => {
-  const kv = c.env?.WEATHER_KV
-  const zrodlo =
-    (await czytajKv<OdpowiedzPogody>(kv, KLUCZ_POGODA)) ??
-    (await (async () => {
-      try {
-        const dane = await pobierzPogode()
-        await Promise.all([
-          pisz2Kv(kv, KLUCZ_POGODA, dane, TTL_POGODA),
-          pisz2Kv(kv, KLUCZ_POGODA_AWARIA, dane),
-        ])
-        return dane
-      } catch {
-        return await czytajKv<OdpowiedzPogody>(kv, KLUCZ_POGODA_AWARIA)
-      }
-    })())
+  // Ta sama funkcja, co w `/pogoda` — pasek nie może pokazywać innej
+  // temperatury niż podstrona prognozy tej samej witryny.
+  const wynik = await pogodaZPamieci(c.env?.WEATHER_KV)
+  const zrodlo = wynik.dane
 
   if (!zrodlo?.teraz) {
     c.header('cache-control', 'no-store')
+    // `dostepne: false` to prawidłowa odpowiedź, nie awaria portalu:
+    // skrypt paska po prostu nie wpisuje nic i pasek zostaje bez pogody.
     return c.json({ dostepne: false }, 503)
   }
 
@@ -234,6 +133,7 @@ trasy.get('/pasek', async (c) => {
     kierunek: kierunekNaSkrot(zrodlo.teraz.kierunekWiatru),
     lokalizacja: zrodlo.lokalizacja,
     zrodlo: zrodlo.zrodlo,
+    nieswieze: zrodlo.nieswieze === true,
   })
 })
 

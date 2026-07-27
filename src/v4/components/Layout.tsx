@@ -37,17 +37,59 @@ const IconMail = () => (
 )
 
 // ─────────────────────────────────────────────────────────────────── TOPBAR
+
+/**
+ * Data w pasku — liczona po stronie serwera, ale ZAWSZE w strefie
+ * Europe/Warsaw, nie w strefie procesu. Worker Cloudflare działa w UTC,
+ * więc `new Date().toLocaleDateString('pl-PL')` bez wskazania strefy
+ * pokazywałby wieczorem po 22:00 (23:00 w czasie letnim) datę dnia
+ * poprzedniego — na portalu lokalnym, gdzie liczy się „co dziś",
+ * jest to błąd widoczny dla każdego czytelnika.
+ *
+ * `Intl.DateTimeFormat` z jawną strefą jest w Workers dostępny
+ * (pełne ICU), więc nie trzeba tu algorytmu Sakamoto jak w warstwie
+ * prognozy, gdzie przeliczamy podane przez dostawcę daty ISO bez zegara.
+ */
+const dataPolska = (): string => {
+  const tekst = new Intl.DateTimeFormat('pl-PL', {
+    timeZone: 'Europe/Warsaw',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date())
+  // pl-PL daje „poniedziałek, 27 lipca 2026" — szata wymaga wielkiej litery
+  return tekst.charAt(0).toUpperCase() + tekst.slice(1)
+}
+
+/**
+ * Pogoda w pasku — uzupełniana po stronie klienta z /api/v1/pogoda/pasek.
+ *
+ * Dlaczego nie SSR: `Shell` jest używany w 20 miejscach jako komponent
+ * synchroniczny. Pobranie pogody na serwerze wymagałoby `await` w każdej
+ * z 20 tras i dołożyłoby do czasu odpowiedzi KAŻDEJ podstrony żądanie
+ * do KV (a przy zimnym cache — do Open-Meteo). Pasek jest elementem
+ * dekoracyjnym, więc płacić za niego opóźnieniem pierwszego bajtu na
+ * artykule byłoby złym kompromisem.
+ *
+ * W SSR wychodzi pusty kontener. Nie ma tu wartości zastępczej („18°C"),
+ * bo lepiej pokazać nic niż liczbę wziętą z powietrza — dotąd w tym
+ * miejscu była właśnie taka liczba, wpisana na stałe.
+ *
+ * `aria-live="polite"` — czytnik ekranu ogłosi temperaturę po dociągnięciu,
+ * ale nie przerwie czytania nagłówka strony (F3 WCAG).
+ */
 export const Topbar: FC = () => (
   <div id="topbar">
     <div class="topbar-inner">
       <div class="topbar-left">
-        <span class="topbar-date">Piątek, 23 maja 2026</span>
-        <span class="topbar-weather">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <circle cx="12" cy="12" r="5" />
-          </svg>{' '}
-          18°C · Izbica Kujawska
-        </span>
+        <span class="topbar-date">{dataPolska()}</span>
+        <span
+          class="topbar-weather"
+          id="topbar-pogoda"
+          aria-live="polite"
+          data-endpoint="/api/v1/pogoda/pasek"
+        ></span>
       </div>
       <div class="topbar-right">
         <a href="/redakcja">Redakcja</a>

@@ -16,6 +16,9 @@ import {
 } from './pages/Category'
 import { ArticlePageV4, GalleryPageV4 } from './pages/Article'
 import { SolectwaPageV4, SearchPageV4, NotFoundV4 } from './pages/Misc'
+// Etap I10 — mapa gminy. Osobny plik, bo strona ma własną warstwę kliencką
+// (MapLibre) i notę o źródłach danych, której pozostałe widoki nie mają.
+import { MapaPageV4, type PunktMapy } from './pages/Mapa'
 // Etap D5 — wyniki z indeksu FTS5 mają własny komponent, bo dysponują
 // fragmentem z zaznaczonym trafieniem, czego karta ListCard nie obsługuje.
 import { SearchResultsV4 } from './pages/SearchResults'
@@ -183,6 +186,86 @@ app.get('/solectwa', (c) =>
     }
   )
 )
+
+// ══════════════════════════════════════════════════════════ MAPA GMINY (I10)
+//
+// Trasa musi stać PRZED catch-allem kategorii (/:cat/:slug), inaczej router
+// taksonomii przejąłby „/mapa" i zwrócił 404 kategorii.
+//
+// Dane czytamy tu bezpośrednio z D1, a NIE przez fetch do /api/v1/mapa/solectwa.
+// Wywoływanie własnego API po HTTP z wnętrza Workera przy każdym renderze
+// dokładałoby pełny obieg żądania (podróż przez warstwę sieciową Cloudflare)
+// do czasu odpowiedzi strony, mimo że dane leżą w tej samej bazie. Trasa API
+// zostaje — z niej korzysta warstwa kliencka mapy oraz zewnętrzni klienci.
+//
+// Zapytanie jest świadomie tym samym co w routes/v1/mapa.ts. Nie wyodrębniam
+// go do wspólnej funkcji, bo oba miejsca zwracają inny kształt (koperta JSON
+// vs props komponentu), a wspólna warstwa musiałaby i tak rozgałęziać się na
+// końcu — zyskiem byłaby jedna linijka SELECT, kosztem dodatkowej pośredniej
+// abstrakcji nad zapytaniem, które zmienia się razem ze schematem tabeli.
+app.get('/mapa', async (c) => {
+  let punkty: PunktMapy[] = []
+  let blad: string | null = null
+
+  const db = c.env?.DB
+  if (!db) {
+    blad = 'Baza danych jest niedostępna.'
+  } else {
+    try {
+      const wynik = await db
+        .prepare(
+          `SELECT slug, name, soltys, news_count, latitude, longitude
+             FROM solectwa
+            WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+            ORDER BY name COLLATE NOCASE`
+        )
+        .all<{
+          slug: string
+          name: string
+          soltys: string | null
+          news_count: number | null
+          latitude: number
+          longitude: number
+        }>()
+
+      punkty = (wynik.results ?? []).map((r) => ({
+        slug: r.slug,
+        nazwa: r.name,
+        lat: r.latitude,
+        lon: r.longitude,
+        soltys: r.soltys,
+        liczbaMaterialow: r.news_count ?? 0,
+        adres: `/solectwa/${r.slug}`,
+        // Miasto jest siedzibą gminy — jedyny punkt o innej randze.
+        jestSiedziba: r.slug === 'izbica-kujawska',
+      }))
+
+      if (punkty.length === 0) {
+        blad = 'W bazie nie ma jeszcze współrzędnych sołectw (wymagana migracja 0055).'
+      }
+    } catch (e) {
+      // Uczciwy komunikat zamiast strony sugerującej gminę bez sołectw.
+      blad = e instanceof Error ? e.message : 'Nieznany błąd odczytu bazy.'
+    }
+  }
+
+  // Liczba sołectw = punkty bez siedziby gminy. Wyliczana, nie wpisana —
+  // dopisanie sołectwa w bazie zmienia wszystkie liczby na stronie.
+  const liczbaSolectw = punkty.filter((p) => !p.jestSiedziba).length
+
+  return c.render(
+    <Shell>
+      <MapaPageV4 punkty={punkty} liczbaSolectw={liczbaSolectw} blad={blad} />
+    </Shell>,
+    {
+      title: 'Mapa gminy Izbica Kujawska — sołectwa — Izbica24.pl',
+      description:
+        `Interaktywna mapa ${liczbaSolectw || SOLECTWA.length} sołectw gminy Izbica Kujawska. ` +
+        `Kliknij miejscowość, aby zobaczyć materiały z jej okolic.`,
+      canonical: 'https://izbica24.pl/mapa',
+    }
+  )
+})
 
 app.get('/solectwa/:slug', (c) => {
   const slug = c.req.param('slug')

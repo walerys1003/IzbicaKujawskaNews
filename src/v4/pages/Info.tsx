@@ -273,58 +273,12 @@ export const AddAnnouncementPageV4: FC = () => {
 }
 
 // ═════════════════════════════════════════════════════ MAPA GMINY
-export const MapaGminyPageV4: FC = () => (
-  <div class="page">
-    <Breadcrumbs items={[{ label: 'Mapa gminy' }]} />
-    <header class="cat-hero reveal" style="--c:var(--c-samorzad)">
-      <span class="tag samorzad">Gmina Izbica Kujawska</span>
-      <h1 style="margin-top:12px">Mapa gminy — instytucje i sołectwa</h1>
-      <p class="cat-lead">
-        Najważniejsze instytucje publiczne, placówki oświatowe i zdrowotne oraz {SOLECTWA.length} sołectw gminy
-        Izbica Kujawska. Powiat włocławski, województwo kujawsko-pomorskie, {GMINA.powierzchnia.tekst}.
-      </p>
-    </header>
-
-    <section class="section reveal">
-      <SectionHeader title="Instytucje w gminie" colorVar="var(--c-samorzad)" />
-      <div class="list-grid cols-2">
-        {[
-          { n: 'Urząd Miejski', a: 'ul. Marszałka Piłsudskiego 32', t: '54 286 50 09', h: 'pon–pt 7:30–15:30, śr do 17:00' },
-          { n: 'SPZOZ Izbica Kujawska', a: 'ul. Kolejowa 5', t: '54 286 51 12', h: 'pon–pt 8:00–18:00' },
-          { n: 'Posterunek Policji', a: 'ul. Narutowicza 8', t: '47 725 42 30', h: 'pon–pt 8:00–15:00, dyżur 24/7: 112' },
-          { n: 'OSP Izbica Kujawska', a: 'ul. Sportowa 2', t: '998 / 112', h: 'gotowość całodobowa' },
-          { n: 'MGCK — Centrum Kultury', a: 'ul. Piłsudskiego 26', t: '54 286 50 41', h: 'pon–pt 9:00–19:00' },
-          { n: 'Biblioteka Publiczna', a: 'ul. Piłsudskiego 26', t: '54 286 50 42', h: 'pon–pt 10:00–18:00, sob 9:00–13:00' },
-          { n: 'MGOPS', a: 'ul. Sportowa 4', t: '54 286 51 45', h: 'pon–pt 7:30–15:30' },
-          { n: 'ZGKiW', a: 'ul. Kolejowa 14', t: '54 286 50 88', h: 'pon–pt 7:00–15:00, awarie: 601 445 220' },
-        ].map((i) => (
-          <article class="lc" style="--c:var(--c-samorzad)">
-            <div class="lc-body">
-              <span class="tag samorzad">Instytucja</span>
-              <h3>{i.n}</h3>
-              <p>
-                📍 {i.a}
-                <br />
-                📞 {i.t}
-                <br />
-                🕘 {i.h}
-              </p>
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
-
-    <section class="section reveal">
-      <SectionHeader title={`${SOLECTWA.length} sołectw`} moreHref="/solectwa" moreLabel="Zobacz wszystkie" colorVar="var(--c-samorzad)" />
-      <div class="sol-page-grid">
-        {SOLECTWA.map((s) => (
-          <a class="sol-card" href={`/solectwa/${s.slug}`}>
-            <h3>{s.name}</h3>
-            <div class="sc-count">{s.articleCount} wpisów</div>
-          </a>
-        ))}
-      </div>
-    </section>
-  </div>
-)
+/*
+ * Etap I10 — komponent MapaGminyPageV4 usunięty.
+ *
+ * Pokazywał listy tekstowe pod nagłówkiem „Mapa gminy", ale mapy nie
+ * zawierał. Zastąpiony przez MapaPageV4 (src/v4/pages/Mapa.tsx), który
+ * rysuje właściwą mapę interaktywną i zachowuje obie listy jako
+ * alternatywę tekstową dla użytkowników bez JavaScriptu (WCAG 1.1.1).
+ * Adres /mapa-gminy przekierowuje na /mapa (301).
+ */
