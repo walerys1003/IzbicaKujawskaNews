@@ -1,4 +1,6 @@
 import { Hono } from 'hono'
+import v4Router from './v4/router'
+import v4InfoRoutes from './v4/info-routes'
 import aiRouter from './routes/ai'
 import ragRouter from './routes/rag'
 import newsletterRouter from './routes/newsletter'
@@ -72,6 +74,17 @@ const app = new Hono<AppEnv>()
 app.use('*', securityHeaders)
 app.use('/api/*', corsHeaders)
 app.use('*', responsePerformanceMiddleware)
+
+// ════════════════════════════════════════════════════════════════════════════
+// IZBICA24.PL v4 — SZATA GRAFICZNA (wdrożenie literalne z Zendpad Design)
+// Router v4 montowany PRZED pozostałymi trasami publicznymi, aby przejąć:
+//   /, /szukaj, /solectwa/*, /tag/*, 12 kategorii × podkategorie × artykuły
+// Własny renderer (rendererV4) ładuje izbica-v4.css — szatę 1:1.
+// Starsze widoki (v2/v3) pozostają dostępne pod /v3 i /v2 do porównania.
+// ════════════════════════════════════════════════════════════════════════════
+app.route('/', v4InfoRoutes)
+app.route('/', v4Router)
+
 app.use(renderer)
 
 // ============ API v1 — sub-app mounted at /api/v1 ============
@@ -223,10 +236,10 @@ app.route('/admin', adminBackupVerifyRoutes)
 // │  Typografia: Playfair Display + Lora + Inter                    │
 // │  Layout: asymetryczny hero grid, magazine cards, sticky sidebar │
 // └─────────────────────────────────────────────────────────────────┘
-app.get('/', (c) => {
+app.get('/v3', (c) => {
   return c.render(
     <HomeV3 />,
-    { title: 'izbica24.pl — Magazyn Gminy Izbica Kujawska' }
+    { title: 'izbica24.pl v3 (archiwum) — Magazyn Gminy Izbica Kujawska' }
   )
 })
 
@@ -328,7 +341,7 @@ app.get('/wiedza', (c) => {
 })
 
 // ============ STRONA: ARTYKUŁ ============
-app.get('/wiadomosci/:slug', (c) => {
+app.get('/archiwum/wiadomosci/:slug', (c) => {
   const slug = c.req.param('slug')
   const article = findArticle(slug)
   if (!article) {
@@ -359,7 +372,7 @@ app.get('/wiadomosci/:slug', (c) => {
 })
 
 // ============ STRONA: SZUKAJ (MUSI BYĆ PRZED /:cat) ============
-app.get('/szukaj', (c) => {
+app.get('/archiwum/szukaj', (c) => {
   const q = c.req.query('q') || ''
   const results = q ? searchArticles(q).map(a => ({
     url: `/wiadomosci/${a.slug}`,
@@ -429,7 +442,7 @@ app.get('/blad/500', (c) => {
   return c.render(<><DemoStrip /><SuperHeader /><MainNav /><main id="page-main"><Error500 /></main><Footer /></>, { title: '500 — izbica24.pl' })
 })
 
-app.get('/:cat', (c) => {
+app.get('/archiwum/:cat', (c) => {
   const cat = c.req.param('cat')
   // Skip routes that don't look like categories
   if (['api', 'static', 'downloads', 'szukaj', 'plan', 'wiedza', 'v2', 'rss.xml', 'sitemap.xml', 'news-sitemap.xml', 'robots.txt', 'manifest.json', 'humans.txt', '_debug-layout.js'].includes(cat)) {

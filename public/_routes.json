@@ -1,5 +1,11 @@
 {
   "version": 1,
   "include": ["/*"],
-  "exclude": ["/data/*", "/static/*", "/downloads/*"]
+  "exclude": [
+    "/data/*",
+    "/static/*",
+    "/downloads/*",
+    "/favicon.ico",
+    "/sw.js"
+  ]
 }

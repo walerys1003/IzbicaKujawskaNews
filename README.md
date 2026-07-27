@@ -1,174 +1,79 @@
-# Izbica24 — Portal Gminy Izbica Kujawska
+# izbica24.pl — portal informacyjny gminy Izbica Kujawska (v4)
 
-> **Magazyn Kujawski Premium** — kompletny portal informacyjny gminy Izbica Kujawska zbudowany na Cloudflare Pages + Workers + Hono + TypeScript
+## Przegląd projektu
+- **Nazwa**: izbica24.pl (`izbica24-portal`)
+- **Cel**: społeczno-lokalny portal informacyjny gminy Izbica Kujawska (5 400 mieszkańców, 34 sołectwa, 147 km², powiat włocławski)
+- **Szata graficzna v4**: wdrożona **literalnie 1:1** z dostarczonego mockupu `index.html` (styl TVN24) — CSS przeniesiony bez modyfikacji, markup odtworzony element po elemencie
+- **Stack**: Hono 4 + JSX SSR + Cloudflare Pages/Workers, Vite 6, Wrangler 4
 
-## 🎯 Status Projektu
+## Status wdrożenia v4
 
-**Faza implementacji**: 1-5 z 10 — **~435/590 zadań ukończonych (74%)**
+### ✅ Zrobione
+**Szata graficzna (1:1 z mockupu)**
+- `public/static/v4/izbica-v4.css` — CSS przeniesiony literalnie z mockupu (linie 12–630), + `izbica-v4-ext.css` (widoki dodatkowe)
+- `public/static/v4/izbica-v4.js` — przeniesione zachowania: reveal observer (4 zabezpieczenia), filtry `.news-filter` / `.mm-filter`, zakładki `.k-tab`, smooth scroll, mobile menu, rotator mega-menu
+- Fonty: Barlow Condensed + Barlow + Source Serif 4 (jak w mockupie)
+- 20 zdjęć + warianty `.webp` i `.avif` (60 plików) w `public/static/img/v4/`
 
-| Faza | Sandbox | Zakres | Zadania | Status |
-|------|---------|--------|---------|--------|
-| 1.1+1.2+1.3 | S1 | D1 schema + 15 typed models + base routes + RSS/sitemap | 45 | ✅ MERGED |
-| 1.4+2.1+2.2 | S2 | Frontend enhancements + D1 migrations + 15 KV wrappers | 50 | ✅ MERGED |
-| 2.3+2.4+3.1 | S3 | 20 R2 buckets + FTS5 + 16 JWT auth routes + PBKDF2 | 55 | ✅ MERGED |
-| 3.2+3.3+4.1 | S4 | Admin Panel + Tiptap WYSIWYG + AI Newsroom workflow | 65 | ✅ MERGED |
-| 4.2+4.3+4.4 | S5 | 15 AI prompts + 20 RAG endpoints + 30 n8n workflows | 65 | ✅ MERGED |
-| 5.1+5.2+5.3 | S6 | Media library + Galleries + Podcast + Video | 55 | ✅ MERGED |
-| 6.1+6.2+6.3 | S7 | Web Push + Analytics + Search UI + autocomplete | 50 | ✅ MERGED |
-| 8.2+9.1+9.2 | S9 | Vitest + Playwright + 10 monitoring modules + backup | 50 | ✅ MERGED |
-| 10.1+10.2+10.3 | S10 | CI/CD + 20 docs + Public pages + Performance edge | 50 | ✅ MERGED |
-| 7.1+7.2+8.1 | S8 | SEO advanced + Admin UI + Newsletter advanced | 60 | ⚠️ PARTIALLY (truncated agent) |
-| Phase 5-10 extra | — | Reserved for next batch | ~110 | ⏳ TODO |
+**Weryfikacja parytetu z mockupem** (element po elemencie, HTML render vs mockup):
+`hero-side-item 4/4 · sygnale-big 6/6 · sygnale-md 8/8 · news-filter 9/9 · news-card 10/10 · news-feat 2/2 · k-tab 12/12 · k-panel 5/5 · stat 4/4 · cult-card 6/6 · portrait-card 3/3 · media-card 14/14 · zycie-card 16/16 · sstat 3/3 · mm-filter 9/9 · pc-ep 13/13 · footer-col 4/4` — **wszystkie zgodne**
 
-## 🏗️ Architektura
+**Wszystkie 16 sekcji strony głównej w oryginalnej kolejności**: topbar → header → nav → breaking ticker → hero grid → Na sygnale → Wiadomości → split (Kujawianka + Samorząd) → stats bar → feature Wietrzychowice → Kultura → Ludzie → Przegląd mediów → Życie codzienne → Sołectwa → Multimedia → Ogłoszenia → footer
 
-### Tech Stack
-- **Runtime**: Cloudflare Workers (edge globally distributed)
-- **Framework**: Hono 4.x + JSX SSR via `hono/jsx-renderer`
-- **Database**: Cloudflare D1 (SQLite, 60+ migracji)
-- **Cache/Sessions**: 15 Cloudflare KV namespaces (typed wrappers)
-- **Storage**: 20 Cloudflare R2 buckets
-- **Auth**: JWT (hono/jwt) + PBKDF2 password hashing (Web Crypto API)
-- **AI**: OpenAI GPT-4o-mini + Anthropic Claude 3.5 Sonnet (15 newsroom prompts)
-- **RAG**: Cloudflare Vectorize fallback + D1 cosine similarity
-- **Search**: SQLite FTS5 + Polish stemmer + spell-suggest
-- **Editor**: Tiptap WYSIWYG (CDN)
-- **Testing**: Vitest + Playwright
+**Rozszerzenie belki górnej (mega-menu) — zgodnie z życzeniem**
+- Kliknięcie/hover kategorii głównej → panel z listą podkategorii (lewa kolumna) **+ karty artykułów** (prawa kolumna)
+- Dla **każdej z 67 podkategorii dokładnie 4 karty**: zdjęcie + tytuł + krótka zajawka + data + czas czytania
+- Karty rotują automatycznie co 4 s, z kropkami nawigacyjnymi; przełączenie podkategorii zmienia zestaw kart
+- Automatyczne dopełnianie do 4 kart (pula kategorii → pula całego portalu), tag każdej karty odpowiada faktycznej podkategorii materiału
 
-### Endpointy API (290+ registered)
+**Warstwa danych** (`src/v4/`)
+- `taxonomy.ts` — 12 kategorii głównych, 67 podkategorii, 3. poziom (`kultura/parafie/*`, `multimedia/wideo|podcast|galerie/*`), 34 sołectwa
+- `content-types.ts` — model treści: `ContentType` (article/gallery/video/audio/live/media-review/announcement/event/infographic), `ContentBlock` (paragraph/heading/list/quote/image/gallery/video/audio/embed/file/table/info), `MediaAsset`, `Gallery`, `Author`
+- `content-db.ts` — **58 materiałów demo**, 3 galerie, 24 zasoby medialne, 4 autorzy + selektory zapytań
+- `data-kujawianka.ts` — dane 5 zakładek (ostatni mecz, tabela mini/pełna, strzelcy, terminarz, kadra 23 os., junior)
+- `data-site.ts` — topbar, header, filtry, karta samorządu, statystyki, sołectwa, kafle ogłoszeń, stopka
 
-**Public:**
-- `/` — strona główna (25 modułów, Magazyn Kujawski Premium)
-- `/szukaj?q=` — wyszukiwanie z FTS5
-- `/o-nas`, `/kontakt`, `/regulamin`, `/polityka-prywatnosci`, `/cookies`, `/redakcja`, `/reklama`, `/kariera`, `/dla-prasy`, `/dostepnosc`
-- `/sitemap.xml`, `/sitemap-news.xml`, `/rss`, `/rss/:category`, `/robots.txt`, `/humans.txt`
-- `/manifest.json`, `/security.txt`
+**Widoki (wszystkie działają, HTTP 200)**
+| Widok | Trasa | Status |
+|---|---|---|
+| Strona główna | `/` | ✅ |
+| Kategoria (12) | `/wiadomosci`, `/na-sygnale`, `/samorzad`, `/kujawianka`, `/kultura`, `/historia`, `/ludzie`, `/zycie-codzienne`, `/przeglad-mediow`, `/multimedia`, `/ogloszenia` | ✅ |
+| Podkategoria (67) | `/wiadomosci/inwestycje`, `/na-sygnale/pozary`, `/kujawianka/tabela`, … | ✅ |
+| 3. poziom | `/kultura/parafie/blenna`, `/multimedia/wideo/reportaze`, … | ✅ |
+| Artykuł | `/wiadomosci/inwestycje/remont-ulicy-koscielnej-zakonczony` | ✅ |
+| Galeria | `/multimedia/galerie/:sekcja/:slug` | ✅ |
+| Sołectwa | `/solectwa`, `/solectwa/sadlno` (34) | ✅ |
+| Tag | `/tag/:tag` | ✅ |
+| Szukaj | `/szukaj?q=` | ✅ |
+| 404 | dowolna nieistniejąca | ✅ |
 
-**API v1:**
-- `/api/v1/articles`, `/api/v1/articles/:slug` — artykuły CRUD
-- `/api/v1/categories`, `/api/v1/tags`, `/api/v1/popular`, `/api/v1/latest`
-- `/api/v1/comments/*`, `/api/v1/newsletter/*`, `/api/v1/alerts/*`
-- `/api/v1/auth/*` — 16 endpointów (register, login, logout, refresh, magic-link, verify-email, reset-password, change-password, profile, delete-account, 2fa-enable/verify, social-google/facebook, api-keys, sessions)
-- `/api/v1/health`, `/api/v1/version`, `/api/v1/metrics`
+**Back-end / panel redakcji** (`/admin`)
+`/admin` (dashboard) · `/admin/articles` · `/admin/articles/new` · `/admin/articles/:id/edit` · `/admin/media` · `/admin/ogloszenia` · `/admin/comments` · `/admin/users` · `/admin/settings` — wszystkie 200
 
-**AI Newsroom:**
-- `/api/ai/prompts` — lista 15 promptów (headline, lead, tldr, seo-meta, fact-checker, tone-rewriter, quote-extractor, tags-classifier, image-prompt, social-snippets, newsletter-blurb, push-notification, translate-pl-en, plain-language, comments-moderator)
-- `/api/ai/prompt/:id` — wywołanie konkretnego promptu
+### ⏳ Do zrobienia (kolejna faza)
+- Podłączenie panelu redakcji do **trwałego zapisu w D1** (obecnie widoki + formularze; dane demo w TS)
+- Migracje D1 dla modelu v4 + seed z `content-db.ts`; binding D1 w `wrangler.jsonc`
+- Upload plików do R2 (zdjęcia, audio, wideo, dokumenty) z panelu
+- Workflow publikacji (szkic → recenzja → publikacja) z rolami redakcyjnymi
+- Odtworzenie logiki funkcjonalnej z dokumentów „Sesja N1–N6”
+- Wdrożenie produkcyjne na Cloudflare Pages
 
-**RAG (20 endpointów):**
-- `/api/rag/ingest/article`, `/api/rag/search`, `/api/rag/ask`, `/api/rag/similar/:slug`
-- `/api/rag/summarize-cluster`, `/api/rag/timeline/:topic`, `/api/rag/compare`
-- `/api/rag/topics`, `/api/rag/recommend/:userId`, `/api/rag/auto-categorize`
-- + 10 dodatkowych endpointów RAG
+## Architektura danych
+- **Model treści**: `Article` z blokami `ContentBlock` (union dyskryminowany) — obsługa tekstu, zdjęć, galerii, wideo, audio, embedów, plików, tabel i ramek informacyjnych
+- **Typy materiałów**: artykuł, galeria, wideo, audio/podcast, relacja live, przegląd mediów, ogłoszenie, wydarzenie, infografika
+- **Obecne źródło**: moduły TypeScript (`src/v4/content-db.ts`) — SSR bez zapytań do bazy
+- **Docelowo**: Cloudflare D1 (treść, relacje), KV (cache, konfiguracja — 15 namespace'ów gotowych), R2 (media)
 
-**Media + Galleries + Podcast/Video (55 endpointów):**
-- `/api/media/upload`, `/api/media/library`, `/api/media/:id/optimize`
-- `/api/galleries/*` — 15 endpointów
-- `/api/podcast/episodes`, `/api/podcast/rss`, `/api/video/*` — 20 endpointów
-
-**Push + Analytics + Search (50 endpointów):**
-- `/api/push/subscribe`, `/api/push/send-broadcast`, `/api/push/breaking`
-- `/api/analytics/pageview`, `/api/analytics/dashboard`, `/api/analytics/realtime`
-- `/api/search/autocomplete`, `/api/search/trending`, `/api/search/spell-check`
-
-**Admin (Sandbox 4 + 9):**
-- `/admin` — Dashboard, Articles, Categories, Comments, Media, Settings
-- `/admin/logs`, `/admin/errors`, `/admin/slow-queries`
-- `/admin/backup-list`, `/admin/backup-create`, `/admin/backup-restore`
-
-## 🚀 Deployment
-
-**Local development:**
+## Uruchomienie lokalne
 ```bash
-npm install
 npm run build
 pm2 start ecosystem.config.cjs
-# Test: curl http://localhost:3000
+curl http://localhost:3000
 ```
 
-**Cloudflare Pages deployment:**
-```bash
-npm run build
-npx wrangler pages deploy dist --project-name izbica24-portal
-```
-
-**Database migrations:**
-```bash
-npx wrangler d1 migrations apply izbica24-production --local  # dev
-npx wrangler d1 migrations apply izbica24-production           # prod
-```
-
-## 📁 Struktura
-
-```
-webapp/
-├── src/
-│   ├── ai/                # AI prompts (15) + RAG (embedder, vector-store)
-│   ├── api/v1.ts          # REST API v1 sub-app
-│   ├── components/        # JSX SSR (HomeV3, ArticlePage, AdminPanel, ...)
-│   ├── db/                # Typed D1 models + repositories
-│   ├── lib/               # kv/, backup/, monitoring/, performance/
-│   ├── middleware/        # request-id, request-logger, error-handler
-│   ├── monitoring/        # 10 modules (logger, metrics, tracing, ...)
-│   ├── routes/
-│   │   ├── admin/         # 8 admin routes
-│   │   ├── auth/          # 16 JWT auth routes
-│   │   ├── public/        # 10 public pages
-│   │   ├── v1/            # health, metrics, version + media-list, etc.
-│   │   ├── ai.ts, rag.ts, push, analytics, search, ai-newsroom
-│   │   └── media-lib, galleries, podcast, video
-│   ├── seo/               # sitemap, jsonld, og
-│   └── types/             # env.ts (Bindings: 15 KV + 20 R2 + D1 + secrets)
-├── migrations/            # 60+ D1 SQL migrations
-├── n8n-workflows/         # 30 n8n JSON templates (RSS ingest, social publish, ...)
-├── docs/                  # 20 markdown docs (architecture, api, auth, ...)
-├── tests/                 # vitest unit + integration + playwright e2e
-├── public/static/         # vitals.js, push-client.js, search.js, sw.js
-├── scripts/               # deploy, migrate, seed, backup, rollback
-└── .github/workflows/     # CI, CodeQL, deploy-preview/prod, lighthouse
-```
-
-## 🔗 URLs
-
-- **GitHub**: https://github.com/walerys1003/IzbicaKujawskaNews
-- **Local dev**: http://localhost:3000
-- **Sandbox preview**: https://3000-ilphadxwtch7dg25penfb-ecea8f22.sandbox.novita.ai
-
-## 📊 Build Stats (ostatni build)
-- **Modules transformed**: 246
-- **dist/_worker.js**: 409.66 KB
-- **Build time**: 3.09s (Vite 6.4.2)
-
-## ✅ Testy Smoke (zweryfikowane)
-- `GET /` → HTTP 200, 151 KB HTML
-- `GET /healthz` → HTTP 200
-- `GET /api/v1/health` → HTTP 200 JSON
-- `GET /api/ai/prompts` → HTTP 200 (15 promptów)
-
-## 🚧 TODO — pozostałe zadania (~155 z 590)
-
-### Sandbox 8 — Faza 7.1+7.2+8.1 (60 zadań) — TRUNCATED, do re-run:
-- 15 SEO advanced (sitemap-images.xml, IndexNow, JSON-LD complete)
-- 25 Admin UI Dashboard (drag-drop sort, AI buttons w editorze, charts)
-- 20 Newsletter advanced (segments, campaigns, A/B test, Mailchimp/Resend integration)
-
-### Phase 5-10 extras (~95 zadań):
-- Real-time WebSocket alternative (Server-Sent Events)
-- PWA install banner + offline mode
-- Live blog feature (commenting + auto-refresh)
-- Dyżury aptek + lekarzy z auto-rotation
-- Pogoda widget + AQI integration (IMGW + GIOŚ)
-- Strona partnerów + reklamodawców
-- Ranking sołectw
-- Galeria fotografów (UGC submissions)
-- Live transmisje z sesji Rady Gminy
-- Mobile app PWA manifest + icons full set
-
-## 📜 Licencja
-Proprietary — Gmina Izbica Kujawska
-
----
-
-**Last Updated**: 2026-05-25
-**Tech Lead**: WordPress Innovation Seeker (walerys1003)
-**Orchestration**: Multi-sandbox parallel build (10 sub-agents, 590-task roadmap)
+## Wdrożenie
+- **Platforma**: Cloudflare Pages
+- **Status**: 🟡 gotowe do wdrożenia (weryfikacja lokalna zakończona)
+- **Stack**: Hono + TypeScript + JSX SSR + CSS 1:1 z mockupu
+- **Weryfikacja**: build ✅ (`dist/_worker.js` 629 kB) · 0 błędów konsoli przeglądarki · wszystkie trasy 200
+- **Ostatnia aktualizacja**: 2026-07-27
