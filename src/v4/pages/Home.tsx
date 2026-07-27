@@ -772,6 +772,32 @@ const ZycieCodzienne: FC = () => {
 }
 
 // ═══════════════════════════════════════════════════════════ SOŁECTWA
+
+/**
+ * Przykładowe nazwy w akapicie wstępnym — brane z listy sołectw,
+ * nie wypisane ręcznie.
+ *
+ * Poprzednio stało tu zdanie wymieniające „Sadłno, Bierzyn, Pasieka,
+ * Wietrzychowice, Modzerowo, Sarnowo, Mchówek". Z siedmiu nazw trzy nie
+ * są sołectwami tej gminy: Bierzyn leży w gminie Boniewo, Sarnowo
+ * w gminie Lubraniec (szkoła w Sarnowie ma pocztowy adres „87-865 Izbica
+ * Kujawska", co zapewne było źródłem pomyłki, ale w wykazie oświatowym
+ * gminy Izbica Kujawska jej nie ma), a Sadłna OpenStreetMap nie zna
+ * w tym rejonie w ogóle.
+ *
+ * Zdanie było na stronie głównej, więc trzy obce wsie witały każdego
+ * czytelnika jako „nasze sołectwa". Wyliczenie z SOLECTWA usuwa całą
+ * klasę tego błędu: dopisanie lub usunięcie sołectwa w taksonomii
+ * zmienia ten akapit automatycznie i nie da się już wpisać nazwy,
+ * której nie ma na liście.
+ *
+ * Bierzemy pierwsze sześć pozycji alfabetycznie, nie losowe — SSR musi
+ * dawać przy każdym żądaniu ten sam HTML (cache brzegowy, diff w testach).
+ */
+const NAZWY_PRZYKLADOWE = SOLECTWA.slice(0, 6)
+  .map((s) => s.name)
+  .join(', ')
+
 const SolectwaSection: FC = () => (
   <section class="section reveal">
     <div class="solectwa">
@@ -781,13 +807,25 @@ const SolectwaSection: FC = () => (
         </h2>
         <p>
           Gmina Izbica Kujawska to nie tylko miasto. To <strong>{SOLECTWA.length} sołectw</strong> rozsianych wokół
-          rynku — Sadłno, Bierzyn, Pasieka, Wietrzychowice, Modzerowo, Sarnowo, Mchówek i wiele
+          rynku — {NAZWY_PRZYKLADOWE} i wiele
           innych. Każde z własną historią, sołtysem, świetlicą i Kołem Gospodyń Wiejskich. Kliknij
           sołectwo, by zobaczyć wszystkie wpisy z jego okolic.
         </p>
         <div class="sol-stats-row">
-          <div class="sstat"><div class="num">34</div><div class="lbl">Sołectw</div></div>
-          <div class="sstat"><div class="num">5,4 tys.</div><div class="lbl">Mieszkańców</div></div>
+          {/*
+            Liczba sołectw wyliczana z listy, nie wpisana. Wcześniej obok
+            wyliczanego „{SOLECTWA.length} sołectw" w nagłówku stała tu
+            liczba „34" wpisana na stałe — dwie różne liczby sołectw
+            widoczne jednocześnie na jednym ekranie.
+          */}
+          <div class="sstat"><div class="num">{SOLECTWA.length}</div><div class="lbl">Sołectw</div></div>
+          {/*
+            Ludność ze wspólnego źródła faktów: 7 688 (GUS, Statystyczne
+            Vademecum Samorządowca). Poprzednie „5,4 tys." nie odpowiadało
+            żadnemu znanemu pomiarowi — zaniżało liczbę mieszkańców gminy
+            o ponad dwa tysiące osób.
+          */}
+          <div class="sstat"><div class="num">{GMINA.ludnosc.tekst}</div><div class="lbl">Mieszkańców</div></div>
           <div class="sstat"><div class="num">{GMINA.powierzchnia.tekst}</div><div class="lbl">Powierzchnia</div></div>
         </div>
       </div>

@@ -26,7 +26,17 @@
   if (!kontener) return; /* nie jesteśmy na /mapa — nic nie ładujemy */
 
   var WERSJA_MAPLIBRE = '4.7.1';
-  var CDN = 'https://unpkg.com/maplibre-gl@' + WERSJA_MAPLIBRE + '/dist/';
+
+  /* CDN: jsDelivr, NIE unpkg.
+     Powód nie jest kwestią gustu. Nasza polityka CSP
+     (src/middleware/security-headers.ts) wymienia w script-src i style-src
+     wyłącznie 'self', cdn.jsdelivr.net i cdnjs.cloudflare.com. Przy adresie
+     unpkg.com przeglądarka blokowała OBA pliki MapLibre, skrypt wpadał
+     w gałąź onerror i mapa nie pojawiała się nigdy — a testy HTTP tego nie
+     wykrywały, bo serwer zwracał poprawne 200 dla samej strony.
+     Wersja przypięta na sztywno: podmiana biblioteki pod nami zmieniłaby
+     wygląd i zachowanie mapy bez naszej wiedzy. */
+  var CDN = 'https://cdn.jsdelivr.net/npm/maplibre-gl@' + WERSJA_MAPLIBRE + '/dist/';
   var STYL_PODKLADU = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
   var ADNOTACJA =
     '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener nofollow">' +
@@ -216,7 +226,18 @@
       /* Błędy pojedynczych kafli nie mogą kasować całej mapy — logujemy
          i idziemy dalej. Konsola wystarczy: czytelnika nie interesuje,
          że jeden kwadrat podkładu się nie wczytał. */
-      if (window.console && console.warn) console.warn('[mapa]', e && e.error ? e.error : e);
+      /* Wyciągamy TEKST błędu, nie sam obiekt. MapLibre podaje w zdarzeniu
+         obiekt Error, a przeglądarka wypisywała go jako samo „Error”
+         bez treści — log był bezużyteczny przy diagnozie. Dokładamy też
+         adres kafla (e.sourceId / e.tile), bo bez niego nie wiadomo,
+         który fragment podkładu zawiódł. */
+      if (window.console && console.warn) {
+        var blad = e && e.error ? e.error : e;
+        var tresc = (blad && (blad.message || blad.statusText)) || String(blad);
+        var status = blad && blad.status ? ' [HTTP ' + blad.status + ']' : '';
+        var zrodlo = e && e.sourceId ? ' zrodlo=' + e.sourceId : '';
+        console.warn('[mapa] ' + tresc + status + zrodlo);
+      }
     });
 
     /* Powiązanie listy pod mapą z mapą: kliknięcie karty sołectwa

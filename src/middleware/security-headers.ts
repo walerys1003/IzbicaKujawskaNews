@@ -15,8 +15,14 @@ export const securityHeaders = async (c: Context<AppEnv>, next: () => Promise<vo
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
-    "img-src 'self' data: blob: https://*.izbica24.pl https://*.r2.cloudflarestorage.com https://*.cloudflarestream.com",
+    // `https://*.cartocdn.com` — sprite podkładu mapy (PNG/JSON) na /mapa.
+    "img-src 'self' data: blob: https://*.izbica24.pl https://*.r2.cloudflarestorage.com https://*.cloudflarestream.com https://*.cartocdn.com",
     "font-src 'self' https://fonts.gstatic.com",
+    // FAZA 4 / I10 — MapLibre GL JS tworzy własny Web Worker do dekodowania
+    // kafli wektorowych, i robi to z adresu blob:. Bez tego wpisu worker-src
+    // dziedziczy po default-src 'self', przeglądarka odrzuca blob:
+    // i konstruktor Map kończy wyjątkiem — mapa nie rysuje się wcale.
+    "worker-src 'self' blob:",
     "media-src 'self' https://*.r2.cloudflarestorage.com https://*.cloudflarestream.com",
     // FAZA 3 / AI1 — usuniete `https://api.openai.com` i `https://api.anthropic.com`.
     //
@@ -32,7 +38,25 @@ export const securityHeaders = async (c: Context<AppEnv>, next: () => Promise<vo
     //
     // Dodatkowa korzysc: zmiana dostawcy (Groq, OpenRouter, wlasny adres)
     // nie wymaga juz ruszania naglowkow bezpieczenstwa.
-    "connect-src 'self' https://*.izbica24.pl",
+    // FAZA 4 / I10 — dodane hosty podkładu mapy na /mapa:
+    //   basemaps.cartocdn.com  — plik stylu (style.json)
+    //   tiles.basemaps.cartocdn.com — kafle wektorowe, glify czcionek, sprite
+    // MapLibre pobiera kafle przez fetch/XHR, więc rządzi tym connect-src,
+    // a nie img-src. Przy samym 'self' strona zwracała 200, kontener mapy
+    // powstawał, ale nie pojawiał się w nim ani jeden kafel.
+    //
+    // Lista jest domknięta świadomie: nie ma tu żadnego wildcardu w rodzaju
+    // https: — dopisujemy dokładnie te hosty, które podkład realnie woła
+    // (sprawdzone w style.json: glyphs, sprite, sources.carto.url).
+    // Wildcard *.cartocdn.com jest tu konieczny, nie wygodny. Plik
+    // tiles.json rozdziela ruch na CZTERY hosty — tiles-a, tiles-b, tiles-c
+    // i tiles-d .basemaps.cartocdn.com (klasyczny sharding kafli). Styl
+    // wczytywał się poprawnie, ale każdy kafel padał na „Failed to fetch”,
+    // więc mapa pokazywała pustą, białą planszę ze znacznikami.
+    // Nazwy hostów są ustalane przez CARTO w czasie działania i mogą się
+    // zmienić bez naszej wiedzy, dlatego wyliczanie ich pojedynczo byłoby
+    // kruche — ograniczamy się do jednej domeny dostawcy podkładu.
+    "connect-src 'self' https://*.izbica24.pl https://*.cartocdn.com",
     "frame-src 'self' https://www.youtube.com https://player.vimeo.com https://www.facebook.com",
     "frame-ancestors 'self'",
     "form-action 'self'",

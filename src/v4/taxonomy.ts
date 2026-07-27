@@ -58,7 +58,21 @@ export const CATEGORIES: Category[] = [
       'Główna kategoria informacyjna portalu. Wszystko, co jest bieżącą informacją z gminy Izbica Kujawska.',
     subcategories: [
       sub('wiadomosci', 'inwestycje', 'Inwestycje i remonty', 'Drogi, kanalizacja, wodociągi, budynki publiczne, przetargi, fundusze UE.'),
-      sub('wiadomosci', 'edukacja', 'Edukacja', 'SP nr 1, SP nr 2, SP Błenna, SP Sarnowo, Zespół Szkół im. Kasprowicza, przedszkole, żłobek.'),
+      // Wykaz zgodny z oficjalną listą placówek oświatowych gminy
+      // (izbicakuj.pl/placowki-oswiatowe.html): SP nr 1 im. Marszałka
+      // Józefa Piłsudskiego, SP nr 2 im. Augustyna Słubickiego,
+      // SP w Błennie, Przedszkole Samorządowe, Samorządowy Żłobek.
+      // Ponadprowadzony przez powiat Zespół Szkół im. Jana Kasprowicza.
+      //
+      // Usunięte „SP Sarnowo": Publiczna Szkoła Podstawowa im. st. sierż.
+      // Feliksa Rybickiego w Sarnowie ma wprawdzie adres pocztowy
+      // „Józefowo 2, 87-865 Izbica Kujawska", ale organem prowadzącym
+      // jest gmina Lubraniec (wykaz szkół woj. kujawsko-pomorskiego,
+      // TERYT 418125) i w wykazie placówek gminy Izbica Kujawska jej nie
+      // ma. Kod pocztowy Izbicy obsługuje także część gminy Lubraniec —
+      // stąd pomyłka. Opisy podkategorii trafiają do meta description,
+      // więc gmina ogłaszałaby w Google szkołę, której nie prowadzi.
+      sub('wiadomosci', 'edukacja', 'Edukacja', 'SP nr 1, SP nr 2, SP Błenna, Zespół Szkół im. Kasprowicza, przedszkole, żłobek.'),
       sub('wiadomosci', 'zdrowie', 'Zdrowie', 'SPZOZ Izbica Kujawska, godziny przyjęć, szczepienia, programy profilaktyczne, NFZ.'),
       sub('wiadomosci', 'spoleczne', 'Społeczne', 'MGOPS, programy socjalne, pomoc żywnościowa, seniorzy, Caritas, rodzina.'),
       sub('wiadomosci', 'komunikaty', 'Komunikaty i ogłoszenia', 'Wyłączenia prądu i wody, objazdy, harmonogramy odpadów, ostrzeżenia meteo.'),
@@ -168,7 +182,13 @@ export const CATEGORIES: Category[] = [
       sub('historia', 'wietrzychowice', 'Wietrzychowice – Polskie Piramidy', 'Park Kulturowy, grobowce kujawskie sprzed 5 500 lat, badania archeologiczne.'),
       sub('historia', 'spolecznosc-zydowska', 'Społeczność żydowska', 'Historia Żydów w Izbicy, synagoga 1880–1895, cmentarz, jesziwa, Zagłada, pamięć.'),
       sub('historia', 'stare-zdjecia', 'Dawna Izbica w fotografii', 'Archiwalne zdjęcia z komentarzem — „poznajesz to miejsce?”.'),
-      sub('historia', 'zabytki', 'Zabytki i architektura', 'Gotycki kościół NMP, dwór w Zagrodnicy, rynek historyczny, kapliczki.'),
+      // Zagrodnica zostaje — to realna część miasta na zachód od starówki
+      // (w rejonie ul. Narutowicza) z zachowanym dworem szlacheckim,
+      // potwierdzona w polskiezabytki.pl (obiekt 1029, gmina Izbica
+      // Kujawska). W dworze działa dziś dom pomocy społecznej, więc
+      // nazwa „dwór w Izbicy-Zagrodnicy" jest ściślejsza niż sama
+      // „Zagrodnica" — czytelnik nie szuka wtedy osobnej wsi.
+      sub('historia', 'zabytki', 'Zabytki i architektura', 'Gotycki kościół NMP, dwór w Izbicy-Zagrodnicy, rynek historyczny, kapliczki.'),
       sub('historia', 'sylwetki', 'Sylwetki historyczne', 'Biogramy zasłużonych mieszkańców i postaci historycznych związanych z miastem.'),
       sub('historia', 'tego-dnia', 'Tego dnia w Izbicy', 'Cykl „co wydarzyło się tego dnia w historii Izbicy Kujawskiej”.'),
       sub('historia', 'publikacje', 'Artykuły naukowe i publikacje', 'Zapiski Kujawsko-Dobrzyńskie, prace archeologiczne, publikacje diecezjalne.'),

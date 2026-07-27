@@ -119,7 +119,7 @@ export const ARTICLES_V4: Article[] = [
     blocks: [
       { type: 'paragraph', html: 'Podczas sesji 22 maja Rada Miejska przyjęła zmiany w budżecie gminy na 2026 rok. Najważniejsza pozycja: <strong>4,8 mln zł na inwestycje remontowe</strong>.' },
       { type: 'heading', level: 2, text: 'Największe pozycje budżetu' },
-      { type: 'table', head: ['Inwestycja', 'Kwota', 'Termin'], rows: [['Plac Wolności — przebudowa', '1,9 mln zł', 'lipiec–listopad 2026'], ['Termomodernizacja SP nr 2', '1,2 mln zł', 'wakacje 2026'], ['Kanalizacja Sadłno–Bierzyn', '1,1 mln zł', 'czerwiec 2026 – X 2027'], ['Świetlice wiejskie (4 sołectwa)', '0,6 mln zł', 'do końca 2026']] },
+      { type: 'table', head: ['Inwestycja', 'Kwota', 'Termin'], rows: [['Plac Wolności — przebudowa', '1,9 mln zł', 'lipiec–listopad 2026'], ['Termomodernizacja SP nr 2', '1,2 mln zł', 'wakacje 2026'], ['Kanalizacja Augustynowo–Chociszewo', '1,1 mln zł', 'czerwiec 2026 – X 2027'], ['Świetlice wiejskie (4 sołectwa)', '0,6 mln zł', 'do końca 2026']] },
       { type: 'quote', text: 'To największy budżet remontowy w historii gminy. Czeka nas pracowite półrocze.', author: 'Marek Dorabiała', role: 'Burmistrz' },
     ],
   }),
@@ -207,13 +207,13 @@ export const ARTICLES_V4: Article[] = [
 
   // ───────────────────────────────── NA SYGNALE (type: live)
   art({
-    slug: 'pozar-stodoly-bierzyn',
+    slug: 'pozar-stodoly-chociszewo',
     category: 'na-sygnale',
     subcategory: 'pozary',
     type: 'live',
     title: 'OSP Izbica, Pasieka i Wietrzychowice w akcji ratowniczej',
     lede:
-      'Stodoła w Bierzynie stanęła w płomieniach po godz. 14:30. Trzy jednostki OSP gasiły ogień przez blisko 2 godziny. Sytuacja opanowana, nikt nie ucierpiał. Interwencja nr 47/2026.',
+      'Stodoła w Chociszewie stanęła w płomieniach po godz. 14:30. Trzy jednostki OSP gasiły ogień przez blisko 2 godziny. Sytuacja opanowana, nikt nie ucierpiał. Interwencja nr 47/2026.',
     heroImage: `${IMG}/02-osp-pozar-stodola.jpg`,
     heroAlt: 'Strażacy OSP gaszą pożar stodoły',
     author: A['marek-kowalski'],
@@ -225,8 +225,8 @@ export const ARTICLES_V4: Article[] = [
     breaking: true,
     featured: true,
     solectwo: 'chociszewo',
-    tags: ['OSP', 'Pożar', 'Bierzyn', 'Interwencja'],
-    incident: { time: '14:32', dayLabel: 'dziś', kind: 'Pożar stodoły · Bierzyn', icon: '🔥', place: 'Bierzyn', source: 'OSP Izbica Kujawska · FB · KMP Włocławek', resolved: true },
+    tags: ['OSP', 'Pożar', 'Chociszewo', 'Interwencja'],
+    incident: { time: '14:32', dayLabel: 'dziś', kind: 'Pożar stodoły · Chociszewo', icon: '🔥', place: 'Chociszewo', source: 'OSP Izbica Kujawska · FB · KMP Włocławek', resolved: true },
     blocks: [
       { type: 'paragraph', html: 'Zgłoszenie wpłynęło o <strong>14:32</strong>. Na miejsce skierowano OSP Izbica Kujawska, OSP Pasieka oraz OSP Wietrzychowice.' },
       { type: 'list', items: ['14:32 — zgłoszenie pożaru', '14:41 — pierwszy zastęp na miejscu', '15:20 — pożar opanowany', '16:25 — zakończenie działań'] },
@@ -256,15 +256,15 @@ export const ARTICLES_V4: Article[] = [
   }),
 
   art({
-    slug: 'zaginiona-84-latka-sarnowo-odnaleziona',
+    slug: 'zaginiona-84-latka-slazewo-odnaleziona',
     category: 'na-sygnale',
     subcategory: 'interwencje',
     type: 'live',
     title: 'Zaginiona 84-latka odnaleziona w ciągu 35 minut',
     lede:
-      'Mieszkanka Sarnowa wyszła z domu po południu. Wieczorem rodzina zgłosiła zaginięcie. OSP Izbica we współpracy z policją odnalazła kobietę. Bezpieczna w domu.',
+      'Mieszkanka Ślazewa wyszła z domu po południu. Wieczorem rodzina zgłosiła zaginięcie. OSP Izbica we współpracy z policją odnalazła kobietę. Bezpieczna w domu.',
     heroImage: `${IMG}/20-pogoda-kujawy.jpg`,
-    heroAlt: 'Akcja poszukiwawcza w okolicy Sarnowa',
+    heroAlt: 'Akcja poszukiwawcza w okolicy Ślazewa',
     author: A['marek-kowalski'],
     publishedAt: '22 maja 2026, 23:15',
     publishedAtISO: '2026-05-22T23:15:00+02:00',
@@ -272,8 +272,8 @@ export const ARTICLES_V4: Article[] = [
     commentCount: 9,
     featured: true,
     solectwo: 'slazewo',
-    tags: ['OSP', 'Poszukiwania', 'Sarnowo'],
-    incident: { time: '22:40', dayLabel: 'wczoraj', kind: 'Akcja poszukiwawcza · Sarnowo', icon: '🏥', place: 'Sarnowo', source: 'OSP Izbica · KMP Włocławek', resolved: true },
+    tags: ['OSP', 'Poszukiwania', 'Ślazewo'],
+    incident: { time: '22:40', dayLabel: 'wczoraj', kind: 'Akcja poszukiwawcza · Ślazewo', icon: '🏥', place: 'Ślazewo', source: 'OSP Izbica · KMP Włocławek', resolved: true },
     blocks: [{ type: 'paragraph', html: 'Do akcji zaangażowano 14 strażaków oraz dwa patrole policji. Kobietę odnaleziono po 35 minutach poszukiwań w pobliskim zagajniku.' }],
   }),
 
@@ -315,21 +315,21 @@ export const ARTICLES_V4: Article[] = [
   }),
 
   art({
-    slug: 'planowane-wylaczenie-pradu-sadlno-modzerowo',
+    slug: 'planowane-wylaczenie-pradu-augustynowo-modzerowo',
     category: 'na-sygnale',
     subcategory: 'awarie',
     type: 'live',
-    title: 'Sadłno, Modzerowo — planowane wyłączenie prądu',
+    title: 'Augustynowo, Modzerowo — planowane wyłączenie prądu',
     lede: 'PGE: prace konserwacyjne w godz. 9–14. Część gospodarstw bez prądu.',
-    heroImage: `${IMG}/17-swietlica-sadlno.jpg`,
-    heroAlt: 'Sieć energetyczna w sołectwie Sadłno',
+    heroImage: `${IMG}/17-swietlica-wiejska.jpg`,
+    heroAlt: 'Sieć energetyczna w sołectwie Augustynowo',
     author: A.redakcja,
     publishedAt: '23 maja 2026, 09:30',
     publishedAtISO: '2026-05-23T09:30:00+02:00',
     views: 654,
     solectwo: 'augustynowo',
-    tags: ['PGE', 'Prąd', 'Sadłno', 'Modzerowo'],
-    incident: { time: '09:20', dayLabel: 'dziś', kind: 'Awaria prądu', icon: '⚡', place: 'Sadłno, Modzerowo', source: 'PGE Dystrybucja' },
+    tags: ['PGE', 'Prąd', 'Augustynowo', 'Modzerowo'],
+    incident: { time: '09:20', dayLabel: 'dziś', kind: 'Awaria prądu', icon: '⚡', place: 'Augustynowo, Modzerowo', source: 'PGE Dystrybucja' },
     blocks: [{ type: 'paragraph', html: 'PGE Dystrybucja informuje o planowanych pracach konserwacyjnych na linii średniego napięcia.' }],
   }),
 
@@ -412,10 +412,10 @@ export const ARTICLES_V4: Article[] = [
   }),
 
   art({
-    slug: 'nasadzenia-200-drzew-sadlno-modzerowo',
+    slug: 'nasadzenia-200-drzew-augustynowo-modzerowo',
     category: 'wiadomosci',
     subcategory: 'srodowisko',
-    title: 'Nasadzenia 200 drzew w sołectwach Sadłno i Modzerowo',
+    title: 'Nasadzenia 200 drzew w sołectwach Augustynowo i Modzerowo',
     lede:
       'Pierwszy etap programu „Zielona Gmina” zakończony. Posadzono 200 dębów, lip i klonów. Akcję wsparli wolontariusze i strażacy OSP.',
     heroImage: `${IMG}/16-srodowisko-odpady.jpg`,
@@ -436,7 +436,7 @@ export const ARTICLES_V4: Article[] = [
     title: 'Harmonogram odbioru odpadów — czerwiec 2026. Sprawdź daty dla swojego sołectwa.',
     lede:
       'Pełen wykaz terminów odbioru zmieszanych, BIO, plastiku, szkła i papieru. Zmiany w kilku sołectwach z powodu remontów dróg. Dokładne daty w dokumencie PDF.',
-    heroImage: `${IMG}/17-swietlica-sadlno.jpg`,
+    heroImage: `${IMG}/17-swietlica-wiejska.jpg`,
     heroAlt: 'Pojemniki na odpady',
     author: A.redakcja,
     publishedAt: '20 maja 2026, 09:00',
@@ -514,18 +514,23 @@ export const ARTICLES_V4: Article[] = [
   }),
 
   art({
-    slug: 'zebranie-solectwa-bierzyn-nowy-soltys',
+    slug: 'zebranie-solectwa-chociszewo-nowy-soltys',
     category: 'samorzad',
     subcategory: 'solectwa',
-    title: 'Zebranie sołectwa Bierzyn — wybrany nowy sołtys',
-    lede: 'Frekwencja 78%. Nowym sołtysem Bierzyna został Jan Kwiatkowski. Rada sołecka w pełnym składzie.',
-    heroImage: `${IMG}/17-swietlica-sadlno.jpg`,
+    title: 'Zebranie sołectwa Chociszewo — wybrany nowy sołtys',
+    // Bez nazwiska. Poprzednio stało tu „Nowym sołtysem został Jan Kwiatkowski" —
+    // imię i nazwisko osoby, której nie ma w żadnym wykazie sołtysów gminy.
+    // Kolumna `soltys` w tabeli `solectwa` jest dla wszystkich 37 pozycji NULL,
+    // więc nie mamy czym tego podstawić. Przypisanie komuś funkcji publicznej
+    // to twierdzenie o osobie, nie ozdoba demonstracyjnej treści.
+    lede: 'Frekwencja 78%. Zebranie wybrało nowego sołtysa i radę sołecką w pełnym składzie.',
+    heroImage: `${IMG}/17-swietlica-wiejska.jpg`,
     author: A['anna-wojcik'],
     publishedAt: '19 maja 2026, 15:45',
     publishedAtISO: '2026-05-19T15:45:00+02:00',
     views: 556,
     solectwo: 'chociszewo',
-    tags: ['Sołectwa', 'Bierzyn', 'Sołtys'],
+    tags: ['Sołectwa', 'Chociszewo', 'Sołtys'],
     blocks: [{ type: 'paragraph', html: 'W zebraniu wzięło udział 61 z 78 uprawnionych mieszkańców. Fundusz sołecki na 2027: 42 800 zł.' }],
   }),
 
@@ -574,7 +579,7 @@ export const ARTICLES_V4: Article[] = [
     subcategory: 'kgw',
     title: 'KGW Pasieczanki: warsztaty pieczenia chleba kujawskiego — 2 czerwca',
     lede:
-      'Tradycyjna receptura z mąką żytnią ze Świszew, drewno opałowe z lokalnego lasu. Warsztaty prowadzą najstarsze gospodynie wsi. Zapisy w świetlicy wiejskiej. Koszt: 30 zł od osoby.',
+      'Tradycyjna receptura z mąką żytnią ze Świszew (sołectwo Świszewy), drewno opałowe z lokalnego lasu. Warsztaty prowadzą najstarsze gospodynie wsi. Zapisy w świetlicy wiejskiej. Koszt: 30 zł od osoby.',
     heroImage: `${IMG}/15-kgw-pasieka-chleb.jpg`,
     heroAlt: 'Warsztaty pieczenia chleba KGW Pasieczanki',
     author: A.redakcja,
@@ -746,13 +751,13 @@ export const ARTICLES_V4: Article[] = [
   }),
 
   art({
-    slug: 'gloswloclawianina-sadlno-swietlica',
+    slug: 'gloswloclawianina-augustynowo-swietlica',
     category: 'przeglad-mediow',
     subcategory: 'portale',
     type: 'media-review',
-    title: 'Sołectwo Sadłno z dofinansowaniem na remont świetlicy',
-    lede: 'Sołectwo Sadłno otrzymało środki na modernizację świetlicy wiejskiej z programu wojewódzkiego.',
-    heroImage: `${IMG}/17-swietlica-sadlno.jpg`,
+    title: 'Sołectwo Augustynowo z dofinansowaniem na remont świetlicy',
+    lede: 'Sołectwo Augustynowo otrzymało środki na modernizację świetlicy wiejskiej z programu wojewódzkiego.',
+    heroImage: `${IMG}/17-swietlica-wiejska.jpg`,
     author: A.redakcja,
     publishedAt: '18 maja 2026, 14:20',
     publishedAtISO: '2026-05-18T14:20:00+02:00',
@@ -760,7 +765,7 @@ export const ARTICLES_V4: Article[] = [
     commentCount: 2,
     solectwo: 'augustynowo',
     externalSource: { name: 'gloswloclawianina.pl', url: 'https://gloswloclawianina.pl', badgeColor: '#0d6efd' },
-    tags: ['Przegląd mediów', 'Sadłno'],
+    tags: ['Przegląd mediów', 'Augustynowo'],
     blocks: [{ type: 'paragraph', html: 'Kwota dofinansowania: 180 tys. zł.' }],
   }),
 
@@ -1126,20 +1131,42 @@ export const ARTICLES_V4: Article[] = [
   }),
 
   art({
-    slug: 'dwor-w-zagrodnicy-xviii-wiek',
+    // Zagrodnica JEST realna — to część miasta Izbica Kujawska na zachód od
+    // starówki, w rejonie ul. Narutowicza, ze zachowanym dworem szlacheckim.
+    // Sprawdzone w polskiezabytki.pl (obiekt 1029, gmina Izbica Kujawska)
+    // oraz izbica-kujawska.com/informacje/zabytki.php.
+    //
+    // Poprawione zostały natomiast twierdzenia o obiekcie. Poprzedni lead
+    // mówił o „XVIII-wiecznym dworze" i „rejestrze zabytków z 1957 roku" —
+    // żaródła podają, że dwór był siedzibą dziedziców izbickich OD połowy
+    // XVIII w. i był wielokrotnie przebudowywany, a daty wpisu do rejestru
+    // nie potwierdza żadne źródło. Kapliczka kolumnowa i budowla romantyczna
+    // stoją w parku — to prawda, ale nie czyni to dworu „perłą architektury
+    // romantycznej", bo sam budynek jest wielokrotnie przebudowanym murowanym
+    // dworem. Dopisany został stan obecny, którego brak był największym
+    // brakiem tekstu: w dworze działa dom pomocy społecznej, więc czytelnik
+    // planujący zwiedzanie musi wiedzieć, że to nie obiekt turystyczny.
+    slug: 'dwor-w-izbicy-zagrodnicy',
     category: 'historia',
     subcategory: 'zabytki',
-    title: 'Dwór w Zagrodnicy — perła architektury romantycznej',
-    lede: 'XVIII-wieczny dwór z parkiem krajobrazowym, kaplicą kolumnową i budowlą romantyczną. Historia i stan obecny.',
-    heroImage: `${IMG}/17-swietlica-sadlno.jpg`,
+    title: 'Dwór w Izbicy-Zagrodnicy — siedziba dziedziców izbickich',
+    lede:
+      'Dawny dwór szlachecki, od połowy XVIII w. siedziba dziedziców izbickich, wielokrotnie przebudowywany. W parku kapliczka kolumnowa i budowla romantyczna. Dziś dom pomocy społecznej.',
+    heroImage: `${IMG}/17-swietlica-wiejska.jpg`,
     author: A['tomasz-kotlinski'],
     publishedAt: '8 maja 2026, 10:00',
     publishedAtISO: '2026-05-08T10:00:00+02:00',
     readingMinutes: 7,
     views: 1420,
-    solectwo: 'tymien',
+    // Zagrodnica leży w granicach miasta, nie w sołectwie wiejskim.
+    solectwo: 'izbica-kujawska',
     tags: ['Historia', 'Zabytki', 'Zagrodnica'],
-    blocks: [{ type: 'paragraph', html: 'Zespół dworsko-parkowy wpisany do rejestru zabytków w 1957 roku.' }],
+    blocks: [
+      { type: 'paragraph', html: 'Zagrodnica to dawna podizbicka miejscowość, dziś część miasta położona na zachód od starówki, w rejonie ulicy Narutowicza. Czasy świetności zespołu przypominają jedna z bram wjazdowych z XIX w. oraz pozostałości okazałego parku.' },
+      { type: 'paragraph', html: 'W 1929 roku dziedziczka <strong>Zdzisława Maria Aniela Wodzińska</strong> przekazała dwór wraz z częścią majątku Stowarzyszeniu Charystów Diecezji Włocławskiej, a ci w 1935 r. — Zgromadzeniu Orionistów.' },
+      { type: 'info', variant: 'info', title: 'Stan obecny', html: 'W budynku działa dom pomocy społecznej dla dorosłych prowadzony przez księży orionistów. <strong>Obiekt nie jest udostępniony do zwiedzania</strong> — to miejsce zamieszkania mieszkańców placówki.' },
+      { type: 'paragraph', html: 'Według lokalnej legendy w dworze mieszkała przez kilka lat Tekla Justyna z Krzyżanowskich, późniejsza matka Fryderyka Chopina. Jest to przekaz tradycji, nie fakt potwierdzony dokumentem.' },
+    ],
   }),
 
   // ───────────────────────────────── OGŁOSZENIA
@@ -1213,7 +1240,7 @@ export const GALLERIES: Gallery[] = [
       { src: `${IMG}/15-kgw-pasieka-chleb.jpg`, alt: 'Stoiska KGW', caption: 'Stoiska Kół Gospodyń Wiejskich' },
       { src: `${IMG}/14-pielgrzymka-blenna.jpg`, alt: 'Msza dożynkowa', caption: 'Niedzielna msza dożynkowa' },
       { src: `${IMG}/13-tochman-bibl.jpg`, alt: 'Wystawa', caption: 'Wystawa „Dawna Izbica”' },
-      { src: `${IMG}/17-swietlica-sadlno.jpg`, alt: 'Festyn rodzinny', caption: 'Festyn rodzinny' },
+      { src: `${IMG}/17-swietlica-wiejska.jpg`, alt: 'Festyn rodzinny', caption: 'Festyn rodzinny' },
     ],
   },
   {
@@ -1231,9 +1258,9 @@ export const GALLERIES: Gallery[] = [
     ],
   },
   {
-    id: 'osp-interwencja-bierzyn',
-    slug: 'osp-interwencja-bierzyn',
-    title: 'Pożar stodoły w Bierzynie',
+    id: 'osp-interwencja-chociszewo',
+    slug: 'osp-interwencja-chociszewo',
+    title: 'Pożar stodoły w Chociszewie',
     description: 'Dokumentacja interwencji OSP nr 47/2026.',
     cover: `${IMG}/02-osp-pozar-stodola.jpg`,
     section: 'na-sygnale',
@@ -1265,7 +1292,7 @@ export const MEDIA_LIBRARY: MediaAsset[] = [
   { id: 'm14', kind: 'image', url: `${IMG}/14-pielgrzymka-blenna.jpg`, thumb: `${IMG}/14-pielgrzymka-blenna.jpg`, title: 'Pielgrzymka Błenna', alt: 'Sanktuarium', uploadedAt: '2026-05-21', tags: ['kultura', 'parafie'] },
   { id: 'm15', kind: 'image', url: `${IMG}/15-kgw-pasieka-chleb.jpg`, thumb: `${IMG}/15-kgw-pasieka-chleb.jpg`, title: 'KGW — chleb kujawski', alt: 'Warsztaty pieczenia', uploadedAt: '2026-05-20', tags: ['kultura', 'kgw'] },
   { id: 'm16', kind: 'image', url: `${IMG}/16-srodowisko-odpady.jpg`, thumb: `${IMG}/16-srodowisko-odpady.jpg`, title: 'Środowisko — odpady', alt: 'Segregacja odpadów', uploadedAt: '2026-05-20', tags: ['środowisko'] },
-  { id: 'm17', kind: 'image', url: `${IMG}/17-swietlica-sadlno.jpg`, thumb: `${IMG}/17-swietlica-sadlno.jpg`, title: 'Świetlica Sadłno', alt: 'Budynek świetlicy', uploadedAt: '2026-05-18', tags: ['sołectwa'] },
+  { id: 'm17', kind: 'image', url: `${IMG}/17-swietlica-wiejska.jpg`, thumb: `${IMG}/17-swietlica-wiejska.jpg`, title: 'Świetlica wiejska', alt: 'Budynek świetlicy', uploadedAt: '2026-05-18', tags: ['sołectwa'] },
   { id: 'm18', kind: 'image', url: `${IMG}/18-szlak-megality.jpg`, thumb: `${IMG}/18-szlak-megality.jpg`, title: 'Szlak megalitów', alt: 'Ścieżka dydaktyczna', uploadedAt: '2026-05-15', tags: ['turystyka'] },
   { id: 'm19', kind: 'image', url: `${IMG}/19-policja-patrol.jpg`, thumb: `${IMG}/19-policja-patrol.jpg`, title: 'Patrol policji', alt: 'Radiowóz', uploadedAt: '2026-05-23', tags: ['bezpieczeństwo'] },
   { id: 'm20', kind: 'image', url: `${IMG}/20-pogoda-kujawy.jpg`, thumb: `${IMG}/20-pogoda-kujawy.jpg`, title: 'Pogoda — Kujawy', alt: 'Niebo nad polami', uploadedAt: '2026-05-23', tags: ['pogoda'] },
