@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { validator } from 'hono/validator'
 import { callStructuredModel } from '../ai/client'
+import { AiProviderError, configFromEnv } from '../ai/providers'
 import { renderPromptTemplate } from '../ai/json-schema'
 import { ALL_PROMPTS, getPromptById } from '../ai/prompts'
 import type { SupportedModel } from '../ai/prompts/types'
@@ -51,11 +52,22 @@ aiRouter.post('/prompt/:id', promptParamValidator, promptRequestValidator, async
   if (!prompt) return c.json({ error: 'prompt_not_found', id }, 404)
 
   const model = overrideModel || prompt.model
-  if (model === 'gpt-4o-mini' && !c.env.OPENAI_API_KEY) {
-    return c.json({ error: 'missing_openai_api_key', promptId: id }, 503)
-  }
-  if (model === 'claude-3-5-sonnet' && !c.env.ANTHROPIC_API_KEY) {
-    return c.json({ error: 'missing_anthropic_api_key', promptId: id }, 503)
+
+  // FAZA 3 / AI1 — poprzednie sprawdzenie wiazalo nazwe modelu z konkretnym
+  // kluczem: prompt oznaczony 'gpt-4o-mini' zwracal 503 „missing_openai_api_key"
+  // nawet wtedy, gdy administrator poprawnie skonfigurowal dostawce zgodnego
+  // z Anthropic. Nazwa modelu zapisana w definicji promptu blokowala dzialajaca
+  // konfiguracje. Teraz o dostepnosci decyduje `configFromEnv()` — jedno
+  // zrodlo prawdy dla calego projektu.
+  if (!configFromEnv(c.env as never)) {
+    return c.json({
+      error: 'brak_konfiguracji_dostawcy',
+      detail:
+        'Nie skonfigurowano dostawcy modelu. Ustaw ANTHROPIC_API_KEY (z opcjonalnym ' +
+        'ANTHROPIC_BASE_URL) albo OPENAI_API_KEY (z opcjonalnym OPENAI_BASE_URL), ' +
+        'albo wlacz wiazanie Workers AI.',
+      promptId: id,
+    }, 503)
   }
 
   const userPrompt = renderPromptTemplate(prompt.userPromptTemplate, variables)
@@ -92,6 +104,13 @@ aiRouter.post('/prompt/:id', promptParamValidator, promptRequestValidator, async
       data: result.data,
     })
   } catch (error) {
+    // Blad dostawcy to nie blad promptu — 503 mowi „usluga niedostepna,
+    // spróbuj ponownie", 502 sugerowaloby zla definicje promptu i wyslaloby
+    // redaktora na poszukiwanie bledu tam, gdzie go nie ma.
+    if (error instanceof AiProviderError) {
+      const status = error.retryable ? 503 : 502
+      return c.json({ error: error.code, detail: error.message, promptId: id }, status)
+    }
     return c.json({
       error: 'prompt_execution_failed',
       detail: error instanceof Error ? error.message : 'Unknown AI error',

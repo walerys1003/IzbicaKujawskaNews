@@ -1,6 +1,40 @@
+/**
+ * FAZA 3 / AI1 — 25 akcji redakcyjnych na wspolnym adapterze dostawcy.
+ *
+ * CO ZMIENIONO
+ * ────────────
+ * 1. Adresy `https://api.openai.com` i `https://api.anthropic.com` byly wpisane
+ *    na stale (linie 23-24 poprzedniej wersji), wiec dostawca pod wlasnym
+ *    adresem nie mial jak zostac uzyty — nawet gdy klucz byl poprawny.
+ *
+ * 2. Funkcja `run()` przy braku klucza konczyla sie tak:
+ *
+ *        return JSON.stringify({ mock: true, prompt })
+ *
+ *    Redaktor, ktory kliknal „Zaproponuj naglowki", dostawal wtedy w polu
+ *    wynikow napis z wlasnym poleceniem w srodku. To lepsze niz zmyslona tresc
+ *    (`mock: true` jest widoczne), ale nadal odpowiedz o statusie sukcesu —
+ *    panel nie mial powodu pokazac bledu konfiguracji. Teraz `complete()`
+ *    podnosi `AiProviderError('brak_konfiguracji')`, a trasa odpowiada 503.
+ *
+ * 3. Wybor dostawcy: `run(..., 'anthropic')` przy czterech akcjach wymagajacych
+ *    ostrozniejszej oceny (`checkFacts`, `detectDuplicate`, `compareArticles`)
+ *    zostal zachowany jako PODPOWIEDZ, nie wymog. Jesli administrator
+ *    skonfigurowal jednego dostawce, wszystkie akcje ida do niego — wczesniej
+ *    `checkFacts` przy samym kluczu OpenAI cicho zmienialo dostawce, a przy
+ *    braku obu zwracalo `mock`.
+ */
+
+import type { Bindings } from '../../types/env'
+import { complete, type ProviderConfig } from '../providers'
+
 export type NewsroomBindings = {
   OPENAI_API_KEY?: string
   ANTHROPIC_API_KEY?: string
+  ANTHROPIC_BASE_URL?: string
+  OPENAI_BASE_URL?: string
+  AI_DEFAULT_PROVIDER?: string
+  AI_DEFAULT_MODEL?: string
 }
 
 export type NewsroomInput = {
@@ -20,58 +54,42 @@ export type NewsroomInput = {
   context?: string
 }
 
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
-const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages'
-
 const systemPrompt = 'Jesteś newsroom AI dla lokalnego portalu informacyjnego. Odpowiadaj po polsku, zwięźle, redakcyjnie i konkretnie. Zwracaj wyłącznie użyteczny wynik dla zadanej funkcji.'
 
-async function callOpenAI(apiKey: string, prompt: string) {
-  const res = await fetch(OPENAI_URL, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4.1-mini',
-      temperature: 0.4,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt },
-      ],
-    }),
-  })
-  const json: any = await res.json()
-  if (!res.ok) throw new Error(json?.error?.message || 'OPENAI_ERROR')
-  return json?.choices?.[0]?.message?.content || ''
-}
+/**
+ * Jedno wejscie dla wszystkich 25 akcji.
+ *
+ * `preferowanyDostawca` jest podpowiedzia: uzywamy go tylko wtedy, gdy jego
+ * klucz jest dostepny ORAZ administrator nie wskazal dostawcy wprost przez
+ * `AI_DEFAULT_PROVIDER`. Konfiguracja czlowieka ma pierwszenstwo nad nazwa
+ * zapisana w kodzie — inaczej wpisany w panelu klucz bylby pomijany.
+ *
+ * Brak dostawcy = wyjatek `AiProviderError('brak_konfiguracji')`, nigdy
+ * odpowiedz zastepcza. Wolant (`src/routes/ai-newsroom.ts`) zamienia go na 503.
+ */
+async function run(
+  bindings: NewsroomBindings,
+  prompt: string,
+  preferowanyDostawca?: 'openai' | 'anthropic',
+): Promise<string> {
+  const env = bindings as unknown as Bindings
 
-async function callAnthropic(apiKey: string, prompt: string) {
-  const res = await fetch(ANTHROPIC_URL, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 800,
-      temperature: 0.4,
+  let override: Partial<ProviderConfig> | undefined
+  if (preferowanyDostawca === 'anthropic' && bindings.ANTHROPIC_API_KEY && !bindings.AI_DEFAULT_PROVIDER) {
+    override = { kind: 'anthropic' }
+  }
+
+  const result = await complete(
+    env,
+    {
       system: systemPrompt,
       messages: [{ role: 'user', content: prompt }],
-    }),
-  })
-  const json: any = await res.json()
-  if (!res.ok) throw new Error(json?.error?.message || 'ANTHROPIC_ERROR')
-  return json?.content?.map((part: any) => part?.text || '').join('\n') || ''
-}
-
-async function run(bindings: NewsroomBindings, prompt: string, provider: 'openai' | 'anthropic' = 'openai') {
-  if (provider === 'anthropic' && bindings.ANTHROPIC_API_KEY) return callAnthropic(bindings.ANTHROPIC_API_KEY, prompt)
-  if (bindings.OPENAI_API_KEY) return callOpenAI(bindings.OPENAI_API_KEY, prompt)
-  if (bindings.ANTHROPIC_API_KEY) return callAnthropic(bindings.ANTHROPIC_API_KEY, prompt)
-  return JSON.stringify({ mock: true, prompt })
+      temperature: 0.4,
+      maxTokens: 1200,
+    },
+    override,
+  )
+  return result.text
 }
 
 const toBlock = (input: NewsroomInput) => JSON.stringify(input || {}, null, 2)

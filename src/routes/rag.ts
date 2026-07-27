@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { validator } from 'hono/validator'
 import { ARTICLES } from '../data-articles'
-import { callTextModel } from '../ai/client'
+import { callTextModelOrNull } from '../ai/client'
 import { createEmbeddings } from '../ai/rag/embedder'
 import { RagVectorStore, chunkText, cosineSimilarity, mergeContext } from '../ai/rag/vector-store'
 import type { AppBindings } from '../types/cloudflare'
@@ -98,6 +98,33 @@ const heuristicAnswer = (question: string, matches: Array<{ slug: string; title:
 
 const getStore = (c: { env: AppBindings }) => new RagVectorStore(c.env)
 
+/**
+ * FAZA 3 / AI7 — straz jakosci wektorow.
+ *
+ * `createEmbeddings()` przy braku modelu zanurzen zwraca wektory policzone
+ * z kodow znakow (`semantic: false`). Dobieraja one dokumenty po pisowni,
+ * nie po znaczeniu — „awaria wodociagu" nie trafi do „brak wody w kranach",
+ * a „remont ulicy" trafi do dowolnego tekstu o podobnym zestawie liter.
+ *
+ * Zwrocenie takich trafien jako listy do przejrzenia jest jeszcze uczciwe.
+ * Ale podanie ich modelowi jako KONTEKSTU to co innego: model dostaje wtedy
+ * dokumenty nie na temat, opisane jako zrodla, i buduje z nich odpowiedz.
+ * Wynik wyglada na oparty na archiwum gminy, a jest oparty na przypadkowym
+ * doborze. Dlatego trasy, ktore karmia model, musza tu odmowic.
+ */
+const wymagajZnaczeniowych = (
+  embedding: { semantic: boolean; provider: string },
+): { blad: string; szczegol: string } | null => {
+  if (embedding.semantic) return null
+  return {
+    blad: 'brak_modelu_zanurzen',
+    szczegol:
+      'Wyszukiwanie znaczeniowe wymaga modelu zanurzen (OPENAI_API_KEY + OPENAI_BASE_URL). ' +
+      'Bez niego dobor dokumentow opiera sie na podobienstwie napisow, wiec kontekst przekazany ' +
+      'modelowi jezykowemu bylby niezwiazany z pytaniem. Odpowiedz nie zostala wygenerowana.',
+  }
+}
+
 const ingestSingle = async (bindings: AppBindings, payload: IngestPayload) => {
   const store = new RagVectorStore(bindings)
   const chunks = chunkText(payload.content)
@@ -155,7 +182,10 @@ ragRouter.post('/search', jsonValidator, async (c) => {
     const topK = topKValue(ensureNumber(body, 'topK', 5))
     const embedding = await createEmbeddings(c.env, [query])
     const matches = await getStore(c).search(embedding.vectors[0], topK, filterCategory)
-    return c.json({ ok: true, query, topK, items: matches })
+    // Ta trasa zwraca liste do przejrzenia przez czlowieka, wiec nie odmawiamy —
+    // ale `znaczeniowe: false` musi byc widoczne, inaczej redaktor uzna dobor
+    // po pisowni za dobor po temacie.
+    return c.json({ ok: true, query, topK, items: matches, znaczeniowe: embedding.semantic })
   } catch (error) {
     return c.json({ error: 'search_failed', detail: error instanceof Error ? error.message : 'unknown' }, 400)
   }
@@ -167,10 +197,12 @@ ragRouter.post('/ask', jsonValidator, async (c) => {
     const question = ensureString(body, 'question')
     const topK = topKValue(ensureNumber(body, 'topK', 5))
     const embedding = await createEmbeddings(c.env, [question])
+    const brak = wymagajZnaczeniowych(embedding)
+    if (brak) return c.json({ error: brak.blad, detail: brak.szczegol }, 503)
     const matches = await getStore(c).search(embedding.vectors[0], topK)
     const citations = buildCitationList(matches)
     const context = mergeContext(matches)
-    const aiText = await callTextModel(c.env, `Pytanie: ${question}\n\nKontekst:\n${context}\n\nOdpowiedz po polsku w 3-5 zdaniach i odwołaj się wyłącznie do kontekstu.`, 'Jesteś asystentem RAG portalu lokalnego.')
+    const aiText = await callTextModelOrNull(c.env, `Pytanie: ${question}\n\nKontekst:\n${context}\n\nOdpowiedz po polsku w 3-5 zdaniach i odwołaj się wyłącznie do kontekstu.`, 'Jesteś asystentem RAG portalu lokalnego.')
     const answer = aiText || heuristicAnswer(question, matches).answer
     return c.json({ ok: true, question, answer, citations })
   } catch (error) {
@@ -193,7 +225,7 @@ ragRouter.post('/summarize-cluster', jsonValidator, async (c) => {
     const slugs = ensureStringArray(c.req.valid('json'), 'slugs')
     const docs = await getStore(c).getDocuments(slugs)
     const context = docs.map(doc => `${doc.title}\n${doc.content}`).join('\n\n')
-    const aiText = await callTextModel(c.env, `Streszcz wspólny klaster tematów na podstawie dokumentów:\n\n${context}`, 'Tworzysz jeden spójny summary w języku polskim.')
+    const aiText = await callTextModelOrNull(c.env, `Streszcz wspólny klaster tematów na podstawie dokumentów:\n\n${context}`, 'Tworzysz jeden spójny summary w języku polskim.')
     return c.json({ ok: true, slugs, summary: aiText || `Klaster obejmuje ${docs.length} materiałów dotyczących: ${docs.map(doc => doc.title).join('; ')}.` })
   } catch (error) {
     return c.json({ error: 'summarize_cluster_failed', detail: error instanceof Error ? error.message : 'unknown' }, 400)
@@ -221,7 +253,7 @@ ragRouter.post('/compare', jsonValidator, async (c) => {
     if (docs.length < 2) return c.json({ error: 'documents_not_found' }, 404)
     const [left, right] = docs
     const prompt = `Porównaj dwa artykuły.\nA: ${left.title}\n${left.content}\n\nB: ${right.title}\n${right.content}\n\nWypisz podobieństwa i różnice.`
-    const aiText = await callTextModel(c.env, prompt, 'Tworzysz krótkie porównanie w punktach po polsku.')
+    const aiText = await callTextModelOrNull(c.env, prompt, 'Tworzysz krótkie porównanie w punktach po polsku.')
     return c.json({
       ok: true,
       left: { slug: left.slug, title: left.title },
@@ -239,9 +271,11 @@ ragRouter.post('/translate-context', jsonValidator, async (c) => {
     const text = ensureString(body, 'text')
     const targetLanguage = typeof body.targetLanguage === 'string' ? body.targetLanguage : 'English'
     const embedding = await createEmbeddings(c.env, [text])
+    const brak = wymagajZnaczeniowych(embedding)
+    if (brak) return c.json({ error: brak.blad, detail: brak.szczegol }, 503)
     const matches = await getStore(c).search(embedding.vectors[0], 4)
     const context = mergeContext(matches)
-    const aiText = await callTextModel(c.env, `Przetłumacz tekst na ${targetLanguage}, zachowując lokalne nazwy.\n\nTekst:\n${text}\n\nKontekst RAG:\n${context}`, 'Tłumaczysz tekst z użyciem kontekstu lokalnego.')
+    const aiText = await callTextModelOrNull(c.env, `Przetłumacz tekst na ${targetLanguage}, zachowując lokalne nazwy.\n\nTekst:\n${text}\n\nKontekst RAG:\n${context}`, 'Tłumaczysz tekst z użyciem kontekstu lokalnego.')
     return c.json({ ok: true, targetLanguage, translation: aiText || text, citations: buildCitationList(matches) })
   } catch (error) {
     return c.json({ error: 'translate_context_failed', detail: error instanceof Error ? error.message : 'unknown' }, 400)
@@ -325,9 +359,12 @@ ragRouter.post('/expand-stub', jsonValidator, async (c) => {
     const body = c.req.valid('json')
     const draft = ensureString(body, 'draft')
     const topK = topKValue(ensureNumber(body, 'topK', 4))
-    const matches = await getStore(c).search((await createEmbeddings(c.env, [draft])).vectors[0], topK)
+    const embedding = await createEmbeddings(c.env, [draft])
+    const brak = wymagajZnaczeniowych(embedding)
+    if (brak) return c.json({ error: brak.blad, detail: brak.szczegol }, 503)
+    const matches = await getStore(c).search(embedding.vectors[0], topK)
     const context = mergeContext(matches)
-    const aiText = await callTextModel(c.env, `Rozwiń krótki szkic artykułu o brakujące szczegóły, korzystając wyłącznie z kontekstu.\n\nSzkic:\n${draft}\n\nKontekst:\n${context}`, 'Piszesz uporządkowany, rzeczowy szkic artykułu po polsku.')
+    const aiText = await callTextModelOrNull(c.env, `Rozwiń krótki szkic artykułu o brakujące szczegóły, korzystając wyłącznie z kontekstu.\n\nSzkic:\n${draft}\n\nKontekst:\n${context}`, 'Piszesz uporządkowany, rzeczowy szkic artykułu po polsku.')
     return c.json({ ok: true, expanded: aiText || `${draft}\n\nUzupełnienie kontekstowe: ${matches.map(match => match.content).join(' ')}`, citations: buildCitationList(matches) })
   } catch (error) {
     return c.json({ error: 'expand_stub_failed', detail: error instanceof Error ? error.message : 'unknown' }, 400)
@@ -339,8 +376,11 @@ ragRouter.post('/fact-check', jsonValidator, async (c) => {
     const body = c.req.valid('json')
     const statement = ensureString(body, 'statement')
     const topK = topKValue(ensureNumber(body, 'topK', 5))
-    const matches = await getStore(c).search((await createEmbeddings(c.env, [statement])).vectors[0], topK)
-    const answer = await callTextModel(c.env, `Oceń twierdzenie na bazie kontekstu RAG.\n\nTwierdzenie: ${statement}\n\nKontekst:\n${mergeContext(matches)}`, 'Jesteś fact-checkerem lokalnego archiwum.')
+    const embedding = await createEmbeddings(c.env, [statement])
+    const brak = wymagajZnaczeniowych(embedding)
+    if (brak) return c.json({ error: brak.blad, detail: brak.szczegol }, 503)
+    const matches = await getStore(c).search(embedding.vectors[0], topK)
+    const answer = await callTextModelOrNull(c.env, `Oceń twierdzenie na bazie kontekstu RAG.\n\nTwierdzenie: ${statement}\n\nKontekst:\n${mergeContext(matches)}`, 'Jesteś fact-checkerem lokalnego archiwum.')
     return c.json({ ok: true, statement, verdict: answer || 'Wymaga dodatkowej weryfikacji redakcyjnej.', citations: buildCitationList(matches) })
   } catch (error) {
     return c.json({ error: 'rag_fact_check_failed', detail: error instanceof Error ? error.message : 'unknown' }, 400)
