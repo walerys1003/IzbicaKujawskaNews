@@ -121,6 +121,20 @@ export interface Bindings {
   AI_DEFAULT_MODEL?: string
   /** Sol do skrotu adresu IP w rejestrze zdarzen (RODO). */
   IP_HASH_SALT?: string
+
+  // FAZA 4 / I12 — analityka.
+  /**
+   * Token Cloudflare Web Analytics (panel Cloudflare -> Web Analytics).
+   *
+   * Brak tokenu = baner zgody NIE jest renderowany i pomiar nie dziala.
+   * Jest to zachowanie zamierzone: pytanie o zgode na pomiar, ktorego nie
+   * prowadzimy, uczyloby czytelnikow odklikiwania banerow bez czytania.
+   *
+   * Token jest publiczny (trafia do HTML), wiec nie musi byc sekretem —
+   * ale zostaje w konfiguracji srodowiska, bo rozni sie miedzy staging
+   * i produkcja, a wpisany w kod trafilby do repozytorium na stale.
+   */
+  CF_ANALYTICS_TOKEN?: string
   /** Wiazanie Workers AI — wlaczane w wrangler.jsonc. */
   AI?: { run: (model: string, input: Record<string, unknown>) => Promise<unknown> }
 

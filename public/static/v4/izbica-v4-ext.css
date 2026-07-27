@@ -619,3 +619,67 @@
 .powietrze-poziom-zakres{ display:block; font:600 11px/1.4 var(--body); color:var(--ink-5); margin-top:2px; }
 .powietrze-poziom-opis{ font-size:12.5px; line-height:1.45; color:var(--ink-3); margin-top:5px; }
 .powietrze-nota{ font-size:12px; color:var(--ink-5); line-height:1.6; margin-top:12px; max-width:820px; }
+
+/* ═════════════════════════════════ BANER ZGODY NA ANALITYKĘ (I12) */
+/* Pasek na dole okna, nie okno modalne pośrodku.
+
+   Modal przykryłby treść i wymuszałby decyzję przed przeczytaniem
+   czegokolwiek — a czytelnik wchodzi na portal po informację, nie po to,
+   by rozstrzygać kwestie pomiaru ruchu. Pasek u dołu zostawia cały
+   artykuł widoczny i czytelny, więc decyzja jest podejmowana bez presji.
+
+   `position:fixed` z `inset-inline:0` — pasek trzyma się dołu ekranu
+   także po przewinięciu, ale nie zasłania nagłówka ani nawigacji. */
+.zgoda{
+  position:fixed; inset-inline:0; bottom:0; z-index:9000;
+  display:flex; flex-wrap:wrap; align-items:center; gap:18px;
+  padding:16px clamp(16px,4vw,40px);
+  background:var(--ink); color:#fff;
+  box-shadow:0 -4px 24px rgba(0,0,0,.28);
+  /* Górna krawędź w kolorze marki — pasek jest częścią portalu,
+     a nie komunikatem systemowym przeglądarki. */
+  border-top:3px solid var(--red);
+}
+/* Bez tej klasy baner nie jest widoczny nawet po zdjęciu `hidden`.
+   Dwie niezależne blokady: atrybut `hidden` (działa bez CSS) i klasa
+   (działa, gdy któryś rozszerzacz przeglądarki usunie atrybut). */
+.zgoda:not(.zgoda--widoczny){ display:none; }
+
+.zgoda-tresc{ flex:1 1 460px; min-width:0; }
+.zgoda-tytul{
+  font:800 17px/1.2 var(--display); text-transform:uppercase;
+  letter-spacing:.4px; margin:0 0 6px;
+}
+.zgoda-opis{ font-size:13.5px; line-height:1.6; margin:0; color:rgba(255,255,255,.88); }
+.zgoda-opis strong{ color:#fff; }
+.zgoda-opis--drobne{ font-size:12px; margin-top:7px; color:rgba(255,255,255,.66); }
+.zgoda-opis a{ color:#fff; text-decoration:underline; }
+.zgoda-opis a:hover{ color:var(--red); }
+
+.zgoda-przyciski{ display:flex; gap:10px; flex:0 0 auto; }
+/* Oba przyciski mają identyczną wielkość, wagę pisma i wysokość.
+   Różni je wyłącznie kolor tła — nie hierarchia wizualna. Baner, w którym
+   „Akceptuję" jest duży i kolorowy, a „Odmawiam" to szary drobny odnośnik,
+   wymusza wybór wyglądem zamiast argumentem. */
+.zgoda-btn{
+  font:700 13px/1 var(--body); text-transform:uppercase; letter-spacing:.6px;
+  padding:12px 20px; border:2px solid transparent; cursor:pointer;
+  transition:background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+  /* 44 px wysokości — minimalny wygodny obszar dotyku (WCAG 2.5.5). */
+  min-height:44px;
+}
+.zgoda-btn--tak{ background:var(--red); color:#fff; }
+.zgoda-btn--tak:hover{ background:var(--red-dark); }
+.zgoda-btn--nie{ background:transparent; color:#fff; border-color:rgba(255,255,255,.45); }
+.zgoda-btn--nie:hover{ border-color:#fff; background:rgba(255,255,255,.1); }
+/* Widoczny fokus — obowiązkowy, bo baner jest obsługiwany klawiaturą
+   (WCAG 2.4.7). Biały pierścień z odstępem jest czytelny na ciemnym tle. */
+.zgoda-btn:focus-visible{ outline:3px solid #fff; outline-offset:3px; }
+
+@media (max-width:700px){
+  .zgoda{ flex-direction:column; align-items:stretch; gap:14px; }
+  /* Na wąskim ekranie przyciski dzielą szerokość po równo — dalej
+     równorzędne, bez uprzywilejowania zgody. */
+  .zgoda-przyciski{ display:grid; grid-template-columns:1fr 1fr; }
+  .zgoda-btn{ width:100%; }
+}

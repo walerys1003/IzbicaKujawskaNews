@@ -304,19 +304,38 @@ page(
     },
     {
       heading: 'Jakie cookies stosujemy',
-      body: '',
+      body: 'Portal czytany anonimowo <strong>nie zapisuje żadnych plików cookies</strong>. Poniższa tabela wymienia wyłącznie to, co rzeczywiście trafia na Twoje urządzenie:',
       table: {
-        head: ['Rodzaj', 'Cel', 'Czas przechowywania'],
+        head: ['Rodzaj', 'Nazwa / mechanizm', 'Cel', 'Czas przechowywania'],
         rows: [
-          ['Niezbędne', 'Prawidłowe działanie serwisu, sesja użytkownika', 'do zamknięcia przeglądarki'],
-          ['Preferencje', 'Zapamiętanie ustawień (np. rozmiar tekstu)', 'do 12 miesięcy'],
-          ['Analityczne', 'Anonimowe statystyki odwiedzin i popularności treści', 'do 24 miesięcy'],
+          [
+            'Niezbędne (tylko redakcja)',
+            'admin_token, admin_refresh',
+            'Utrzymanie zalogowanej sesji w panelu redakcyjnym. Ustawiane wyłącznie po zalogowaniu — czytelnik ich nie otrzymuje.',
+            'admin_token — czas życia tokenu; admin_refresh — do 30 dni lub do wylogowania',
+          ],
+          [
+            'Techniczny zapis decyzji',
+            'izbica24:zgoda-analityka (localStorage, nie cookie)',
+            'Pamięć Twojej odpowiedzi na pytanie o statystyki — abyśmy nie pytali ponownie. Nie jest wysyłany na serwer.',
+            'do wyczyszczenia danych przeglądarki',
+          ],
+          [
+            'Analityczne',
+            'Cloudflare Web Analytics — bez cookies',
+            'Zbiorcze statystyki odwiedzin. Uruchamiane wyłącznie po Twojej wyraźnej zgodzie; narzędzie nie zapisuje cookies i nie tworzy profilu użytkownika.',
+            'nie dotyczy — brak zapisu na urządzeniu',
+          ],
         ],
       },
     },
     {
-      heading: 'Zarządzanie cookies',
-      body: 'W każdej chwili możesz zmienić ustawienia dotyczące plików cookies w swojej przeglądarce — zablokować je lub usunąć zapisane pliki. Wyłączenie cookies niezbędnych może wpłynąć na działanie niektórych funkcji serwisu.\nSzczegóły znajdziesz w dokumentacji swojej przeglądarki (Chrome, Firefox, Safari, Edge).',
+      heading: 'Czego nie robimy',
+      body: 'Dla jasności — w serwisie <strong>nie ma</strong>: cookies reklamowych, pikseli śledzących sieci społecznościowych, profilowania czytelników, sprzedaży ani udostępniania danych o ruchu podmiotom trzecim w celach marketingowych.\nUstawienie rozmiaru tekstu w pasku dostępności działa wyłącznie w obrębie otwartej karty i nie jest nigdzie zapisywane.',
+    },
+    {
+      heading: 'Zarządzanie zgodą i cookies',
+      body: 'Zgodę na statystyki możesz w każdej chwili wycofać — wystarczy wyczyścić dane witryny (localStorage) w ustawieniach przeglądarki; przy następnej wizycie zapytamy ponownie. Odmowa jest zapamiętywana dokładnie tak samo jak zgoda, więc baner nie wróci.\nCookies sesyjne panelu redakcyjnego usuwa wylogowanie. Możesz też zablokować lub usunąć pliki cookies w ustawieniach przeglądarki (Chrome, Firefox, Safari, Edge) — czytanie portalu pozostanie w pełni możliwe.',
     },
     {
       heading: 'Kontakt',
@@ -512,7 +531,7 @@ app.get('/mapa-strony', (c) => {
                     ['/dolacz', 'Dołącz do nas'],
                     ['/newsletter', 'Newsletter'],
                     ['/telefony', 'Ważne telefony'],
-                    ['/mapa-gminy', 'Mapa gminy'],
+                    ['/mapa', 'Mapa gminy'],
                     ['/solectwa', 'Sołectwa (34)'],
                     ['/szukaj', 'Wyszukiwarka'],
                     ['/pomoc', 'Pomoc'],

@@ -397,7 +397,7 @@ export const Footer: FC = () => (
           <a href="/reklama">Reklama i współpraca</a>
           <a href="/dolacz">Dołącz do nas</a>
           <a href="/telefony">Ważne telefony</a>
-          <a href="/mapa-gminy">Mapa gminy</a>
+          <a href="/mapa">Mapa gminy</a>
         </div>
       </div>
 

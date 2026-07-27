@@ -2,9 +2,25 @@
 // IZBICA24.PL v4 — RENDERER (head literalnie zgodny z szatą graficzną)
 // ============================================================================
 
-import { jsxRenderer } from 'hono/jsx-renderer'
+import { jsxRenderer, useRequestContext } from 'hono/jsx-renderer'
+// Etap I12 — baner zgody na analitykę. Musi być w rendererze, a nie
+// w Shell: Shell nie jest używany na wszystkich stronach (panel redakcji,
+// strony błędów), a obowiązek uzyskania zgody dotyczy każdej odsłony.
+import { ZgodaCookies } from './components/ZgodaCookies'
 
 export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, canonical }) => {
+  /**
+   * Token analityki czytamy z kontekstu żądania, nie z propsów.
+   *
+   * Alternatywą byłoby przekazywanie go przez `c.render(..., { token })`
+   * w każdej z ponad dwudziestu tras — jedno pominięcie oznaczałoby
+   * podstronę bez pomiaru albo, co gorsza, bez banera przy działającym
+   * pomiarze. Kontekst żądania jest tu jedynym źródłem, więc nie da się
+   * o nim zapomnieć.
+   */
+  const ctx = useRequestContext()
+  const tokenAnalityki = (ctx?.env as { CF_ANALYTICS_TOKEN?: string } | undefined)
+    ?.CF_ANALYTICS_TOKEN
   const pageTitle =
     (title as string) || 'Izbica24.pl — Niezależny portal informacyjny gminy Izbica Kujawska'
   const desc =
@@ -68,6 +84,17 @@ export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, 
           płacą za mapę, której czytelnik nie otworzył (etap F4).
         */}
         <script src="/static/v4/izbica-v4-mapa.js" defer></script>
+        {/*
+          Etap I12 — zgoda na analitykę.
+
+          Baner stoi na końcu <body>, a skrypt analityczny NIE jest tu
+          w ogóle obecny: wstrzykuje go dopiero izbica-v4-zgoda.js po
+          kliknięciu „Zgadzam się". Gdyby beacon.min.js stał w <head>
+          (typowe wdrożenie), pomiar odbywałby się przed zgodą i zgoda
+          byłaby pozorna.
+        */}
+        <ZgodaCookies token={tokenAnalityki} />
+        <script src="/static/v4/izbica-v4-zgoda.js" defer></script>
       </body>
     </html>
   )
