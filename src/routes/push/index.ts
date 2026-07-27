@@ -47,7 +47,6 @@ export interface PushMessageRecord {
 }
 
 const route = new Hono<AppEnv>()
-const VAPID_FALLBACK = 'BElzbGljYTI0LWRldi12YXBpZC1wdWJsaWMta2V5LXBsYWNlaG9sZGVy'
 
 const subscriberKey = (id: string) => `push:subscriber:${id}`
 const preferenceKey = (userId: string) => `push:preference:${userId}`
@@ -129,7 +128,21 @@ route.use('/schedule', requireAuth)
 route.use('/preferences', requireAuth)
 route.use('/preferences/*', requireAuth)
 
-route.get('/vapid-public-key', (c) => c.json({ publicKey: c.env.VAPID_PUBLIC_KEY || VAPID_FALLBACK }))
+// Klucz publiczny VAPID musi pochodzić wyłącznie ze środowiska.
+// Poprzednio zwracany był tu zahardkodowany placeholder, który przeglądarka
+// przyjmowała jako prawidłowy klucz — subskrypcje powstawały, ale żadne
+// powiadomienie nie mogło zostać podpisane (brak klucza prywatnego).
+// Teraz brak konfiguracji jest zgłaszany jawnie jako 503.
+route.get('/vapid-public-key', (c) => {
+  const publicKey = c.env.VAPID_PUBLIC_KEY
+  if (!publicKey) {
+    return c.json({
+      error: 'push_not_configured',
+      message: 'Powiadomienia push nie są skonfigurowane na tym środowisku (brak VAPID_PUBLIC_KEY).',
+    }, 503)
+  }
+  return c.json({ publicKey })
+})
 
 route.post('/subscribe', async (c) => {
   const body = await c.req.json<Record<string, unknown>>().catch(() => null)

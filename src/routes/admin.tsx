@@ -88,23 +88,50 @@ const newsletters: NewsletterItem[] = [
   { id: '2', subject: 'Top 10 tygodnia + kalendarz MGCK', audience: 'Segment premium', scheduledAt: '2026-05-24 19:00', status: 'sent' },
 ]
 
+/**
+ * Kontrola dostępu do panelu redakcyjnego.
+ *
+ * Poprzednia wersja przy braku JWT_SECRET nadawała każdemu żądaniu rolę
+ * 'admin' i przepuszczała je dalej (fail-open). W praktyce oznaczało to,
+ * że `curl /admin` bez żadnego tokenu zwracał 200 z pełną zawartością
+ * panelu — wystarczyło, by zmienna środowiskowa nie została ustawiona.
+ *
+ * Teraz brak konfiguracji jest traktowany jako awaria zabezpieczeń
+ * i skutkuje odmową dostępu (fail-closed).
+ */
 const requireAdmin = async (c: any, next: any) => {
   const secret = c.env?.JWT_SECRET
+
   if (!secret) {
-    c.set('adminRole', 'admin')
-    return next()
+    console.error('[admin] Odmowa dostępu: brak JWT_SECRET w środowisku.')
+    return c.json({
+      error: 'server_misconfigured',
+      message: 'Panel administracyjny jest niedostępny: brak konfiguracji uwierzytelniania.',
+    }, 503)
   }
+
   const header = c.req.header('authorization') || ''
   const token = header.startsWith('Bearer ') ? header.slice(7) : (getCookie(c, 'admin_token') || '')
-  if (!token) return c.json({ error: 'Unauthorized' }, 401)
+  if (!token) return c.json({ error: 'unauthorized', message: 'Wymagane zalogowanie.' }, 401)
+
   try {
     const payload: any = await verify(token, secret)
+
+    // Odrzucenie tokenów przedawnionych — `verify` sprawdza `exp`,
+    // ale token bez `exp` przeszedłby walidację bezterminowo.
+    if (typeof payload?.exp !== 'number') {
+      return c.json({ error: 'unauthorized', message: 'Token bez daty wygaśnięcia.' }, 401)
+    }
+
     const role = payload?.role
-    if (role !== 'admin' && role !== 'editor') return c.json({ error: 'Forbidden' }, 403)
+    if (role !== 'admin' && role !== 'editor') {
+      return c.json({ error: 'forbidden', message: 'Brak uprawnień do panelu redakcyjnego.' }, 403)
+    }
+
     c.set('adminRole', role)
     await next()
   } catch {
-    return c.json({ error: 'Unauthorized' }, 401)
+    return c.json({ error: 'unauthorized', message: 'Nieprawidłowy lub wygasły token.' }, 401)
   }
 }
 

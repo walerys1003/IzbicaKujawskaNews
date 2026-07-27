@@ -3,10 +3,30 @@
   "name": "izbica24-portal",
   "compatibility_date": "2025-01-01",
   "pages_build_output_dir": "./dist",
-  "compatibility_flags": [
-    "nodejs_compat"
+  "compatibility_flags": ["nodejs_compat"],
+
+  // ---------------------------------------------------------------------------
+  // D1 — baza relacyjna. Jedna baza produkcyjna; lokalnie wrangler tworzy
+  // automatycznie SQLite w .wrangler/state/v3/d1 przy uruchomieniu z --local.
+  // Po utworzeniu realnej bazy (`npx wrangler d1 create izbica24-production`)
+  // podmień database_id na wartość zwróconą przez wrangler.
+  // ---------------------------------------------------------------------------
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "izbica24-production",
+      "database_id": "00000000-0000-0000-0000-000000000000"
+    }
   ],
+
+  // ---------------------------------------------------------------------------
+  // KV — 16 przestrzeni odpowiadających modułom w src/lib/kv/ oraz APP_KV
+  // używanemu przez src/lib/media/gallery-store.ts.
+  // ID są placeholderami do podmiany po `npx wrangler kv namespace create <NAZWA>`.
+  // preview_id="local-dev" wystarcza dla pracy lokalnej.
+  // ---------------------------------------------------------------------------
   "kv_namespaces": [
+    { "binding": "APP_KV", "id": "replace-app-kv", "preview_id": "local-dev" },
     { "binding": "WEATHER_KV", "id": "replace-weather-kv", "preview_id": "local-dev" },
     { "binding": "FUEL_KV", "id": "replace-fuel-kv", "preview_id": "local-dev" },
     { "binding": "AIR_KV", "id": "replace-air-kv", "preview_id": "local-dev" },
@@ -23,6 +43,55 @@
     { "binding": "SEARCH_SUGGESTIONS_KV", "id": "replace-search-suggestions-kv", "preview_id": "local-dev" },
     { "binding": "BACKUP_SNAPSHOTS_KV", "id": "replace-backup-snapshots-kv", "preview_id": "local-dev" }
   ],
+
+  // ---------------------------------------------------------------------------
+  // R2 — 20 bucketów odpowiadających modułom domenowym w src/lib/r2/.
+  // Tworzenie: `npx wrangler r2 bucket create <bucket_name>` (dla każdego).
+  // ---------------------------------------------------------------------------
+  "r2_buckets": [
+    { "binding": "R2_ARTICLES_IMAGES", "bucket_name": "izbica24-articles-images" },
+    { "binding": "R2_ARTICLES_VIDEOS", "bucket_name": "izbica24-articles-videos" },
+    { "binding": "R2_GALERIE_PHOTOS", "bucket_name": "izbica24-galerie-photos" },
+    { "binding": "R2_OGLOSZENIA_PHOTOS", "bucket_name": "izbica24-ogloszenia-photos" },
+    { "binding": "R2_USER_AVATARS", "bucket_name": "izbica24-user-avatars" },
+    { "binding": "R2_USER_UPLOADS", "bucket_name": "izbica24-user-uploads" },
+    { "binding": "R2_PODCAST_AUDIO", "bucket_name": "izbica24-podcast-audio" },
+    { "binding": "R2_VIDEO_THUMBNAILS", "bucket_name": "izbica24-video-thumbnails" },
+    { "binding": "R2_PDF_ARCHIVE", "bucket_name": "izbica24-pdf-archive" },
+    { "binding": "R2_EXPORTS_CSV", "bucket_name": "izbica24-exports-csv" },
+    { "binding": "R2_BACKUPS_DB", "bucket_name": "izbica24-backups-db" },
+    { "binding": "R2_SITE_SNAPSHOTS", "bucket_name": "izbica24-site-snapshots" },
+    { "binding": "R2_SOCIAL_CARDS", "bucket_name": "izbica24-social-cards" },
+    { "binding": "R2_INFOGRAPHICS", "bucket_name": "izbica24-infographics" },
+    { "binding": "R2_LOGOS_PARTNERS", "bucket_name": "izbica24-logos-partners" },
+    { "binding": "R2_BADGES_ICONS", "bucket_name": "izbica24-badges-icons" },
+    { "binding": "R2_FONTS_CUSTOM", "bucket_name": "izbica24-fonts-custom" },
+    { "binding": "R2_EMAIL_ATTACHMENTS", "bucket_name": "izbica24-email-attachments" },
+    { "binding": "R2_MODERATION_QUEUE", "bucket_name": "izbica24-moderation-queue" },
+    { "binding": "R2_AI_GENERATED", "bucket_name": "izbica24-ai-generated" }
+  ],
+
+  // ---------------------------------------------------------------------------
+  // Vectorize — indeks embeddingów dla RAG (src/ai/rag/vector-store.ts).
+  // Tworzenie: `npx wrangler vectorize create izbica24-articles \
+  //   --dimensions=768 --metric=cosine`
+  // ---------------------------------------------------------------------------
+  // UWAGA: Vectorize i Workers AI nie mają emulacji lokalnej. Zadeklarowanie
+  // ich tutaj wymusza w `wrangler pages dev` tryb zdalny (remote proxy),
+  // który wymaga zalogowania do Cloudflare — w sandboksie serwer wtedy
+  // wcale się nie uruchamia. Dlatego bloki poniżej pozostają zakomentowane
+  // do momentu wdrożenia na realne konto Cloudflare (FAZA 1, etap AI2).
+  //
+  // Utworzenie zasobów przed odkomentowaniem:
+  //   npx wrangler vectorize create izbica24-articles --dimensions=768 --metric=cosine
+  //
+  // "vectorize": [
+  //   { "binding": "VECTORIZE_INDEX", "index_name": "izbica24-articles" }
+  // ],
+  // "ai": { "binding": "AI" },
+
+  // Cron: */10 — odświeżanie cache pogody/paliw/powietrza; 0 * * * * — publikacja
+  // zaplanowanych artykułów i rotacja snapshotów. Obsługa w scheduled() w src/index.tsx.
   "triggers": {
     "crons": ["*/10 * * * *", "0 * * * *"]
   }

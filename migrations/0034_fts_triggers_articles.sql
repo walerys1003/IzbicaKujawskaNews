@@ -1,0 +1,11 @@
+-- Triggery synchronizacji articles -> articles_fts są już utworzone
+-- w migracji 0005_fts_articles.sql (trg_articles_fts_insert / _delete / _update),
+-- zgodnie ze schematem kanonicznym (lead, content_md, content_html).
+--
+-- Poprzednia wersja tego pliku odtwarzała te same triggery na kolumnach
+-- 'lede' i 'body_html', które nie istnieją w schemacie kanonicznym
+-- (0002_core_schema.sql). Powodowało to błąd "no such column: NEW.lede"
+-- przy pierwszym INSERT do tabeli articles.
+--
+-- Plik zachowany dla ciągłości numeracji migracji.
+SELECT '0027 fts triggers: no-op (obsluzone w 0005_fts_articles)' AS status;

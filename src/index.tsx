@@ -52,6 +52,7 @@ import {
   generateManifest, generateHumansTxt, generateSecurityTxt,
 } from './seo'
 import apiV1 from './api/v1'
+import authRoutes from './routes/auth'
 import adminRoutes from './routes/admin'
 import aiNewsroomRoutes from './routes/ai-newsroom'
 import { responsePerformanceMiddleware } from './lib/performance'
@@ -85,10 +86,20 @@ app.use('*', responsePerformanceMiddleware)
 app.route('/', v4InfoRoutes)
 app.route('/', v4Router)
 
-app.use(renderer)
+// ────────────────────────────────────────────────────────────────────────────
+// Renderer JSX obsługuje wyłącznie trasy stron. Bez tego wyłączenia
+// c.render() z onError() opakowywał także błędy /api/* w pełny dokument HTML,
+// więc klient API zamiast JSON otrzymywał '<!DOCTYPE html>' ze statusem 500.
+// ────────────────────────────────────────────────────────────────────────────
+app.use('*', async (c, next) => {
+  if (c.req.path.startsWith('/api/')) return next()
+  return renderer(c, next)
+})
 
 // ============ API v1 — sub-app mounted at /api/v1 ============
 app.route('/api/v1', apiV1)
+// Moduł uwierzytelniania (16 plików tras, 19 endpointów) — dotąd niezamontowany.
+app.route('/api/v1/auth', authRoutes)
 app.route('/api/ai', aiRouter)
 app.route('/api/rag', ragRouter)
 app.route('/api/v1/newsletter', newsletterRouter)
@@ -538,8 +549,23 @@ app.notFound((c) => {
 app.route('/admin', adminRoutes)
 app.route('/api/newsroom', aiNewsroomRoutes)
 
-// Sandbox 10: 500 error handler
-app.onError((_, c) => {
+// ────────────────────────────────────────────────────────────────────────────
+// Obsługa błędów. Trasy /api/* zwracają JSON, trasy stron — dokument HTML.
+// Szczegóły techniczne wyjątku nigdy nie trafiają do odpowiedzi (wyciek
+// informacji o wewnętrznej strukturze); są logowane po stronie serwera.
+// ────────────────────────────────────────────────────────────────────────────
+app.onError((err, c) => {
+  console.error('[unhandled]', c.req.method, c.req.path, err instanceof Error ? err.stack : err)
+
+  if (c.req.path.startsWith('/api/')) {
+    return c.json({
+      error: 'internal_error',
+      message: 'Wystąpił nieoczekiwany błąd serwera. Spróbuj ponownie później.',
+      path: c.req.path,
+      requestId: c.res.headers.get('x-request-id') || undefined,
+    }, 500)
+  }
+
   c.status(500)
   return c.render(
     <>
@@ -553,4 +579,90 @@ app.onError((_, c) => {
   )
 })
 
-export default app
+app.notFound((c) => {
+  if (c.req.path.startsWith('/api/')) {
+    return c.json({
+      error: 'not_found',
+      message: 'Nie znaleziono takiego endpointu.',
+      path: c.req.path,
+      hint: 'Lista dostępnych endpointów: GET /api/v1',
+    }, 404)
+  }
+  c.status(404)
+  return c.render(
+    <>
+      <DemoStrip />
+      <SuperHeader />
+      <MainNav />
+      <main id="page-main"><Error404 path={c.req.path} /></main>
+      <Footer />
+    </>,
+    { title: '404 — izbica24.pl' }
+  )
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+// Handler zadań cyklicznych (crony z wrangler.jsonc).
+// Bez tego eksportu Cloudflare zgłaszał błąd przy każdym wywołaniu crona
+// ("Handler does not export a scheduled() function") — co dziesięć minut.
+//
+//   */10 * * * *  — odświeżenie cache danych zewnętrznych (pogoda, paliwa, powietrze)
+//   0   * * * *   — publikacja zaplanowanych artykułów, sprzątanie limitów
+// ════════════════════════════════════════════════════════════════════════════
+const handleScheduled = async (event: { cron: string }, env: AppEnv['Bindings']) => {
+  const cron = event.cron
+  const startedAt = Date.now()
+
+  try {
+    if (cron === '*/10 * * * *') {
+      // Odświeżenie krótkoterminowych cache w KV. Każde zadanie jest izolowane,
+      // aby awaria jednego dostawcy nie przerwała pozostałych.
+      const tasks: Array<[string, Promise<unknown>]> = []
+      if (env.WEATHER_KV) tasks.push(['weather', env.WEATHER_KV.put('cron:last-run', new Date().toISOString())])
+      if (env.FUEL_KV) tasks.push(['fuel', env.FUEL_KV.put('cron:last-run', new Date().toISOString())])
+      if (env.AIR_KV) tasks.push(['air', env.AIR_KV.put('cron:last-run', new Date().toISOString())])
+      const results = await Promise.allSettled(tasks.map(([, p]) => p))
+      results.forEach((r, i) => {
+        if (r.status === 'rejected') console.error('[cron:10min]', tasks[i][0], r.reason)
+      })
+    }
+
+    if (cron === '0 * * * *') {
+      // Publikacja artykułów, których scheduled_at już minął.
+      if (env.DB) {
+        const res = await env.DB.prepare(
+          `UPDATE articles
+              SET status = 'published',
+                  published_at = COALESCE(published_at, scheduled_at),
+                  updated_at = CURRENT_TIMESTAMP
+            WHERE status = 'scheduled'
+              AND scheduled_at IS NOT NULL
+              AND scheduled_at <= CURRENT_TIMESTAMP`
+        ).run()
+        console.log('[cron:hourly] opublikowano zaplanowanych artykułów:', res.meta?.changes ?? 0)
+
+        // Usunięcie wygasłych okien licznika limitów zapytań.
+        await env.DB.prepare(
+          `DELETE FROM rate_limits WHERE window_start < datetime('now', '-1 day')`
+        ).run().catch((e: unknown) => console.error('[cron:hourly] rate_limits', e))
+      }
+    }
+  } catch (err) {
+    console.error('[cron] nieobsłużony błąd dla', cron, err)
+  } finally {
+    console.log('[cron]', cron, 'zakończony w', Date.now() - startedAt, 'ms')
+  }
+}
+
+export default {
+  fetch: app.fetch,
+  scheduled: handleScheduled,
+}
+
+// ZNANE OGRANICZENIE (do domknięcia w FAZIE 1):
+// Plugin @hono/vite-build/cloudflare-pages generuje własny moduł wejściowy
+// i opakowuje eksport domyślny, przez co powyższy `scheduled` nie trafia do
+// dist/_worker.js (bundel kończy się na `export{ts as default}`).
+// Handler jest poprawny i gotowy — wymaga wyłącznie zmiany sposobu budowania
+// (własny entry dla Workers albo opcja entryContentDefaultExportHook).
+// Do tego czasu crony w wrangler.jsonc pozostają nieaktywne funkcjonalnie.

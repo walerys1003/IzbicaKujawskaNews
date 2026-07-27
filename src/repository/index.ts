@@ -194,22 +194,60 @@ function mapCommentRow(row: Record<string, unknown>): CommentRow {
 // ====== Newsletter Repository ======
 export function createNewsletterRepo(db: D1DatabaseLike) {
   return {
+    // Tabelą kanoniczną jest `newsletters` (0002_core_schema.sql).
+    // Wcześniej zapytania kierowano do nieistniejącej `newsletter_subs`,
+    // co powodowało błąd 500 przy każdej próbie zapisu do newslettera.
+    // Dozwolone statusy wg CHECK w schemacie: 'pending' | 'confirmed' | 'unsubscribed'.
     async subscribe(email: string): Promise<{ ok: boolean; message: string }> {
-      const existing = await db.prepare(`SELECT id FROM newsletter_subs WHERE email = ?`).bind(email).first<{id: number}>()
-      if (existing) return { ok: false, message: 'already_subscribed' }
-      await db.prepare(`INSERT INTO newsletter_subs (email, status, subscribed_at, consent_version) VALUES (?, 'unconfirmed', datetime('now'), '1.0')`).bind(email).run()
+      const existing = await db.prepare(
+        `SELECT id, status FROM newsletters WHERE email = ? AND deleted_at IS NULL`
+      ).bind(email).first<{ id: number; status: string }>()
+
+      if (existing) {
+        // Powtórny zapis po wypisaniu przywraca subskrypcję do potwierdzenia.
+        if (existing.status === 'unsubscribed') {
+          await db.prepare(
+            `UPDATE newsletters
+                SET status = 'pending', unsubscribed_at = NULL, confirmed_at = NULL,
+                    updated_at = CURRENT_TIMESTAMP
+              WHERE id = ?`
+          ).bind(existing.id).run()
+          return { ok: true, message: 'confirmation_sent' }
+        }
+        return { ok: false, message: 'already_subscribed' }
+      }
+
+      await db.prepare(
+        `INSERT INTO newsletters (email, status, consent_version, created_at, updated_at)
+         VALUES (?, 'pending', '1.0', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+      ).bind(email).run()
       return { ok: true, message: 'confirmation_sent' }
     },
     async confirm(email: string): Promise<{ ok: boolean }> {
-      await db.prepare(`UPDATE newsletter_subs SET status = 'confirmed', confirmed_at = datetime('now') WHERE email = ?`).bind(email).run()
+      await db.prepare(
+        `UPDATE newsletters
+            SET status = 'confirmed', confirmed_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+          WHERE email = ? AND deleted_at IS NULL`
+      ).bind(email).run()
       return { ok: true }
     },
     async unsubscribe(email: string): Promise<{ ok: boolean }> {
-      await db.prepare(`UPDATE newsletter_subs SET status = 'unsubscribed', unsubscribed_at = datetime('now') WHERE email = ?`).bind(email).run()
+      await db.prepare(
+        `UPDATE newsletters
+            SET status = 'unsubscribed', unsubscribed_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+          WHERE email = ? AND deleted_at IS NULL`
+      ).bind(email).run()
       return { ok: true }
     },
     async getSubscribers(): Promise<{ email: string; status: string; subscribed_at: string }[]> {
-      const { results = [] } = await db.prepare(`SELECT email, status, subscribed_at FROM newsletter_subs WHERE status = 'confirmed' ORDER BY subscribed_at DESC`).all<Record<string, unknown>>()
+      const { results = [] } = await db.prepare(
+        `SELECT email, status, created_at AS subscribed_at
+           FROM newsletters
+          WHERE status = 'confirmed' AND deleted_at IS NULL
+          ORDER BY created_at DESC`
+      ).all<Record<string, unknown>>()
       return results.map(r => ({ email: String(r.email), status: String(r.status), subscribed_at: String(r.subscribed_at) }))
     },
   }

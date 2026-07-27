@@ -17,7 +17,15 @@
     "migrate": "bash scripts/migrate.sh",
     "seed": "bash scripts/seed.sh",
     "rollback": "bash scripts/rollback.sh",
-    "health-check": "bash scripts/health-check.sh"
+    "health-check": "bash scripts/health-check.sh",
+    "dev:sandbox": "wrangler pages dev dist --d1=izbica24-production --local --ip 0.0.0.0 --port 3000",
+    "db:migrate:local": "wrangler d1 migrations apply izbica24-production --local",
+    "db:migrate:prod": "wrangler d1 migrations apply izbica24-production --remote",
+    "db:seed": "wrangler d1 execute izbica24-production --local --file=./seed.sql",
+    "db:reset": "rm -rf .wrangler/state/v3/d1 && npm run db:migrate:local",
+    "db:console:local": "wrangler d1 execute izbica24-production --local --command",
+    "db:console:prod": "wrangler d1 execute izbica24-production --remote --command",
+    "clean-port": "fuser -k 3000/tcp 2>/dev/null || true"
   },
   "dependencies": {
     "hono": "^4.12.23"
