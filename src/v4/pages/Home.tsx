@@ -177,11 +177,11 @@ const NaSygnaleSection: FC = () => {
 const WiadomosciSection: FC = () => {
   const cat = findCategory('wiadomosci')!
   const items = [
-    slot('pozar-stodoly-bierzyn', { category: 'na-sygnale', used: slotsUsed() })!,
+    slot('pozar-stodoly-chociszewo', { category: 'na-sygnale', used: slotsUsed() })!,
     slot('arimr-doplaty-2026-nabor', { category: 'zycie', used: slotsUsed() })!,
     slot('sp1-wygrala-konkurs-matematyczny', { category: 'edukacja', used: slotsUsed() })!,
     slot('spzoz-dodatkowe-godziny-kardiologia', { category: 'zdrowie', used: slotsUsed() })!,
-    slot('nasadzenia-200-drzew-sadlno-modzerowo', { category: 'srodowisko', used: slotsUsed() })!,
+    slot('nasadzenia-200-drzew-augustynowo-modzerowo', { category: 'srodowisko', used: slotsUsed() })!,
     slot('harmonogram-odbioru-odpadow-czerwiec-2026', { category: 'zycie', used: slotsUsed() })!,
   ]
   const feat = items[0]
@@ -262,7 +262,7 @@ const KujawiankaSamorzad: FC = () => {
     slot('zarzadzenie-47-2026-nabor-kierownika-zgkiw', { category: 'samorzad', used: slotsUsed() })!,
     slot('fundusze-ue-termomodernizacja-sp2', { category: 'samorzad', used: slotsUsed() })!,
     slot('remont-drogi-powiatowej-izbica-brdow', { category: 'samorzad', used: slotsUsed() })!,
-    slot('zebranie-solectwa-bierzyn-nowy-soltys', { category: 'solectwa', used: slotsUsed() })!,
+    slot('zebranie-solectwa-chociszewo-nowy-soltys', { category: 'solectwa', used: slotsUsed() })!,
   ]
 
   const dayOf = (a: Article) => String(new Date(a.publishedAtISO).getDate()).padStart(2, '0')
