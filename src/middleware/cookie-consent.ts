@@ -2,6 +2,8 @@
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 import type { AppEnv } from '../types/env'
+// FAZA 4 / I12 — anonimizacja adresu w jednym miejscu dla całego projektu.
+import { anonymizeIp, clientIp } from '../lib/privacy/ip-anonymize'
 
 // Render cookie consent banner HTML snippet
 export function renderCookieConsentBanner(): string {
@@ -44,7 +46,17 @@ gdprRouter.post('/consent', async (c) => {
   const body = await c.req.json<{ level?: string; path?: string }>().catch(() => ({}))
   const level = body.level || 'unknown'
   const path = body.path || '/'
-  const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown'
+  // FAZA 4 / I12 — poprawka błędu anonimizacji.
+  //
+  // Było: `ip.split('.').slice(0,3).join('.') + '.0'`. Dla IPv4 działało, ale
+  // adres IPv6 nie zawiera kropek, więc `split('.')` zwracał jednoelementową
+  // tablicę i wynikiem był CAŁY adres IPv6 z doklejonym „.0” — czyli pełna
+  // dana osobowa zapisana pod nazwą pola `ipAnonymized`, co jest gorsze od
+  // jawnego zapisu, bo wprowadza w błąd przy ocenie ryzyka. W Polsce IPv6 ma
+  // już większość połączeń mobilnych, więc nie był to przypadek brzegowy.
+  // Dodatkowo `'unknown'` też przechodziło przez tę sklejkę i trafiało do KV
+  // jako `"unknown.0"`.
+  const ipAnonimowy = anonymizeIp(clientIp((nazwa) => c.req.header(nazwa)))
 
   // Log consent (anonymized IP)
   if (c.env.USER_PREFS_KV) {
@@ -52,7 +64,7 @@ gdprRouter.post('/consent', async (c) => {
     await c.env.USER_PREFS_KV.put(key, JSON.stringify({
       level,
       path,
-      ipAnonymized: ip.split('.').slice(0, 3).join('.') + '.0',
+      ipAnonymized: ipAnonimowy,
       userAgent: c.req.header('User-Agent')?.slice(0, 200) || '',
       timestamp: new Date().toISOString(),
     }), { expirationTtl: 60 * 60 * 24 * 365 })

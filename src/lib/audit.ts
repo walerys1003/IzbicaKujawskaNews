@@ -32,6 +32,7 @@
 import type { Context } from 'hono'
 import { getRequestId } from './http/envelope'
 import { getAuth } from '../middleware/require-permission'
+import { clientIp as wspolnyClientIp } from './privacy/ip-anonymize'
 
 /** Maksymalny rozmiar pojedynczego pola JSON w dzienniku (znaki). */
 const MAX_JSON_CHARS = 4000
@@ -76,27 +77,21 @@ const clip = (value: Record<string, unknown> | null | undefined): string | null 
 }
 
 /**
- * Skrot adresu IP z sola. Sol bierzemy z JWT_SECRET — nie dlatego, ze to
- * jego rola, ale poniewaz jest to jedyny sekret gwarantowany w kazdym
- * srodowisku; brak soli oznaczalby, ze te same IP daja te same skroty
- * we wszystkich instalacjach i mozna je odgadnac slownikiem (adresow IPv4
- * jest tylko 4 mld — bez soli skrot nie chroni niczego).
+ * FAZA 4 / I12 — skrot adresu IP przeniesiony do lib/privacy/ip-anonymize.
+ *
+ * Ten plik mial wlasna implementacje `hashIp`, a rownolegle istnialy jeszcze
+ * dwie inne (auth/store.ts, v1/comments.ts) — trzy kopie tej samej operacji,
+ * z czego dwie z sola zapisana na stale w kodzie zrodlowym. Teraz jest jedna
+ * implementacja, ktora dodatkowo preferuje dedykowany sekret IP_HASH_SALT,
+ * a JWT_SECRET traktuje tylko jako zapas.
+ *
+ * Reeksportujemy pod tymi samymi nazwami, zeby nie zmieniac wywolan.
  */
-export const hashIp = async (ip: string | undefined, salt: string): Promise<string | null> => {
-  if (!ip) return null
-  const data = new TextEncoder().encode(`${salt}:${ip}`)
-  const digest = await crypto.subtle.digest('SHA-256', data)
-  const bytes = new Uint8Array(digest)
-  let out = ''
-  for (let i = 0; i < 16; i += 1) out += bytes[i].toString(16).padStart(2, '0')
-  return out
-}
+export { hashIp } from './privacy/ip-anonymize'
 
-/** Adres klienta widziany przez Cloudflare. */
+/** Adres klienta widziany przez Cloudflare (opakowanie na wspolny helper). */
 export const clientIp = (c: Context): string | undefined =>
-  c.req.header('cf-connecting-ip') ??
-  c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ??
-  undefined
+  wspolnyClientIp((nazwa) => c.req.header(nazwa))
 
 /**
  * Zapis pojedynczego wpisu. Wywolanie jest „fire and forget” w sensie
@@ -110,8 +105,12 @@ export const audit = async (c: Context, entry: AuditEntry): Promise<void> => {
 
   try {
     const auth = getAuth(c as never)
-    const salt = (c.env?.JWT_SECRET as string | undefined) ?? 'izbica24-audit'
-    const ipHash = await hashIp(clientIp(c), salt)
+    // Sol z IP_HASH_SALT, awaryjnie z JWT_SECRET. Poprzednio bylo tu
+    // `?? 'izbica24-audit'` — sol zapisana w kodzie, czyli brak soli:
+    // majac skrot i te stala mozna odtworzyc adres slownikiem (IPv4 to
+    // tylko 4,3 mld wartosci). Teraz brak sekretu daje null i nie zapisujemy
+    // nic, zamiast zapisywac dana osobowa pod pozorem jej ochrony.
+    const ipHash = await hashIp(clientIp(c), c.env as never)
 
     await db
       .prepare(

@@ -24,6 +24,11 @@ import { captureException } from '../monitoring/error-tracker'
 import { logger } from '../monitoring/logger'
 import { ApiError, type ErrorCode, messageForCode } from '../lib/http/errors'
 import { getRequestId } from '../lib/http/envelope'
+// FAZA 4 / I12 — dziennik błędów zapisywał dotąd PEŁNY adres IP klienta
+// (kolumna error_log.ip, migracja 0046). Adres IP jest daną osobową, a do
+// diagnostyki wystarczy sieć: „192.0.2.0” pozwala odróżnić awarię jednego
+// łącza od globalnej, nie wskazując urządzenia.
+import { anonymizeIp, clientIp } from '../lib/privacy/ip-anonymize'
 
 /** Mapowanie statusu HTTP na kod z katalogu — dla wyjątków spoza ApiError. */
 const codeForStatus = (status: number): ErrorCode => {
@@ -140,7 +145,9 @@ export const errorHandler: ErrorHandler<AppEnv> = (error, c) => {
     status,
     code,
     userAgent: c.req.header('user-agent'),
-    ip: c.req.header('CF-Connecting-IP') || c.req.header('x-forwarded-for') || undefined,
+    // Skracamy, a nie haszujemy: dziennik błędów czyta człowiek i musi móc
+    // ocenić zasięg awarii. Skrót SHA-256 byłby tu bezużyteczny.
+    ip: anonymizeIp(clientIp((nazwa) => c.req.header(nazwa))),
   })
   // Na Workers zapis dokańczamy w tle, żeby nie wydłużać odpowiedzi.
   if (typeof c.executionCtx?.waitUntil === 'function') {
