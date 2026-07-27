@@ -1,22 +1,41 @@
-import { createMiddleware } from 'hono/factory'
-import type { AppEnv } from '../../../types/env'
-import { noteRateLimitDecision } from '../../../monitoring/rate-limit-monitor'
-import { rateLimitedRequestsTotal } from '../../../monitoring/metrics'
+/**
+ * FAZA 1 / A7 — plik zachowany wyłącznie dla zgodności importów.
+ *
+ * Poprzednia implementacja trzymała licznik żądań w `new Map()`, czyli
+ * w pamięci JEDNEJ instancji Workera. Na Cloudflare kolejne żądania tego
+ * samego klienta trafiają do różnych izolatów, a izolat jest usypiany po
+ * krótkiej bezczynności — licznik zerował się sam i praktycznie nigdy nie
+ * dobijał do limitu. Atak słownikowy na logowanie przechodził swobodnie,
+ * mimo że w kodzie „był rate limit”. Dodatkowo mapa rosła bez ograniczeń.
+ *
+ * Prawdziwa implementacja mieszka teraz w src/middleware/rate-limit.ts
+ * i opiera się na RATE_LIMIT_KV — magazynie współdzielonym przez wszystkie
+ * instancje.
+ *
+ * NIE dodawać tu logiki. Importować bezpośrednio z ../../../middleware/rate-limit.
+ */
 
-const bucket = new Map<string, number[]>()
+export {
+  rateLimit as rateLimitConfigured,
+  loginRateLimit,
+  registerRateLimit,
+  passwordResetRateLimit,
+  commentRateLimit,
+  uploadRateLimit,
+  aiRateLimit,
+  newsletterRateLimit,
+  contactRateLimit,
+  searchRateLimit,
+} from '../../../middleware/rate-limit'
 
-export const rateLimit = (limit = 5, windowMs = 60_000) => createMiddleware<AppEnv>(async (c, next) => {
-  const ip = c.req.header('CF-Connecting-IP') || c.req.header('x-forwarded-for') || 'unknown'
-  const key = `${c.req.path}:${ip}`
-  const now = Date.now()
-  const hits = (bucket.get(key) || []).filter((stamp) => now - stamp < windowMs)
-  if (hits.length >= limit) {
-    noteRateLimitDecision(true)
-    rateLimitedRequestsTotal.inc()
-    return c.json({ error: 'rate_limited', limit, retryAfterSeconds: Math.ceil(windowMs / 1000) }, 429)
-  }
-  noteRateLimitDecision(false)
-  hits.push(now)
-  bucket.set(key, hits)
-  await next()
-})
+import { rateLimit as configuredRateLimit } from '../../../middleware/rate-limit'
+
+/**
+ * Adapter dawnej sygnatury `rateLimit(limit, windowMs)`.
+ * Pozostaje, aby ewentualne nieodnalezione wywołania nadal działały —
+ * ale już z trwałym licznikiem w KV.
+ *
+ * @deprecated Używać profili z src/middleware/rate-limit.ts.
+ */
+export const rateLimit = (limit = 5, windowMs = 60_000) =>
+  configuredRateLimit({ name: 'legacy', limit, windowMs })

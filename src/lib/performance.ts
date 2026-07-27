@@ -47,9 +47,35 @@ const hashText = (input: string) => {
 const isTextResponse = (contentType: string) =>
   HTML_TYPES.some((type) => contentType.includes(type)) || TEXT_TYPES.some((type) => contentType.includes(type))
 
-const applyCachePolicy = (path: string, method: string, headers: Headers) => {
+const applyCachePolicy = (
+  path: string,
+  method: string,
+  headers: Headers,
+  status: number,
+  isPrivate: boolean,
+) => {
   if (method !== 'GET') {
     headers.set('Cache-Control', 'no-store')
+    return
+  }
+
+  // ── FAZA 1 / A3 — dwie reguły, których wcześniej brakowało ────────────
+  //
+  // 1. Odpowiedź błędna nigdy nie może trafić do cache publicznego.
+  //    Wcześniej 401/403/404/503 dostawały `public, max-age=300`, więc
+  //    CDN podawał ten sam błąd przez pięć minut także po naprawie
+  //    usterki — awaria bazy trwająca sekundę „zamrażała” 503 na 5 minut.
+  //
+  // 2. Odpowiedź zależna od tożsamości (nagłówek Authorization, ciasteczko
+  //    sesji, ustawiane Set-Cookie) nie może być `public`. W przeciwnym
+  //    razie CDN mógłby podać profil jednego użytkownika drugiemu.
+  if (status >= 400) {
+    headers.set('Cache-Control', 'no-store')
+    return
+  }
+
+  if (isPrivate) {
+    headers.set('Cache-Control', 'private, no-store')
     return
   }
 
@@ -75,9 +101,19 @@ export const responsePerformanceMiddleware: MiddlewareHandler<AppEnv> = async (c
 
   const pathname = new URL(c.req.url).pathname
   const headers = new Headers(response.headers)
-  headers.set('Vary', 'Accept-Encoding')
+
+  // Odpowiedź uznajemy za zależną od tożsamości, gdy żądanie niosło
+  // poświadczenia albo gdy odpowiedź ustawia ciasteczko.
+  const isPrivate =
+    Boolean(c.req.header('authorization')) ||
+    Boolean(c.req.header('cookie')) ||
+    headers.has('set-cookie')
+
+  // Vary musi wymieniać nagłówki różnicujące treść, inaczej wspólny cache
+  // pomiesza wariant zalogowany z anonimowym.
+  headers.set('Vary', 'Accept-Encoding, Authorization, Cookie')
   headers.set('X-Response-Time', `${Date.now() - startedAt}ms`)
-  applyCachePolicy(pathname, c.req.method, headers)
+  applyCachePolicy(pathname, c.req.method, headers, response.status, isPrivate)
 
   const contentType = headers.get('content-type') ?? ''
   if (!isTextResponse(contentType)) {

@@ -55,17 +55,14 @@ export const securityHeaders = async (c: Context<AppEnv>, next: () => Promise<vo
   }
 }
 
-// CORS middleware for API
-export const corsHeaders = async (c: Context<AppEnv>, next: () => Promise<void>) => {
-  c.res.headers.set('Access-Control-Allow-Origin', c.req.header('Origin') || 'https://izbica24.pl')
-  c.res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  c.res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
-  c.res.headers.set('Access-Control-Max-Age', '86400')
-  c.res.headers.set('Access-Control-Allow-Credentials', 'true')
-
-  if (c.req.method === 'OPTIONS') {
-    return c.body(null, 204)
-  }
-
-  await next()
-}
+// ════════════════════════════════════════════════════════════════════════════
+// USUNIĘTO: corsHeaders (FAZA 1 / A7)
+//
+// Poprzednia implementacja odbijała dowolną wartość nagłówka Origin
+// i jednocześnie ustawiała Access-Control-Allow-Credentials: true.
+// To zestawienie całkowicie znosi ochronę CORS — obca witryna mogła
+// odczytać odpowiedzi API z ciasteczkiem sesji zalogowanego redaktora.
+//
+// Zastąpione przez src/middleware/cors.ts (corsMiddleware) z zamkniętą
+// listą dozwolonych domen. Nie przywracać tej funkcji.
+// ════════════════════════════════════════════════════════════════════════════

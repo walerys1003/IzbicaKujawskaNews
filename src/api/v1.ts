@@ -40,6 +40,10 @@ import galleryReorderRoute from '../routes/v1/gallery-reorder'
 import galleryPublishRoute from '../routes/v1/gallery-publish'
 import newsletterRouter from '../routes/newsletter'
 import searchRouter from '../routes/search'
+// FAZA 1 / A7 — komentarze z sanityzacją, limitem tempa i realnym zapisem do D1
+import commentsRoute from '../routes/v1/comments'
+// FAZA 1 / I4b — zadania cykliczne wywoływane przez zewnętrzny harmonogram
+import cronRoute from '../routes/v1/cron'
 
 const api = new Hono<AppEnv>()
 
@@ -77,6 +81,12 @@ api.route('/galleries/create', galleryCreateRoute)
 api.route('/galleries/add-image', galleryAddImageRoute)
 api.route('/galleries/reorder', galleryReorderRoute)
 api.route('/galleries/publish', galleryPublishRoute)
+
+// Komentarze — moduł definiuje własne pełne ścieżki
+// (/articles/:slug/comments oraz alias /comments), dlatego montowany w korzeniu.
+api.route('/', commentsRoute)
+// Zadania cykliczne — POST /api/v1/cron/run, chronione sekretem CRON_SECRET.
+api.route('/cron', cronRoute)
 
 // Mount standalone routers (newsletter + search) for D1-backed endpoints
 api.route('/newsletter', newsletterRouter)
@@ -239,59 +249,19 @@ api.post('/incoming', async (c) => {
   }
 })
 
-// ============ B20: COMMENT SUBMIT ============
-api.post('/articles/:slug/comments', async (c) => {
-  const slug = c.req.param('slug')
-  const a = findArticle(slug)
-  if (!a) return c.json({ error: 'article_not_found' }, 404)
-  try {
-    const body = await c.req.json<{ name?: string; email?: string; text?: string; consent?: boolean }>()
-    if (!body.name || !body.text || !body.email) {
-      return c.json({ error: 'missing_fields', required: ['name', 'email', 'text'] }, 400)
-    }
-    if (body.text.length < 10 || body.text.length > 2000) {
-      return c.json({ error: 'text_length', detail: 'Komentarz: 10–2000 znaków.' }, 400)
-    }
-    if (body.consent !== true) {
-      return c.json({ error: 'consent_required' }, 400)
-    }
-    return c.json({
-      ok: true,
-      commentId: `c_${Date.now()}`,
-      status: 'pending_moderation',
-      timestamp: new Date().toISOString(),
-    })
-  } catch {
-    return c.json({ error: 'bad_request' }, 400)
-  }
-})
-
-// ============ B20b: COMMENT SUBMIT (alias endpoint /comments) ============
-api.post('/comments', async (c) => {
-  try {
-    const body = await c.req.json<{ articleSlug?: string; name?: string; email?: string; text?: string; consent?: boolean }>()
-    if (!body.articleSlug) return c.json({ error: 'missing_fields', required: ['articleSlug'] }, 400)
-    const article = findArticle(body.articleSlug)
-    if (!article) return c.json({ error: 'article_not_found' }, 404)
-    if (!body.name || !body.text || !body.email) {
-      return c.json({ error: 'missing_fields', required: ['name', 'email', 'text'] }, 400)
-    }
-    if (body.text.length < 10 || body.text.length > 2000) {
-      return c.json({ error: 'text_length', detail: 'Komentarz: 10–2000 znaków.' }, 400)
-    }
-    if (body.consent !== true) {
-      return c.json({ error: 'consent_required' }, 400)
-    }
-    return c.json({
-      ok: true,
-      commentId: `c_${Date.now()}`,
-      status: 'pending_moderation',
-      timestamp: new Date().toISOString(),
-    })
-  } catch {
-    return c.json({ error: 'bad_request' }, 400)
-  }
-})
+// ════════════════════════════════════════════════════════════════════════════
+// KOMENTARZE — przeniesione do src/routes/v1/comments.ts (FAZA 1 / A7)
+//
+// Były tu DWIE skopiowane implementacje (`/articles/:slug/comments` i
+// `/comments`), które NIE ZAPISYWAŁY komentarza do bazy — zwracały
+// zmyślone `c_<timestamp>` i status „pending_moderation”, więc mieszkaniec
+// widział potwierdzenie, a treść przepadała i redakcja nie miała czego
+// moderować. Nie sanityzowały też treści ani nie ograniczały tempa zgłoszeń.
+//
+// Zastąpione jednym modułem z walidacją, sanityzacją (profil komentarzowy),
+// limitem 3 zgłoszeń na 10 minut, honeypotem i realnym zapisem do D1.
+// Montowane niżej: api.route('/', commentsRoute)
+// ════════════════════════════════════════════════════════════════════════════
 
 // ============ B21: SHARE COUNT ============
 api.post('/articles/:slug/share', async (c) => {

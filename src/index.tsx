@@ -41,7 +41,11 @@ import dostepnoscRoute from './routes/public/dostepnosc'
 import { ragStats } from './rag'
 import { ARTICLES, CATEGORIES_MAP, findArticle, articlesByCategory, searchArticles } from './data-articles'
 import { createRepository } from './repository'
-import { securityHeaders, corsHeaders } from './middleware/security-headers'
+import { securityHeaders } from './middleware/security-headers'
+// FAZA 1 / A7 — CORS na zamkniętą listę domen (zastępuje corsHeaders,
+// które odbijało dowolny Origin przy Allow-Credentials: true).
+import { corsMiddleware } from './middleware/cors'
+import { jsonBodyLimit } from './middleware/body-limit'
 import { renderCookieConsentBanner, gdprRouter } from './middleware/cookie-consent'
 import { RodoPage } from './components/public/RodoPage'
 import { FaqPage } from './components/public/FaqPage'
@@ -56,6 +60,11 @@ import authRoutes from './routes/auth'
 import adminRoutes from './routes/admin'
 import aiNewsroomRoutes from './routes/ai-newsroom'
 import { responsePerformanceMiddleware } from './lib/performance'
+// FAZA 1 / A3 — jednolita warstwa odpowiedzi HTTP
+import { errorHandler } from './middleware/error-handler'
+import { requestIdMiddleware } from './middleware/request-id'
+import { requestLoggerMiddleware } from './middleware/request-logger'
+import { fail, ok, errorCatalogList } from './lib/http/envelope'
 import type { AppEnv } from './types/env'
 // Sandbox 9: monitoring + observability routes
 import healthRoutes from './routes/v1/health'
@@ -72,8 +81,26 @@ import adminBackupVerifyRoutes from './routes/admin/backup-verify'
 
 const app = new Hono<AppEnv>()
 
+// ────────────────────────────────────────────────────────────────────────────
+// FAZA 1 / A3 — requestId musi być pierwszy w łańcuchu.
+// Każde żądanie dostaje identyfikator, który trafia jednocześnie do:
+//   • nagłówka odpowiedzi  x-request-id,
+//   • koperty JSON         { ..., "requestId": "..." },
+//   • wpisu w tabeli       error_log.request_id,
+//   • logu serwera.
+// Dzięki temu zgłoszenie „strona wyrzuciła błąd” da się odnaleźć jednym
+// zapytaniem, zamiast przeszukiwać log po przybliżonym czasie.
+// ────────────────────────────────────────────────────────────────────────────
+app.use('*', requestIdMiddleware)
 app.use('*', securityHeaders)
-app.use('/api/*', corsHeaders)
+
+// FAZA 1 / A7 — CORS oraz limit rozmiaru żądania dla całego API.
+// Limit 256 KB obowiązuje domyślnie; trasy przyjmujące pliki i długie
+// treści redakcyjne nadpisują go własnym, wyższym profilem.
+app.use('/api/*', corsMiddleware)
+app.use('/api/*', jsonBodyLimit)
+
+app.use('*', requestLoggerMiddleware)
 app.use('*', responsePerformanceMiddleware)
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -531,62 +558,50 @@ app.post('/api/analytics/vitals', async (c) => {
 app.get('/api/stats', (c) => c.json(ragStats))
 app.get('/api/health', (c) => c.json({ ok: true, time: new Date().toISOString() }))
 
-// ============ 404 ============
-app.notFound((c) => {
-  c.status(404)
-  return c.render(
-    <>
-      <DemoStrip />
-      <SuperHeader />
-      <MainNav />
-      <main id="page-main" class="main-wrap"><Error404 path={c.req.path} /></main>
-      <Footer />
-    </>,
-    { title: '404 — izbica24.pl' }
-  )
-})
+// ────────────────────────────────────────────────────────────────────────────
+// FAZA 1 / A3 — katalog kodów błędów jako dokumentacja wykonywalna.
+// Integrator nie musi zgadywać, jakie wartości może przyjąć error.code —
+// pobiera je z działającego API i widzi zawsze aktualną listę.
+// ────────────────────────────────────────────────────────────────────────────
+app.get('/api/v1/errors', (c) =>
+  ok(c, errorCatalogList(), {
+    total: errorCatalogList().length,
+    envelope: {
+      sukces: { ok: true, data: '<dowolne>', meta: '<opcjonalne>', requestId: '<uuid>' },
+      blad: { ok: false, error: { code: '<kod z listy>', message: '<komunikat>' }, requestId: '<uuid>' },
+    },
+  }),
+)
+
+// ────────────────────────────────────────────────────────────────────────────
+// Uwaga: w tym miejscu znajdowała się PIERWSZA rejestracja app.notFound().
+// Hono przechowuje tylko jeden handler 404 — każde kolejne wywołanie nadpisuje
+// poprzednie. Handler zdefiniowany niżej (z rozgałęzieniem JSON/HTML) i tak
+// wygrywał, więc ta wersja była martwym kodem sugerującym nieistniejące
+// zachowanie. Usunięta; obowiązuje jedna definicja, na końcu pliku.
+// ────────────────────────────────────────────────────────────────────────────
 
 app.route('/admin', adminRoutes)
 app.route('/api/newsroom', aiNewsroomRoutes)
 
 // ────────────────────────────────────────────────────────────────────────────
-// Obsługa błędów. Trasy /api/* zwracają JSON, trasy stron — dokument HTML.
-// Szczegóły techniczne wyjątku nigdy nie trafiają do odpowiedzi (wyciek
-// informacji o wewnętrznej strukturze); są logowane po stronie serwera.
+// FAZA 1 / A3 — obsługa błędów przeniesiona do middleware/error-handler.ts.
+//
+// Poprzednia wersja inline mapowała KAŻDY wyjątek na 500, także taki, który
+// oznaczał brak uprawnień albo złe dane wejściowe. Nowy handler rozpoznaje
+// ApiError oraz HTTPException, dobiera właściwy status z katalogu kodów
+// i utrwala zdarzenie w tabeli error_log wraz z requestId (B7).
 // ────────────────────────────────────────────────────────────────────────────
-app.onError((err, c) => {
-  console.error('[unhandled]', c.req.method, c.req.path, err instanceof Error ? err.stack : err)
-
-  if (c.req.path.startsWith('/api/')) {
-    return c.json({
-      error: 'internal_error',
-      message: 'Wystąpił nieoczekiwany błąd serwera. Spróbuj ponownie później.',
-      path: c.req.path,
-      requestId: c.res.headers.get('x-request-id') || undefined,
-    }, 500)
-  }
-
-  c.status(500)
-  return c.render(
-    <>
-      <DemoStrip />
-      <SuperHeader />
-      <MainNav />
-      <main id="page-main"><Error500 /></main>
-      <Footer />
-    </>,
-    { title: '500 — izbica24.pl' }
-  )
-})
+app.onError(errorHandler)
 
 app.notFound((c) => {
   if (c.req.path.startsWith('/api/')) {
-    return c.json({
-      error: 'not_found',
-      message: 'Nie znaleziono takiego endpointu.',
-      path: c.req.path,
-      hint: 'Lista dostępnych endpointów: GET /api/v1',
-    }, 404)
+    return fail(
+      c,
+      'not_found',
+      'Nie znaleziono takiego endpointu. Lista dostępnych: GET /api/v1',
+      { path: c.req.path },
+    )
   }
   c.status(404)
   return c.render(
@@ -602,14 +617,25 @@ app.notFound((c) => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════
-// Handler zadań cyklicznych (crony z wrangler.jsonc).
-// Bez tego eksportu Cloudflare zgłaszał błąd przy każdym wywołaniu crona
-// ("Handler does not export a scheduled() function") — co dziesięć minut.
+// Handler zadań cyklicznych.
 //
 //   */10 * * * *  — odświeżenie cache danych zewnętrznych (pogoda, paliwa, powietrze)
 //   0   * * * *   — publikacja zaplanowanych artykułów, sprzątanie limitów
+//
+// OGRANICZENIE PLATFORMY (ustalone i zweryfikowane w FAZIE 1):
+// Cloudflare **Pages** nie obsługuje Cron Triggers — to funkcja wyłącznie
+// Workers. Wpis `triggers.crons` w wrangler.jsonc jest na Pages martwy,
+// a wywołanie /cdn-cgi/handler/scheduled kończy się błędem runtime'u,
+// mimo że bundel poprawnie eksportuje { fetch, scheduled } (zweryfikowane
+// niezależnym importem zbudowanego pliku dist/_worker.js).
+//
+// Dlatego ta sama logika jest równolegle wystawiona jako chroniony endpoint
+// HTTP `POST /api/v1/cron/run` (patrz src/routes/v1/cron.ts). Zewnętrzny
+// harmonogram (GitHub Actions albo osobny mikro-Worker) wywołuje go
+// z nagłówkiem `x-cron-secret`. Eksport `scheduled` zostaje, bo działa
+// natychmiast po ewentualnej migracji celu wdrożenia z Pages na Workers.
 // ════════════════════════════════════════════════════════════════════════════
-const handleScheduled = async (event: { cron: string }, env: AppEnv['Bindings']) => {
+export const handleScheduled = async (event: { cron: string }, env: AppEnv['Bindings']) => {
   const cron = event.cron
   const startedAt = Date.now()
 

@@ -2,11 +2,13 @@ import { Hono } from 'hono'
 import { validator } from 'hono/validator'
 import type { AppEnv } from '../../types/env'
 import { getUserByEmail, issueSessionForUser, verifyPassword, verifyTotp } from './helpers/password-utils'
-import { rateLimit } from './middleware/rate-limit'
+// FAZA 1 / A7 — limit trwały (RATE_LIMIT_KV) zamiast licznika w pamięci
+// pojedynczej instancji, który na edge nie chronił przed niczym.
+import { loginRateLimit } from '../../middleware/rate-limit'
 
 const route = new Hono<AppEnv>()
 
-route.post('/login', rateLimit(5, 60_000), validator('json', (value, c) => {
+route.post('/login', loginRateLimit, validator('json', (value, c) => {
   const body = value as Record<string, unknown>
   const email = String(body.email || '').trim().toLowerCase()
   const password = String(body.password || '')

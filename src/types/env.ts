@@ -94,6 +94,14 @@ export interface Bindings {
   // Auth secrets (Sandbox 3)
   JWT_SECRET: string
 
+  // FAZA 1 — sekrety i konfiguracja dodane w tej fazie
+  /** Sekret zadan cyklicznych (I4b) — Pages nie obsluguje Cron Triggers. */
+  CRON_SECRET?: string
+  /** Dodatkowe domeny dopuszczone w CORS, rozdzielone przecinkami (A7). */
+  CORS_ALLOWED_ORIGINS?: string
+  /** 'production' | 'development' — wplywa na dopuszczalne zrodla CORS. */
+  ENVIRONMENT?: string
+
   // AI secrets (Sandbox 5)
   OPENAI_API_KEY?: string
   ANTHROPIC_API_KEY?: string
