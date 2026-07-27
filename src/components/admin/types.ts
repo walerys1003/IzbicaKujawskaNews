@@ -1,4 +1,12 @@
-export type AdminRole = 'admin' | 'editor'
+/**
+ * Role panelu.
+ *
+ * Wcześniej typ miał dwie wartości ('admin' | 'editor'), a tabela `users`
+ * dopuszcza sześć (migracja 0047). Autor i moderator mają dostęp do panelu
+ * — do własnych szkiców i do kolejki komentarzy — więc zawężony typ zmuszałby
+ * do rzutowania przy każdym przekazaniu roli z sesji do widoku.
+ */
+export type AdminRole = 'admin' | 'editor' | 'author' | 'moderator' | 'contributor' | 'viewer'
 
 export type AdminNavItem = {
   href: string
@@ -26,6 +34,18 @@ export type AdminArticle = {
   status: ArticleStatus
   views: number
   comments: number
+  /** Znacznik czasu do kontroli równoczesnej edycji (B4). */
+  expectedUpdatedAt?: string
+  lead?: string
+  solectwo?: string | null
+  aiAssisted?: boolean
+  heroImage?: string | null
+  heroAlt?: string | null
+  /** Treść w HTML — do wczytania w edytorze. */
+  contentHtml?: string
+  tags?: string[]
+  seoTitle?: string | null
+  seoDescription?: string | null
 }
 
 export type AdminComment = {
@@ -34,7 +54,17 @@ export type AdminComment = {
   articleTitle: string
   content: string
   createdAt: string
-  status: 'pending' | 'approved' | 'rejected' | 'flagged'
+  /**
+   * Statusy zgodne z ograniczeniem CHECK w tabeli `comments`.
+   * 'flagged' nie istnieje w bazie — zgłoszony komentarz to `pending`
+   * z `report_count > 0`, dlatego dochodzi 'spam', a nie 'flagged'.
+   */
+  status: 'pending' | 'approved' | 'rejected' | 'spam'
+  articleId?: string
+  articleSlug?: string | null
+  spamScore?: number
+  reportCount?: number
+  profanityHits?: number
 }
 
 export type AdminUser = {
@@ -43,6 +73,8 @@ export type AdminUser = {
   email: string
   role: AdminRole
   status: 'active' | 'invited' | 'blocked'
+  lastLogin?: string | null
+  articleCount?: number
 }
 
 export type MediaItem = {
@@ -51,6 +83,8 @@ export type MediaItem = {
   url: string
   type: 'image' | 'video' | 'audio' | 'document'
   size: string
+  alt?: string | null
+  credit?: string | null
 }
 
 export type ObituaryItem = {

@@ -1,5 +1,6 @@
 export * from './types'
 export * from './AdminLayout'
+export * from './LoginPage'
 export * from './AdminSidebar'
 export * from './AdminTopbar'
 export * from './DashboardCards'
