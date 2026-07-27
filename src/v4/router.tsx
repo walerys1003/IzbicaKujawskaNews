@@ -5,6 +5,7 @@
 
 import { Hono } from 'hono'
 import { rendererV4 } from './renderer'
+import { loadSnapshot, runWithSnapshot } from './content-source'
 import { Shell } from './components/Layout'
 import { HomeV4 } from './pages/Home'
 import {
@@ -41,6 +42,22 @@ import { articleUrl } from './content-types'
 
 const PER_PAGE = 12
 const app = new Hono()
+
+/**
+ * Migawka tresci na zadanie (etap D4).
+ *
+ * Musi byc PRZED rendererem: akcesory content-db (byCategory, latest…) sa
+ * synchroniczne i czytaja migawke w chwili renderowania JSX, wiec dane musza
+ * juz byc w kontekscie, gdy renderer zaczyna prace.
+ *
+ * `runWithSnapshot` obejmuje `await next()`, a nie tylko wywolanie handlera —
+ * inaczej AsyncLocalStorage stracilby kontekst na pierwszym punkcie
+ * podzialu asynchronicznego i strona glowna renderowalaby sie pusta.
+ */
+app.use('*', async (c, next) => {
+  const snap = await loadSnapshot(c)
+  return runWithSnapshot(snap, () => next())
+})
 
 app.use('*', rendererV4)
 

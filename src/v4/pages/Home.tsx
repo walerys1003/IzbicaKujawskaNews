@@ -14,9 +14,21 @@ import {
   findArticleV4,
   findGallery,
   latest,
+  slot,
 } from '../content-db'
+import { snapshot } from '../content-source'
 import { articleUrl, type Article } from '../content-types'
 import { SectionHeader } from '../components/Layout'
+
+/**
+ * Rejestr slugow zuzytych przez slot() w biezacym zadaniu (etap D4).
+ *
+ * Getter, a nie stala modulu: `used` zyje w migawce zadania, wiec zbior
+ * zeruje sie przy kazdym odsloniu. Stala na poziomie modulu narastalaby
+ * przez cale zycie izolatu Workera i po kilkudziesieciu wejsciach kazdy slot
+ * zwracalby undefined — czyli 500 na stronie glownej.
+ */
+const slotsUsed = () => snapshot().used
 
 const IMG = '/static/img/v4'
 
@@ -46,12 +58,12 @@ const shortDate = (a: Article) => {
 
 // ════════════════════════════════════════════════════════════ HERO
 const Hero: FC = () => {
-  const main = findArticleV4('remont-ulicy-koscielnej-zakonczony')!
+  const main = slot('remont-ulicy-koscielnej-zakonczony', { category: 'wiadomosci', used: slotsUsed() })!
   const side = [
-    findArticleV4('sesja-rady-miejskiej-budzet-remontowy')!,
-    findArticleV4('kujawianka-sparta-brzesc-3-1')!,
-    findArticleV4('wietrzychowice-nowe-odkrycia-archeologiczne')!,
-    findArticleV4('dni-izbicy-2026-program')!,
+    slot('sesja-rady-miejskiej-budzet-remontowy', { category: 'samorzad', used: slotsUsed() })!,
+    slot('kujawianka-sparta-brzesc-3-1', { category: 'sport', used: slotsUsed() })!,
+    slot('wietrzychowice-nowe-odkrycia-archeologiczne', { category: 'historia', used: slotsUsed() })!,
+    slot('dni-izbicy-2026-program', { category: 'kultura', used: slotsUsed() })!,
   ]
 
   return (
@@ -164,12 +176,12 @@ const NaSygnaleSection: FC = () => {
 const WiadomosciSection: FC = () => {
   const cat = findCategory('wiadomosci')!
   const items = [
-    findArticleV4('pozar-stodoly-bierzyn')!,
-    findArticleV4('arimr-doplaty-2026-nabor')!,
-    findArticleV4('sp1-wygrala-konkurs-matematyczny')!,
-    findArticleV4('spzoz-dodatkowe-godziny-kardiologia')!,
-    findArticleV4('nasadzenia-200-drzew-sadlno-modzerowo')!,
-    findArticleV4('harmonogram-odbioru-odpadow-czerwiec-2026')!,
+    slot('pozar-stodoly-bierzyn', { category: 'na-sygnale', used: slotsUsed() })!,
+    slot('arimr-doplaty-2026-nabor', { category: 'zycie', used: slotsUsed() })!,
+    slot('sp1-wygrala-konkurs-matematyczny', { category: 'edukacja', used: slotsUsed() })!,
+    slot('spzoz-dodatkowe-godziny-kardiologia', { category: 'zdrowie', used: slotsUsed() })!,
+    slot('nasadzenia-200-drzew-sadlno-modzerowo', { category: 'srodowisko', used: slotsUsed() })!,
+    slot('harmonogram-odbioru-odpadow-czerwiec-2026', { category: 'zycie', used: slotsUsed() })!,
   ]
   const feat = items[0]
   const rest = items.slice(1)
@@ -243,13 +255,13 @@ const WiadomosciSection: FC = () => {
 
 // ═══════════════════════════ SPLIT: KUJAWIANKA (5 tabów) + SAMORZĄD
 const KujawiankaSamorzad: FC = () => {
-  const kMain = findArticleV4('kujawianka-sparta-brzesc-3-1')!
-  const samMain = findArticleV4('sesja-rady-miejskiej-budzet-remontowy')!
+  const kMain = slot('kujawianka-sparta-brzesc-3-1', { category: 'sport', used: slotsUsed() })!
+  const samMain = slot('sesja-rady-miejskiej-budzet-remontowy', { category: 'samorzad', used: slotsUsed() })!
   const samList = [
-    findArticleV4('zarzadzenie-47-2026-nabor-kierownika-zgkiw')!,
-    findArticleV4('fundusze-ue-termomodernizacja-sp2')!,
-    findArticleV4('remont-drogi-powiatowej-izbica-brdow')!,
-    findArticleV4('zebranie-solectwa-bierzyn-nowy-soltys')!,
+    slot('zarzadzenie-47-2026-nabor-kierownika-zgkiw', { category: 'samorzad', used: slotsUsed() })!,
+    slot('fundusze-ue-termomodernizacja-sp2', { category: 'samorzad', used: slotsUsed() })!,
+    slot('remont-drogi-powiatowej-izbica-brdow', { category: 'samorzad', used: slotsUsed() })!,
+    slot('zebranie-solectwa-bierzyn-nowy-soltys', { category: 'solectwa', used: slotsUsed() })!,
   ]
 
   const dayOf = (a: Article) => String(new Date(a.publishedAtISO).getDate()).padStart(2, '0')
@@ -539,7 +551,7 @@ const StatsBar: FC = () => (
 
 // ══════════════════════════════════════ FEATURE FULL — WIETRZYCHOWICE
 const FeatureWietrzychowice: FC = () => {
-  const a = findArticleV4('wietrzychowice-nowe-odkrycia-archeologiczne')!
+  const a = slot('wietrzychowice-nowe-odkrycia-archeologiczne', { category: 'historia', used: slotsUsed() })!
   return (
     <section class="feature-full reveal">
       <a href={articleUrl(a)}>
@@ -559,11 +571,11 @@ const FeatureWietrzychowice: FC = () => {
 
 // ═════════════════════════════════════════════════════════════ KULTURA
 const KulturaSection: FC = () => {
-  const dni = findArticleV4('dni-izbicy-2026-program')!
+  const dni = slot('dni-izbicy-2026-program', { category: 'kultura', used: slotsUsed() })!
   const cards = [
-    findArticleV4('wojciech-tochman-spotkanie-autorskie')!,
-    findArticleV4('pielgrzymka-blenna-7-czerwca')!,
-    findArticleV4('kgw-pasieczanki-warsztaty-chleba')!,
+    slot('wojciech-tochman-spotkanie-autorskie', { category: 'kultura', used: slotsUsed() })!,
+    slot('pielgrzymka-blenna-7-czerwca', { category: 'kultura', used: slotsUsed() })!,
+    slot('kgw-pasieczanki-warsztaty-chleba', { category: 'kultura', used: slotsUsed() })!,
   ]
   const subOf = (a: Article) => {
     const c = findCategory(a.category)!
@@ -618,9 +630,9 @@ const KulturaSection: FC = () => {
 // ══════════════════════════════════════════════════════════════ LUDZIE
 const LudzieSection: FC = () => {
   const people = [
-    { a: findArticleV4('marek-dorabiala-5-pytan')!, name: 'Marek Dorabiała', role: 'Burmistrz gminy Izbica Kujawska', badge: 'Wywiad · 5 pytań', quote: '„Termomodernizacja szkół to nie luksus — to inwestycja w przyszłość naszych dzieci i w portfele rodziców. Każda zaoszczędzona złotówka wróci do mieszkańców.”' },
-    { a: findArticleV4('jadwiga-kowalska-38-lat-w-bibliotece')!, name: 'Jadwiga Kowalska', role: 'Bibliotekarka · 38 lat stażu', badge: 'Sylwetka · Wspomnienia', quote: '„Przez 38 lat pracowałam w jednej bibliotece, ale Izbica zmieniała się każdego dnia. Każda książka znajduje swojego czytelnika.”' },
-    { a: findArticleV4('adam-adamiak-kujawianka-to-moj-dom')!, name: 'Adam Adamiak', role: 'Napastnik Kujawianki · 14 goli', badge: 'Sukcesy · Sport', quote: '„Kujawianka to mój dom. Mam oferty z wyższych lig, ale Izbica wygrywa za każdym razem. Tu są moi ludzie.”' },
+    { a: slot('marek-dorabiala-5-pytan', { category: 'ludzie', used: slotsUsed() })!, name: 'Marek Dorabiała', role: 'Burmistrz gminy Izbica Kujawska', badge: 'Wywiad · 5 pytań', quote: '„Termomodernizacja szkół to nie luksus — to inwestycja w przyszłość naszych dzieci i w portfele rodziców. Każda zaoszczędzona złotówka wróci do mieszkańców.”' },
+    { a: slot('jadwiga-kowalska-38-lat-w-bibliotece', { category: 'ludzie', used: slotsUsed() })!, name: 'Jadwiga Kowalska', role: 'Bibliotekarka · 38 lat stażu', badge: 'Sylwetka · Wspomnienia', quote: '„Przez 38 lat pracowałam w jednej bibliotece, ale Izbica zmieniała się każdego dnia. Każda książka znajduje swojego czytelnika.”' },
+    { a: slot('adam-adamiak-kujawianka-to-moj-dom', { category: 'ludzie', used: slotsUsed() })!, name: 'Adam Adamiak', role: 'Napastnik Kujawianki · 14 goli', badge: 'Sukcesy · Sport', quote: '„Kujawianka to mój dom. Mam oferty z wyższych lig, ale Izbica wygrywa za każdym razem. Tu są moi ludzie.”' },
   ]
 
   return (
@@ -794,8 +806,8 @@ const SolectwaSection: FC = () => (
 
 // ═════════════════════════════════════════════════════════ MULTIMEDIA
 const MultimediaSection: FC = () => {
-  const video = findArticleV4('wideo-dni-izbicy-2026-zapowiedz')!
-  const pod = findArticleV4('podcast-23-burmistrz-termomodernizacja')!
+  const video = slot('wideo-dni-izbicy-2026-zapowiedz', { category: 'multimedia', used: slotsUsed() })!
+  const pod = slot('podcast-23-burmistrz-termomodernizacja', { category: 'multimedia', used: slotsUsed() })!
   const podEps = byType('audio').filter((a) => a.slug !== pod.slug).slice(0, 3)
   const gal = findGallery('dni-izbicy-2025')!
 

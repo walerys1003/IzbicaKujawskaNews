@@ -5,6 +5,7 @@
 // ============================================================================
 
 import type { Article, Author, Gallery, MediaAsset } from './content-types'
+import { snapshot } from './content-source'
 
 const IMG = '/static/img/v4'
 
@@ -1276,14 +1277,74 @@ export const MEDIA_LIBRARY: MediaAsset[] = [
 
 // ════════════════════════════════════════════════════════════════════════════
 // QUERY API
+//
+// Etap D4: zbior artykulow pochodzi z D1 (migawka zbudowana raz na zadanie
+// w content-source.ts), a nie z tablicy ARTICLES_V4. Sygnatury pozostaja
+// synchroniczne, bo hono/jsx renderuje synchronicznie — komponenty wywoluja
+// te funkcje wprost w cialach JSX.
+//
+// ARTICLES_V4 pozostaje jako tresc awaryjna wylacznie na wypadek, gdy baza
+// nie odpowiada albo brakuje wiazania DB. Portal gminy pokazujacy archiwalna
+// szate jest znosniejszy niz portal pokazujacy pusta strone, ale mieszanie
+// obu zrodel byloby gorsze od kazdego z nich osobno: czytelnik widzialby
+// obok siebie material redakcyjny i tresc demonstracyjna, bez sposobu na
+// odroznienie ich.
 // ════════════════════════════════════════════════════════════════════════════
-const published = () => ARTICLES_V4.filter((a) => a.status === 'published')
+
+/**
+ * Zrodlo prawdy dla wszystkich akcesorow. Gdy migawka z D1 jest niepusta —
+ * wygrywa. Pusta migawka oznacza albo awarie bazy, albo brak wiazania; wtedy
+ * schodzimy do tresci statycznej.
+ */
+const pool = (): Article[] => {
+  const snap = snapshot()
+  return snap.articles.length > 0 ? snap.articles : ARTICLES_V4
+}
+
+const published = () => pool().filter((a) => a.status === 'published')
 
 const byDateDesc = (a: Article, b: Article) =>
   new Date(b.publishedAtISO).getTime() - new Date(a.publishedAtISO).getTime()
 
 export function findArticleV4(slug: string): Article | undefined {
+  const snap = snapshot()
+  // Mapa po slugu jest budowana raz przy wczytaniu migawki — trasa artykulu
+  // jest najczestszym zapytaniem portalu, wiec nie skanujemy tablicy.
+  const fromDb = snap.bySlug.get(slug)
+  if (fromDb) return fromDb
+  if (snap.articles.length > 0) return undefined
   return ARTICLES_V4.find((a) => a.slug === slug)
+}
+
+/**
+ * Artykul dla stalego slotu ukladu strony glownej (etap D4).
+ *
+ * Strona glowna odwzorowuje szate 1:1, wiec kazde miejsce w ukladzie bylo
+ * przypisane do konkretnego slugu z tresci demonstracyjnej i asercji `!`.
+ * Po przejsciu na D1 te slugi nie istnieja — asercja dawala `undefined`, a
+ * pierwsze odwolanie do pola konczylo sie bialym 500 dla calego portalu.
+ *
+ * Slot zachowuje preferowany slug (gdy redakcja utworzy material o tej
+ * nazwie, wroci na swoje miejsce), a w przeciwnym razie bierze najswiezszy
+ * niewykorzystany artykul — najpierw z podanej kategorii, potem z dowolnej.
+ * `used` zapobiega pokazaniu tego samego materialu w dwoch kaflach.
+ */
+export function slot(preferredSlug: string, opts: { category?: string; used?: Set<string> } = {}): Article | undefined {
+  const used = opts.used
+  const exact = findArticleV4(preferredSlug)
+  if (exact && exact.status === 'published' && !used?.has(exact.slug)) {
+    used?.add(exact.slug)
+    return exact
+  }
+
+  const all = published().sort(byDateDesc)
+  const free = (list: Article[]) => list.find((a) => !used?.has(a.slug))
+
+  const candidate =
+    (opts.category ? free(all.filter((a) => a.category === opts.category)) : undefined) ?? free(all)
+
+  if (candidate) used?.add(candidate.slug)
+  return candidate
 }
 
 export function byCategory(catSlug: string): Article[] {
