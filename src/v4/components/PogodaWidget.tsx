@@ -80,35 +80,27 @@ const IkonaPogody: FC<{ ikona: string; rozmiar?: number }> = ({ ikona, rozmiar =
 
 // ───────────────────────────────────────── pasek górny (kompaktowy)
 
-/**
- * Wersja do paska górnego. Zastępuje napis „18°C · Izbica Kujawska"
- * wpisany na stałe w `Layout.tsx`.
+/*
+ * USUNIĘTO komponent `PogodaPasek` (etap I10).
  *
- * Przy braku danych zwraca `null` — pasek jest wtedy węższy, ale nie
- * pokazuje nieprawdy. Świadomie nie ma tu tekstu „brak danych": pasek
- * jest elementem dekoracyjnym, komunikat o awarii dostawcy pogody
- * należy do podstrony /pogoda, a nie do nagłówka każdej strony.
+ * Renderował `<span id="topbar-pogoda">` — czyli DOKŁADNIE ten sam
+ * identyfikator, który `Topbar` w `Layout.tsx:89` już wystawia i który
+ * `izbica-v4-pogoda.js:27` odnajduje przez `getElementById`. Komponent
+ * nie był nigdzie importowany, więc duplikat nie występował w wysyłanym
+ * HTML-u — ale każde jego przyszłe użycie dałoby dwa elementy o tym samym
+ * `id`. Skutek: `getElementById` zwraca pierwszy z nich, więc jeden pasek
+ * aktualizowałby się, a drugi zostałby z pustą treścią na zawsze; do tego
+ * dokument przestaje być poprawny (WCAG 4.1.1) i czytnik ekranu ogłasza
+ * dwa różne obszary `aria-live` o tej samej roli.
+ *
+ * Pasek górny jest wypełniany po stronie przeglądarki (`data-endpoint`),
+ * bo pokazuje jedną liczbę i nie przesuwa układu; karta pogodowa na
+ * stronie głównej jest renderowana serwerowo, bo zajmuje ok. 200 px
+ * i jej doładowanie przesuwałoby treść. Dwie ścieżki są tu celowe —
+ * ale wystarcza po jednym komponencie na każdą.
+ *
+ * `kierunekNaSkrot` pozostaje w użyciu w `PogodaKarta` poniżej.
  */
-export const PogodaPasek: FC<{ dane: DanePogody | null }> = ({ dane }) => {
-  if (!dane?.teraz) return null
-  const t = dane.teraz
-  const nieswieze = dane.nieswieze === true
-  return (
-    <span
-      class="topbar-weather"
-      id="topbar-pogoda"
-      title={
-        nieswieze
-          ? `${t.opis} · dane z pamięci podręcznej (${dane.wiekMinut ?? '?'} min)`
-          : `${t.opis} · wiatr ${t.wiatr} km/h ${kierunekNaSkrot(t.kierunekWiatru)} · źródło: ${dane.zrodlo}`
-      }
-    >
-      <IkonaPogody ikona={t.ikona} rozmiar={16} />{' '}
-      {t.temperatura}°C · {dane.lokalizacja}
-      {nieswieze ? <span class="pogoda-stara" aria-label="dane nieaktualne"> ·</span> : null}
-    </span>
-  )
-}
 
 // ──────────────────────────────────────────── karta na stronie głównej
 

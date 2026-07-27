@@ -683,3 +683,16 @@
   .zgoda-przyciski{ display:grid; grid-template-columns:1fr 1fr; }
   .zgoda-btn{ width:100%; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   KARTA POGODOWA W KOLUMNIE BOCZNEJ HERO (I10)
+   ═══════════════════════════════════════════════════════════════════
+   Karta jest tym samym komponentem, co na podstronie /pogoda — różni się
+   tylko szerokością kontenera. Dlatego NIE nadpisujemy tu jej wnętrza:
+   jedna definicja wyglądu, dwa miejsca użycia. Gdyby sidebar miał własne
+   reguły dla .pogoda-karta, każda przyszła zmiana wymagałaby poprawki
+   w dwóch miejscach i szybko by się rozjechały. */
+/* Odstęp od listy „Najważniejsze dziś" musi być widoczny, bo inaczej
+   karta czyta się jako kolejny element tej listy. Linia u góry oddziela
+   dwa różne rodzaje treści: wiadomości i dane użytkowe. */
+.hero-side-pogoda{ margin-top:14px; padding-top:14px; border-top:2px solid var(--rule); }

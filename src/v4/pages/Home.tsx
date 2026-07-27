@@ -20,6 +20,7 @@ import {
 import { snapshot } from '../content-source'
 import { articleUrl, type Article } from '../content-types'
 import { SectionHeader } from '../components/Layout'
+import { PogodaKarta, type DanePogody, type DanePowietrza } from '../components/PogodaWidget'
 
 /**
  * Rejestr slugow zuzytych przez slot() w biezacym zadaniu (etap D4).
@@ -58,7 +59,27 @@ const shortDate = (a: Article) => {
 }
 
 // ════════════════════════════════════════════════════════════ HERO
-const Hero: FC = () => {
+/**
+ * Etap I10 — karta pogodowa w kolumnie bocznej hero.
+ *
+ * Dlaczego pogoda trafia TUTAJ, a nie na koniec strony: prognoza jest
+ * treścią użytkową o krótkim terminie przydatności — czytelnik sprawdza
+ * ją przy wejściu, nie po przeczytaniu wszystkich działów. Kolumna
+ * boczna hero jest widoczna bez przewijania na komputerze i zaraz po
+ * pierwszym artykule na telefonie.
+ *
+ * Dlaczego POD listą „Najważniejsze dziś", a nie nad nią: portal jest
+ * informacyjny, więc pierwszeństwo na stronie głównej mają wiadomości.
+ * Widget pogodowy nad nagłówkiem odsuwałby je poniżej krawędzi ekranu.
+ *
+ * `dane === null` obsługuje sama `PogodaKarta` — pokazuje wtedy krótkie
+ * wyjaśnienie zamiast temperatury wpisanej „na zapas". Tutaj nie
+ * dublujemy tej logiki.
+ */
+const Hero: FC<{ pogoda?: DanePogody | null; powietrze?: DanePowietrza | null }> = ({
+  pogoda,
+  powietrze,
+}) => {
   const main = slot('remont-ulicy-koscielnej-zakonczony', { category: 'wiadomosci', used: slotsUsed() })!
   const side = [
     slot('sesja-rady-miejskiej-budzet-remontowy', { category: 'samorzad', used: slotsUsed() })!,
@@ -105,6 +126,20 @@ const Hero: FC = () => {
               )
             })}
           </div>
+
+          {/*
+            Karta pogodowa renderowana tylko wtedy, gdy trasa dostarczyła
+            dane. Gdy `pogoda` jest `undefined` (np. inny widok użyje
+            komponentu Hero bez pobierania prognozy), nie pokazujemy nawet
+            komunikatu o awarii — brak danych to nie to samo co awaria
+            dostawcy. `null` oznacza „próbowaliśmy i się nie udało" i wtedy
+            PogodaKarta wyjaśnia to czytelnikowi.
+          */}
+          {pogoda !== undefined ? (
+            <div class="hero-side-pogoda">
+              <PogodaKarta dane={pogoda} powietrze={powietrze} />
+            </div>
+          ) : null}
         </aside>
       </div>
     </div>
@@ -1048,9 +1083,12 @@ const OgloszeniaSection: FC = () => (
 )
 
 // ════════════════════════════════════════════════════════════ EXPORT
-export const HomeV4: FC = () => (
+export const HomeV4: FC<{
+  pogoda?: DanePogody | null
+  powietrze?: DanePowietrza | null
+}> = ({ pogoda, powietrze }) => (
   <>
-    <Hero />
+    <Hero pogoda={pogoda} powietrze={powietrze} />
     <NaSygnaleSection />
     <div class="page">
       <WiadomosciSection />

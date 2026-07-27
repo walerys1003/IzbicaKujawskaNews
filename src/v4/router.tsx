@@ -23,6 +23,7 @@ import { MapaPageV4, type PunktMapy } from './pages/Mapa'
 // fragmentem z zaznaczonym trafieniem, czego karta ListCard nie obsługuje.
 import { SearchResultsV4 } from './pages/SearchResults'
 import { szukaj, podpowiedzi } from '../lib/search/search-service'
+import { pogodaZPamieci, powietrzeZPamieci } from '../lib/integrations/pogoda-cache'
 import {
   CATEGORIES,
   SOLECTWA,
@@ -77,10 +78,56 @@ const pageParam = (v: string | undefined) => {
 const slice = <T,>(arr: T[], page: number) => arr.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
 // ════════════════════════════════════════════════════ STRONA GŁÓWNA
-app.get('/', (c) =>
-  c.render(
+/**
+ * Etap I10 — strona główna z kartą pogodową w kolumnie bocznej.
+ *
+ * ─────────────────────────────────────────────────────────────────────
+ * DLACZEGO TRASA JEST ASYNCHRONICZNA, A NIE UZUPEŁNIANA W PRZEGLĄDARCE
+ * ─────────────────────────────────────────────────────────────────────
+ * Rozważaliśmy dociąganie prognozy skryptem po wczytaniu strony — trasa
+ * pozostałaby wtedy synchroniczna. Odrzucone z trzech powodów:
+ *
+ * 1. Przeskok układu (CLS). Karta pogodowa ma ok. 200 px wysokości i stoi
+ *    NAD dolną częścią kolumny bocznej. Wstawiona po wczytaniu zepchnęłaby
+ *    treść w dół w momencie, gdy czytelnik już zaczął czytać. CLS to
+ *    mierzony wskaźnik Core Web Vitals (etap F4) i jednocześnie realna
+ *    uciążliwość: na telefonie tekst ucieka spod palca.
+ *
+ * 2. Prognoza bez JavaScriptu w ogóle by się nie pokazała. Portal gminny
+ *    czyta się też na starszych telefonach i przez czytniki ekranu,
+ *    a strona główna nie powinna wymagać skryptu do pokazania treści.
+ *
+ * 3. Koszt jest zerowy. Dane leżą już w KV, więc renderowanie serwerowe
+ *    to jedno odczytanie KV (~5 ms) w tym samym Workerze — a nie
+ *    dodatkowe żądanie HTTP z przeglądarki. Wariant kliencki byłby
+ *    WOLNIEJSZY, nie szybszy.
+ *
+ * To ten sam wzorzec, co na podstronie `/pogoda` (info-routes.tsx) —
+ * świadomie, żeby prognoza pochodziła z jednego źródła i nie rozjeżdżała
+ * się między stroną główną a podstroną.
+ *
+ * ─────────────────────────────────────────────────────────────────────
+ * DLACZEGO BRAK POGODY NIE MOŻE ZEPSUĆ STRONY GŁÓWNEJ
+ * ─────────────────────────────────────────────────────────────────────
+ * `pogodaZPamieci` i `powietrzeZPamieci` nigdy nie rzucają wyjątkiem —
+ * przy pustym KV lub milczącym dostawcy zwracają `{ dane: null }`.
+ * Strona główna zostaje wtedy w całości, tylko bez temperatury.
+ * Świadomie NIE ustawiamy tu statusu 503 (inaczej niż na `/pogoda`):
+ * na podstronie pogodowej brak prognozy oznacza, że strona nie spełniła
+ * swojego zadania, ale strona główna portalu informacyjnego jest sprawna
+ * także bez pogody — zwrócenie 503 zniknęłoby ją z wyników wyszukiwania
+ * z powodu awarii u zewnętrznego dostawcy.
+ */
+app.get('/', async (c) => {
+  const env = c.env as { WEATHER_KV?: unknown; AIR_KV?: unknown } | undefined
+  const [pogoda, powietrze] = await Promise.all([
+    pogodaZPamieci(env?.WEATHER_KV),
+    powietrzeZPamieci(env?.AIR_KV ?? env?.WEATHER_KV),
+  ])
+
+  return c.render(
     <Shell>
-      <HomeV4 />
+      <HomeV4 pogoda={pogoda.dane} powietrze={powietrze.dane} />
     </Shell>,
     {
       title: 'Izbica24.pl — Niezależny portal informacyjny gminy Izbica Kujawska',
@@ -88,7 +135,7 @@ app.get('/', (c) =>
         'Aktualne wiadomości z Izbicy Kujawskiej. Samorząd, Kujawianka, kultura, historia, sołectwa.',
     }
   )
-)
+})
 
 // ════════════════════════════════════════════════════════ WYSZUKIWANIE
 /**
