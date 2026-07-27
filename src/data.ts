@@ -30,7 +30,7 @@ export const HERO_MAIN: Article = {
   lead: "Burmistrz Marek Dorabiała poinformował o podpisaniu umowy z firmą HYDROBUDOWA na modernizację 8,4 km sieci wodociągowej w sołectwach Sadłno, Bierzyn i Pasieka. Wartość: 6,7 mln zł, z czego 4,2 mln to dofinansowanie z Rządowego Funduszu Polski Ład.",
   category: "Wiadomości",
   subcategory: "Inwestycje",
-  image: "https://images.unsplash.com/photo-1565008447742-97f6f38c985c?w=1200&h=675&fit=crop",
+  image: "/static/img/v4/03-sesja-rady-miejskiej.jpg",
   author: "Redakcja izbica24.pl",
   time: "2 godziny temu",
 }
@@ -42,7 +42,7 @@ export const HERO_SECONDARY: Article[] = [
     lead: "",
     category: "Samorząd",
     subcategory: "Rada Miejska",
-    image: "https://images.unsplash.com/photo-1573164713988-8665fc963095?w=160&h=120&fit=crop",
+    image: "/static/img/v4/03-sesja-rady-miejskiej.jpg",
     author: "Redakcja",
     time: "5 godz. temu",
   },
@@ -52,7 +52,7 @@ export const HERO_SECONDARY: Article[] = [
     lead: "",
     category: "Kujawianka",
     subcategory: "Mecze",
-    image: "https://images.unsplash.com/photo-1551958219-acbc608c6377?w=160&h=120&fit=crop",
+    image: "/static/img/v4/04-kujawianka-celebracja.jpg",
     author: "Sport",
     time: "wczoraj",
   },
@@ -62,7 +62,7 @@ export const HERO_SECONDARY: Article[] = [
     lead: "",
     category: "Kultura",
     subcategory: "MGCK",
-    image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=160&h=120&fit=crop",
+    image: "/static/img/v4/04-kujawianka-celebracja.jpg",
     author: "Redakcja",
     time: "wczoraj",
   },
@@ -72,7 +72,7 @@ export const HERO_SECONDARY: Article[] = [
     lead: "",
     category: "Historia",
     subcategory: "Wietrzychowice",
-    image: "https://images.unsplash.com/photo-1568663917787-95c6daa14b30?w=160&h=120&fit=crop",
+    image: "/static/img/kultura/01-koncert.jpg",
     author: "Redakcja",
     time: "23 maja",
   },
@@ -94,7 +94,7 @@ export const NEWS_MAIN: Article = {
   lead: "Po sześciu miesiącach prac modernizacyjnych ulica Kościelna w centrum Izbicy została w pełni przebudowana. Nowa nawierzchnia, chodniki, oświetlenie LED i odwodnienie kosztowały gminę 2,8 mln zł. Wykonawca, firma DROGBUD ze Włocławka, oddała inwestycję dwa tygodnie przed terminem umownym.",
   category: "Wiadomości",
   subcategory: "Inwestycje",
-  image: "https://images.unsplash.com/photo-1545987796-200677ee1011?w=800&h=600&fit=crop",
+  image: "/static/img/inwestycje/01-droga.jpg",
   author: "Anna Kowalska",
   time: "Dziś, 09:30",
   tags: ["Inwestycje", "Drogi", "Centrum"],
@@ -107,7 +107,7 @@ export const NEWS_CARDS: Article[] = [
     lead: "",
     category: "Wiadomości",
     subcategory: "Edukacja",
-    image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=225&fit=crop",
+    image: "/static/img/edukacja/01-matura.jpg",
     author: "Maria S.",
     time: "Dziś, 08:00",
   },
@@ -117,7 +117,7 @@ export const NEWS_CARDS: Article[] = [
     lead: "",
     category: "Wiadomości",
     subcategory: "Zdrowie",
-    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=225&fit=crop",
+    image: "/static/img/edukacja/02-przedszkole.jpg",
     author: "Redakcja",
     time: "wczoraj",
   },
@@ -127,7 +127,7 @@ export const NEWS_CARDS: Article[] = [
     lead: "",
     category: "Wiadomości",
     subcategory: "Społeczne",
-    image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400&h=225&fit=crop",
+    image: "/static/img/zdrowie/01-apteka.jpg",
     author: "K. Nowak",
     time: "wczoraj",
   },
@@ -137,7 +137,7 @@ export const NEWS_CARDS: Article[] = [
     lead: "",
     category: "Wiadomości",
     subcategory: "Komunikaty",
-    image: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=400&h=225&fit=crop",
+    image: "/static/img/v4/07-rolnictwo-rzepak.jpg",
     author: "Komunikat",
     time: "2 dni temu",
   },
@@ -147,7 +147,7 @@ export const NEWS_CARDS: Article[] = [
     lead: "",
     category: "Wiadomości",
     subcategory: "Środowisko",
-    image: "https://images.unsplash.com/photo-1559825481-12a05cc00344?w=400&h=225&fit=crop",
+    image: "/static/img/srodowisko/doplaty-obszarowe.jpg",
     author: "Redakcja",
     time: "3 dni temu",
   },
@@ -157,7 +157,7 @@ export const NEWS_CARDS: Article[] = [
     lead: "",
     category: "Wiadomości",
     subcategory: "Rolnictwo",
-    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=225&fit=crop",
+    image: "/static/img/srodowisko/ekosystemy.jpg",
     author: "Redakcja",
     time: "3 dni temu",
   },
@@ -206,8 +206,8 @@ export const KUJAWIANKA = {
     { name: "T. Wojciechowski", goals: 9 },
   ],
   articles: [
-    { title: "Trener Tomasz W.: 'Trzeci tercjał był nasz' — wywiad pomeczowy", time: "wczoraj", img: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=160&h=110&fit=crop" },
-    { title: "Junior Kujawianki Jakub Nowak powołany do reprezentacji wojewódzkiej U17", time: "3 dni temu", img: "https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=160&h=110&fit=crop" },
+    { title: "Trener Tomasz W.: 'Trzeci tercjał był nasz' — wywiad pomeczowy", time: "wczoraj", img: "/static/img/v4/04-kujawianka-celebracja.jpg" },
+    { title: "Junior Kujawianki Jakub Nowak powołany do reprezentacji wojewódzkiej U17", time: "3 dni temu", img: "/static/img/v4/04-kujawianka-celebracja.jpg" },
   ],
 }
 
@@ -217,21 +217,21 @@ export const SAMORZAD = [
     title: "Burmistrz Marek Dorabiała ogłasza konkurs grantowy dla NGO — pula 80 tys. zł",
     lead: "Termin składania wniosków: 15 czerwca 2026. Dofinansowanie do 8 tys. zł na projekt.",
     cat: "Urząd Miejski",
-    img: "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=200&h=150&fit=crop",
+    img: "/static/img/v4/03-sesja-rady-miejskiej.jpg",
     time: "Dziś, 11:00",
   },
   {
     title: "Komisja Rewizyjna Rady Miejskiej rozpoczyna kontrolę gospodarki odpadami",
     lead: "Przewodniczący Komisji R. Janik zapowiedział audyt umów z ZGKiW.",
     cat: "Rada Miejska",
-    img: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&h=150&fit=crop",
+    img: "/static/img/nasygnale/awaria-1.jpg",
     time: "wczoraj",
   },
   {
     title: "Fundusz sołecki 2026 — wszystkie 34 sołectwa przedstawiły plany inwestycyjne",
     lead: "Łączna pula: 487 tys. zł. Największe sołectwo Sadłno otrzyma 24,8 tys. zł na remont świetlicy wiejskiej.",
     cat: "Sołectwa",
-    img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=200&h=150&fit=crop",
+    img: "/static/img/v4/03-sesja-rady-miejskiej.jpg",
     time: "2 dni temu",
   },
 ]
@@ -279,7 +279,7 @@ export const PRZEGLAD_MEDIOW = [
 export const KULTURA_MAIN = {
   title: "Dni Izbicy 2026 — program imprez gotowy. MGCK zaprasza od 12 do 14 lipca",
   lead: "Trzydniowe święto miasta z koncertami, jarmarkiem, biegiem ulicznym i pokazem ognia. Gwiazda wieczoru: zespół Lady Pank.",
-  img: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&h=400&fit=crop",
+  img: "/static/img/kultura/02-mgck.jpg",
   time: "Dziś",
 }
 
@@ -292,7 +292,7 @@ export const KULTURA_EVENTS = [
 export const HISTORIA_MAIN = {
   title: "25 maja 1940 — pierwsza deportacja społeczności żydowskiej z Izbicy",
   lead: "Tego dnia, 86 lat temu, niemieckie władze okupacyjne rozpoczęły masową deportację ludności żydowskiej z izbickiego getta. Spośród ok. 3 600 Żydów mieszkających w mieście, ocalały zaledwie pojedyncze osoby.",
-  img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=300&fit=crop&sat=-100",
+  img: "/static/img/historia/01-kurhany.jpg",
 }
 
 export const HISTORIA_ARCHIWUM = [
@@ -306,25 +306,25 @@ export const LUDZIE = [
     name: "Tadeusz Pawlak",
     role: "strażak OSP Izbica, weteran 45 lat służby",
     title: '„Kiedy zaczynałem w 1981, mieliśmy starą Star 25" — wspomnienia weterana OSP',
-    img: "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=240&h=240&fit=crop",
+    img: "/static/img/nasygnale/interwencja-1.jpg",
   },
   {
     name: "Halina Kowalska",
     role: "sołtys Sadłna, prezes KGW",
     title: '„Sołtys to nie funkcja — to powołanie" — rozmowa z liderką największego sołectwa',
-    img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=240&h=240&fit=crop",
+    img: "/static/img/nasygnale/pozar-1.jpg",
   },
   {
     name: "Krzysztof Wojtkowski",
     role: "nauczyciel matematyki, SP Sarnowo",
     title: '„Moi uczniowie wygrywają olimpiady — bo wierzę w nich" — sylwetka pedagoga',
-    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&h=240&fit=crop",
+    img: "/static/img/edukacja/03-sp1.jpg",
   },
   {
     name: "Maria Witkowska",
     role: "bibliotekarka, 30 lat w bibliotece",
     title: '„Książka zawsze znajdzie swojego czytelnika" — pani Maria odchodzi na emeryturę',
-    img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=240&h=240&fit=crop",
+    img: "/static/img/kultura/03-biblioteka.jpg",
   },
 ]
 
@@ -344,7 +344,7 @@ export const ZYCIE = [
 export const DZIS_W_IZBICY = {
   title: "Maj na Kujawach: kiedy zacząć siew kukurydzy i jak chronić uprawy przed przymrozkami",
   lead: "Tradycyjnie w gminie Izbica Kujawska siew kukurydzy rozpoczyna się około 15 maja, gdy gleba osiąga 10°C na głębokości 5 cm. Aktualne warunki pogodowe sprzyjają — temperatura nocna powyżej 8°C, gleba dobrze ogrzana po ciepłej majówce. Przypominamy jednak, że historyczne dane stacji meteo Włocławek pokazują przymrozki w drugiej dekadzie maja co 3-4 lata...",
-  img: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&h=400&fit=crop",
+  img: "/static/img/wiadomosci/01-koscielna.jpg",
   author: "Redakcja izbica24.pl ✦ AI",
 }
 
@@ -377,12 +377,12 @@ export const OGLOSZENIA = [
 
 // MULTIMEDIA — placeholder
 export const MULTIMEDIA = {
-  video: { title: 'Reportaż z Dożynek Gminnych 2025 — pełna relacja MGCK', cat: "Reportaże", thumb: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&h=400&fit=crop" },
+  video: { title: 'Reportaż z Dożynek Gminnych 2025 — pełna relacja MGCK', cat: "Reportaże", thumb: "/static/img/kultura/04-kgw.jpg" },
   galleries: [
-    { title: "Dni Izbicy 2025", count: 84, img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=300&fit=crop" },
-    { title: "Sezon Kujawianki", count: 156, img: "https://images.unsplash.com/photo-1551958219-acbc608c6377?w=400&h=300&fit=crop" },
-    { title: "Megality Wietrzychowice", count: 47, img: "https://images.unsplash.com/photo-1568663917787-95c6daa14b30?w=400&h=300&fit=crop" },
-    { title: "Strażackie zawody powiatowe", count: 92, img: "https://images.unsplash.com/photo-1582550945154-aaf7ea2c4c80?w=400&h=300&fit=crop" },
+    { title: "Dni Izbicy 2025", count: 84, img: "/static/img/kultura/05-festyn.jpg" },
+    { title: "Sezon Kujawianki", count: 156, img: "/static/img/kultura/01-koncert.jpg" },
+    { title: "Megality Wietrzychowice", count: 47, img: "/static/img/historia/02-stare-miasto.jpg" },
+    { title: "Strażackie zawody powiatowe", count: 92, img: "/static/img/nasygnale/wypadek-1.jpg" },
   ],
   podcast: { title: 'Głos Izbicy — odcinek 47: „Sołtysi opowiadają"', duration: "23:14" },
 }

@@ -22,17 +22,17 @@ export const ARTICLES: ArticleData[] = [
     ],
     author: 'Anna Kowalska',
     authorRole: 'Redaktor naczelna',
-    authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop',
+    authorAvatar: '/static/img/v4/03-sesja-rady-miejskiej.jpg',
     publishedAt: '25 maja 2026, 09:30',
     updatedAt: '25 maja 2026, 11:15',
     readingMinutes: 4,
-    heroImage: 'https://images.unsplash.com/photo-1545987796-200677ee1011?w=1200&h=675&fit=crop',
+    heroImage: '/static/img/inwestycje/02-kanalizacja.jpg',
     heroCaption: 'Nowa nawierzchnia ulicy Kościelnej w centrum Izbicy Kujawskiej · fot. UMiG',
     tags: ['Inwestycje', 'Drogi', 'Centrum', 'DROGBUD', 'Burmistrz'],
     related: [
-      { slug: 'wodociag-sadlno', title: 'ZGKiW podpisał umowę na modernizację sieci wodociągowej', category: 'inwestycje', thumb: 'https://images.unsplash.com/photo-1581094271901-8022df4466f9?w=400&h=225&fit=crop' },
-      { slug: 'pge-wylaczenia-maj', title: 'PGE — planowane wyłączenia prądu 28 maja', category: 'komunikaty', thumb: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=400&h=225&fit=crop' },
-      { slug: 'kujawianka-wlocłavia', title: 'Kujawianka wygrywa 3:1 z Włocłavią', category: 'sport', thumb: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?w=400&h=225&fit=crop' },
+      { slug: 'wodociag-sadlno', title: 'ZGKiW podpisał umowę na modernizację sieci wodociągowej', category: 'inwestycje', thumb: '/static/img/v4/03-sesja-rady-miejskiej.jpg' },
+      { slug: 'pge-wylaczenia-maj', title: 'PGE — planowane wyłączenia prądu 28 maja', category: 'komunikaty', thumb: '/static/img/v4/03-sesja-rady-miejskiej.jpg' },
+      { slug: 'kujawianka-wlocłavia', title: 'Kujawianka wygrywa 3:1 z Włocłavią', category: 'sport', thumb: '/static/img/v4/04-kujawianka-celebracja.jpg' },
     ],
   },
   {
@@ -50,7 +50,7 @@ export const ARTICLES: ArticleData[] = [
     author: 'Redakcja izbica24.pl',
     publishedAt: '24 maja 2026, 14:20',
     readingMinutes: 3,
-    heroImage: 'https://images.unsplash.com/photo-1581094271901-8022df4466f9?w=1200&h=675&fit=crop',
+    heroImage: '/static/img/inwestycje/03-swietlica.jpg',
     tags: ['Inwestycje', 'ZGKiW', 'Wodociągi', 'Polski Ład'],
   },
   {
@@ -67,7 +67,7 @@ export const ARTICLES: ArticleData[] = [
     author: 'Marta S.',
     publishedAt: '23 maja 2026, 12:00',
     readingMinutes: 5,
-    heroImage: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=1200&h=675&fit=crop',
+    heroImage: '/static/img/v4/03-sesja-rady-miejskiej.jpg',
     tags: ['Rada Miejska', 'Budżet', 'Fundusz sołecki'],
   },
   {
@@ -85,7 +85,7 @@ export const ARTICLES: ArticleData[] = [
     authorRole: 'Korespondent sportowy',
     publishedAt: '24 maja 2026, 19:45',
     readingMinutes: 3,
-    heroImage: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?w=1200&h=675&fit=crop',
+    heroImage: '/static/img/v4/04-kujawianka-celebracja.jpg',
     tags: ['Kujawianka', 'Mecz', 'Klasa okręgowa', 'Sport'],
   },
   {
@@ -102,7 +102,7 @@ export const ARTICLES: ArticleData[] = [
     author: 'Krystyna Nowak',
     publishedAt: '24 maja 2026, 10:00',
     readingMinutes: 2,
-    heroImage: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=675&fit=crop',
+    heroImage: '/static/img/kultura/02-mgck.jpg',
     tags: ['MGCK', 'Kultura', 'Lato', 'Wydarzenia'],
   },
   {
@@ -120,7 +120,7 @@ export const ARTICLES: ArticleData[] = [
     authorRole: 'Historyk regionalny',
     publishedAt: '23 maja 2026, 16:30',
     readingMinutes: 4,
-    heroImage: 'https://images.unsplash.com/photo-1568663917787-95c6daa14b30?w=1200&h=675&fit=crop',
+    heroImage: '/static/img/historia/03-spolecznosc.jpg',
     tags: ['Wietrzychowice', 'Historia', 'Turystyka', 'Archeologia'],
   },
   {
@@ -135,7 +135,7 @@ export const ARTICLES: ArticleData[] = [
     author: 'Redakcja izbica24.pl',
     publishedAt: '24 maja 2026, 11:00',
     readingMinutes: 2,
-    heroImage: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1200&h=675&fit=crop',
+    heroImage: '/static/img/zdrowie/02-spzoz.jpg',
     tags: ['Zdrowie', 'SPZOZ', 'Pediatra'],
   },
   {
@@ -150,7 +150,7 @@ export const ARTICLES: ArticleData[] = [
     author: 'K. Nowak',
     publishedAt: '24 maja 2026, 13:30',
     readingMinutes: 2,
-    heroImage: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1200&h=675&fit=crop',
+    heroImage: '/static/img/v4/04-kujawianka-celebracja.jpg',
     tags: ['Caritas', 'MGOPS', 'Dzieci', 'Społeczne'],
   },
   {
@@ -163,7 +163,7 @@ export const ARTICLES: ArticleData[] = [
     author: 'Komunikat',
     publishedAt: '23 maja 2026, 09:00',
     readingMinutes: 1,
-    heroImage: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1200&h=675&fit=crop',
+    heroImage: '/static/img/wiadomosci/01.jpg',
     tags: ['PGE', 'Wyłączenia', 'Komunikaty'],
   },
   {
@@ -176,7 +176,7 @@ export const ARTICLES: ArticleData[] = [
     author: 'Redakcja izbica24.pl',
     publishedAt: '22 maja 2026, 14:00',
     readingMinutes: 2,
-    heroImage: 'https://images.unsplash.com/photo-1559825481-12a05cc00344?w=1200&h=675&fit=crop',
+    heroImage: '/static/img/wiadomosci/02-kujawianka.jpg',
     tags: ['Środowisko', 'Spółka Wodna', 'Melioracja'],
   },
   {
@@ -189,7 +189,7 @@ export const ARTICLES: ArticleData[] = [
     author: 'Redakcja izbica24.pl',
     publishedAt: '22 maja 2026, 11:00',
     readingMinutes: 2,
-    heroImage: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&h=675&fit=crop',
+    heroImage: '/static/img/v4/07-rolnictwo-rzepak.jpg',
     tags: ['ARiMR', 'Rolnictwo', 'Dopłaty'],
   },
   {
@@ -202,7 +202,7 @@ export const ARTICLES: ArticleData[] = [
     author: 'Maria S.',
     publishedAt: '23 maja 2026, 08:00',
     readingMinutes: 2,
-    heroImage: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&h=675&fit=crop',
+    heroImage: '/static/img/edukacja/04-matematyka.jpg',
     tags: ['Edukacja', 'ZS Kasprowicz', 'Rekrutacja'],
   },
 ]

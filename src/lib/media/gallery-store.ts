@@ -21,6 +21,14 @@ export interface GalleryRecord {
   published: boolean
   createdAt: string
   items: GalleryItem[]
+  /**
+   * I11: pola opcjonalne, bo galeria zdjeciowa zwykle nie ma materialu
+   * audio/wideo. Widok pokazuje odtwarzacz tylko przy wypelnionym polu —
+   * wczesniej zaszyte adresy MDN sprawialy, ze KAZDA galeria wyswietlala
+   * odtwarzacz z obcym plikiem demonstracyjnym.
+   */
+  videoUrl?: string
+  audioUrl?: string
 }
 
 const keyOf = (slug: string) => `gallery:${slug}`
@@ -30,12 +38,12 @@ const demoGallery = (slug: string): GalleryRecord => ({
   slug,
   title: `Galeria / ${slug}`,
   description: 'Pokaz slajdów dla portalu Izbica24',
-  coverImage: 'https://picsum.photos/seed/izbica-gallery/1200/800',
+  coverImage: '/static/img/zycie/zycie-poradnik.jpg',
   published: true,
   createdAt: new Date().toISOString(),
   items: [1, 2, 3, 4].map((index) => ({
     id: crypto.randomUUID(),
-    imageUrl: `https://picsum.photos/seed/izbica-gallery-${index}/1200/800`,
+    imageUrl: `/static/img/zycie/zycie-rolnictwo.jpg`,
     caption: `Kadr ${index} z galerii ${slug}`,
     credit: 'Izbica24 demo',
     takenAt: new Date(Date.now() - index * 86400000).toISOString(),

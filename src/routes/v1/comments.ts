@@ -43,6 +43,8 @@ import { fail, created } from '../../lib/http/envelope'
 import { sanitizeHtml, stripHtml } from '../../lib/security/sanitize-html'
 import { validateComment } from '../../lib/validators/comment'
 import { commentRateLimit } from '../../middleware/rate-limit'
+// Etap I9 — weryfikacja Cloudflare Turnstile przed przyjęciem treści.
+import { turnstileGuard } from '../../middleware/turnstile'
 import { detectSpam } from '../../lib/moderation/spam-detector'
 import { hasProfanity, sanitizeProfanity } from '../../lib/moderation/profanity-filter'
 
@@ -187,10 +189,21 @@ const handleSubmit = async (c: Parameters<Parameters<typeof route.post>[1]>[0], 
   }
 }
 
-/** Podstawowy adres zgłoszenia komentarza. */
-route.post('/articles/:slug/comments', commentRateLimit, (c) => handleSubmit(c as never, c.req.param('slug')))
+/**
+ * Podstawowy adres zgłoszenia komentarza.
+ *
+ * Etap I9 — kolejność strażników ma znaczenie i jest celowa:
+ * najpierw `commentRateLimit` (tani, liczy w pamięci/bazie), potem
+ * `turnstileGuard` (wykonuje zapytanie HTTP do Cloudflare). Odwrotna
+ * kolejność sprawiłaby, że ktoś zalewający portal setkami zgłoszeń
+ * na sekundę wymuszałby na nas tyle samo połączeń wychodzących do
+ * siteverify — sam limit chroniłby wtedy tylko bazę, nie nasz ruch.
+ */
+route.post('/articles/:slug/comments', commentRateLimit, turnstileGuard({ action: 'comment' }), (c) =>
+  handleSubmit(c as never, c.req.param('slug')),
+)
 
 /** Alias przyjmujący slug w ciele żądania — zachowany dla starszych klientów. */
-route.post('/comments', commentRateLimit, (c) => handleSubmit(c as never))
+route.post('/comments', commentRateLimit, turnstileGuard({ action: 'comment' }), (c) => handleSubmit(c as never))
 
 export default route

@@ -85,20 +85,38 @@ export const accepted = <T>(c: Context, data: T, meta?: PageMeta) => ok(c, data,
  *   return fail(c, 'not_found')
  *   return fail(c, 'validation_error', 'Pole e-mail jest wymagane.', { field: 'email' })
  */
+/**
+ * Czwarty argument przyjmuje albo dane szczegółowe, albo goły status HTTP.
+ *
+ * Wywołania `fail(c, 'storage_unavailable', '...', 503)` powstawały naturalnie,
+ * bo `ok()` ma status jako ostatni parametr. Bez tego rozróżnienia liczba
+ * trafiała do `details` i klient dostawał `"details": 503` — bezużyteczne pole
+ * udające dane diagnostyczne, przy statusie wziętym wyłącznie z katalogu.
+ * Traktowanie liczby 100–599 jako statusu usuwa cały ten rodzaj pomyłki.
+ */
 export const fail = (
   c: Context,
   code: ErrorCode,
   message?: string,
-  details?: unknown,
+  detailsOrStatus?: unknown,
 ) => {
   const requestId = getRequestId(c)
   c.header('x-request-id', requestId)
+
+  const isStatus =
+    typeof detailsOrStatus === 'number' &&
+    Number.isInteger(detailsOrStatus) &&
+    detailsOrStatus >= 100 &&
+    detailsOrStatus <= 599
+  const details = isStatus ? undefined : detailsOrStatus
+  const status = isStatus ? (detailsOrStatus as number) : statusForCode(code)
+
   const body: ErrorEnvelope = {
     ok: false,
     error: { code, message: message ?? messageForCode(code), ...(details === undefined ? {} : { details }) },
     requestId,
   }
-  return c.json(body, statusForCode(code) as never)
+  return c.json(body, status as never)
 }
 
 /**

@@ -40,8 +40,19 @@ route.get('/:slug', async (c) => {
           <PanoramaViewer imageUrl={gallery.coverImage} />
           <MapPhotos items={gallery.items} />
           <Timeline items={gallery.items.map((item, index) => ({ label: item.takenAt || `Etap ${index + 1}`, description: item.caption }))} />
-          <VideoPlayer src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" poster={gallery.coverImage} title="Wideo powiązane" />
-          <AudioPlayer src="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3" title="Audio relacji" waveform={[0.1,0.3,0.6,0.4,0.5,0.7,0.2,0.55]} />
+          {/*
+            I11: wczesniej byly tu zaszyte adresy MDN (flower.mp4, t-rex-roar.mp3)
+            — pliki demonstracyjne, ktorych regulamin MDN zabrania hotlinkowac,
+            a ktore w galerii z Dni Izbicy pokazywalyby kwiatek i ryk dinozaura.
+            Odtwarzacze pojawiaja sie teraz tylko wtedy, gdy galeria faktycznie
+            zawiera material audio/wideo.
+          */}
+          {gallery.videoUrl ? (
+            <VideoPlayer src={gallery.videoUrl} poster={gallery.coverImage} title="Wideo powiązane" />
+          ) : null}
+          {gallery.audioUrl ? (
+            <AudioPlayer src={gallery.audioUrl} title="Audio relacji" waveform={[0.1, 0.3, 0.6, 0.4, 0.5, 0.7, 0.2, 0.55]} />
+          ) : null}
           <Carousel images={images} />
         </main>
         <script src="/static/gallery.js" defer></script>

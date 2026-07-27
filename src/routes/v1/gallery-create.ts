@@ -12,7 +12,7 @@ route.post('/', async (c) => {
     slug: body.slug,
     title: body.title,
     description: body.description || '',
-    coverImage: body.coverImage || 'https://picsum.photos/seed/gallery-cover/1200/800',
+    coverImage: body.coverImage || '/static/img/zycie/zycie-turystyka.jpg',
     published: false,
     createdAt: new Date().toISOString(),
     items: [],

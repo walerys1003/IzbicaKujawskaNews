@@ -42,6 +42,9 @@ import searchRouter from '../routes/search'
 // FAZA 1 / A7 — komentarze z sanityzacją, limitem tempa i realnym zapisem do D1
 import commentsRoute from '../routes/v1/comments'
 import commentsModerationRoute from '../routes/v1/comments-moderation'
+// FAZA 2 / A5 — pelna warstwa mediow: sniff MIME, multipart, warianty, galerie, podcast
+import mediaV2Route from '../routes/v1/media-v2'
+import galleriesAdminRoute from '../routes/v1/galleries-admin'
 // FAZA 1 / I4b — zadania cykliczne wywoływane przez zewnętrzny harmonogram
 import cronRoute from '../routes/v1/cron'
 // FAZA 2 / A4 + B4 + D9 — artykuły na D1: odczyt publiczny i pełny cykl życia
@@ -96,6 +99,10 @@ api.route('/galleries/publish', galleryPublishRoute)
 api.route('/', commentsRoute)
 // A6 — moderacja: kolejka, decyzje, zgloszenia, publiczna lista zatwierdzonych.
 api.route('/comments', commentsModerationRoute)
+// A5 — nowa warstwa mediow. Stare trasy /media/* zostaja zamontowane, bo panel
+// i istniejace skrypty nadal ich uzywaja; /media2 jest sciezka docelowa.
+api.route('/media2', mediaV2Route)
+api.route('/galleries-admin', galleriesAdminRoute)
 // Zadania cykliczne — POST /api/v1/cron/run, chronione sekretem CRON_SECRET.
 api.route('/cron', cronRoute)
 

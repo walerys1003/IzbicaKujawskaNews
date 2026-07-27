@@ -58,6 +58,8 @@ import {
 import apiV1 from './api/v1'
 import authRoutes from './routes/auth'
 import adminRoutes from './routes/admin'
+// A5 — publiczne wystawianie zasobow z R2 pod /media/*
+import mediaServeRoutes from './routes/media-serve'
 import aiNewsroomRoutes from './routes/ai-newsroom'
 import { responsePerformanceMiddleware } from './lib/performance'
 // FAZA 1 / A3 — jednolita warstwa odpowiedzi HTTP
@@ -124,6 +126,9 @@ app.use('*', async (c, next) => {
 })
 
 // ============ API v1 — sub-app mounted at /api/v1 ============
+// /media/* musi byc PRZED trasami v4, ktore lapia /:cat/:slug — inaczej
+// router kategorii przejalby zadanie o zasob i zwrocil 404 strony.
+app.route('/', mediaServeRoutes)
 app.route('/api/v1', apiV1)
 // Moduł uwierzytelniania (16 plików tras, 19 endpointów) — dotąd niezamontowany.
 app.route('/api/v1/auth', authRoutes)
