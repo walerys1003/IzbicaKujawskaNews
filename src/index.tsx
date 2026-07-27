@@ -685,6 +685,19 @@ export const handleScheduled = async (event: { cron: string }, env: AppEnv['Bind
   }
 }
 
+/**
+ * FAZA 5 / A9 — instancja Hono udostepniona osobno dla testow.
+ *
+ * Eksport domyslny musi byc obiektem `{ fetch, scheduled }`, bo tylko taka
+ * postac pozwala Workerowi obslugiwac wyzwalacze czasowe. Ale przez to
+ * `import app from '../../src/index'` daje obiekt BEZ metody `.request()`,
+ * ktora jest podstawowym sposobem testowania aplikacji Hono bez podnoszenia
+ * serwera. Dlatego 10 z 11 niezaliczonych testow konczylo sie identycznym
+ * bledem `default.request is not a function` — testy byly poprawne, brakowalo
+ * tego jednego eksportu.
+ */
+export { app }
+
 export default {
   fetch: app.fetch,
   scheduled: handleScheduled,

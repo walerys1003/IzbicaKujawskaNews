@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import app from '../../src/index'
+import { app } from '../../src/index'
 import { MockD1Database } from '../fixtures/mock-d1'
 import { fixtureComment } from '../fixtures/seed-data'
 
