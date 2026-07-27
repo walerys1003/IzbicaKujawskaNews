@@ -49,6 +49,9 @@ import articlesAdminRoute from '../routes/v1/articles'
 import categoriesRoute from '../routes/v1/categories'
 // FAZA 2 / B5 — rejestr schematów walidacji jako dokumentacja API
 import schemasRoute from '../routes/v1/schemas'
+// FAZA 3 / AI1 + AI2 + AI8 + AI10 — dostawca modelu, test polaczenia,
+// generowanie strumieniowe i rejestr kosztow
+import aiRoute from '../routes/v1/ai'
 
 const api = new Hono<AppEnv>()
 
@@ -124,6 +127,7 @@ api.route('/articles', articlesPublicRoute)
 api.route('/admin/articles', articlesAdminRoute)
 api.route('/categories', categoriesRoute)
 api.route('/schemas', schemasRoute)
+api.route('/ai', aiRoute)
 
 // ============ B15: ALERTS (Awarie/utrudnienia) ============
 api.get('/alerts', (c) =>

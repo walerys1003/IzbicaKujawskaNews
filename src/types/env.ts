@@ -107,6 +107,23 @@ export interface Bindings {
   ANTHROPIC_API_KEY?: string
   VAPID_PUBLIC_KEY?: string
 
+  // FAZA 3 / AI1 — dostawca modelu jest konfiguracja, nie decyzja w kodzie.
+  // Adres bazowy MUSI byc zmienna: klucz do uslugi zgodnej z API Anthropic,
+  // ale pod innym adresem (np. https://code.apipod.ai, Groq, OpenRouter,
+  // Ollama, vLLM), nie mial wczesniej gdzie zostac wpisany.
+  /** Np. https://code.apipod.ai — bez '/v1'. Brak = api.anthropic.com. */
+  ANTHROPIC_BASE_URL?: string
+  /** Np. https://api.groq.com/openai/v1. Brak = api.openai.com/v1. */
+  OPENAI_BASE_URL?: string
+  /** 'anthropic' | 'openai-compatible' | 'workers-ai' — wymusza wybor. */
+  AI_DEFAULT_PROVIDER?: string
+  /** Nazwa modelu u wybranego dostawcy, np. claude-sonnet-4-20250514. */
+  AI_DEFAULT_MODEL?: string
+  /** Sol do skrotu adresu IP w rejestrze zdarzen (RODO). */
+  IP_HASH_SALT?: string
+  /** Wiazanie Workers AI — wlaczane w wrangler.jsonc. */
+  AI?: { run: (model: string, input: Record<string, unknown>) => Promise<unknown> }
+
   // Generic KV (Sandbox 3)
   APP_KV?: KVNamespaceLike
 

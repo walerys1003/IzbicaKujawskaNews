@@ -18,7 +18,21 @@ export const securityHeaders = async (c: Context<AppEnv>, next: () => Promise<vo
     "img-src 'self' data: blob: https://*.izbica24.pl https://*.r2.cloudflarestorage.com https://*.cloudflarestream.com",
     "font-src 'self' https://fonts.gstatic.com",
     "media-src 'self' https://*.r2.cloudflarestorage.com https://*.cloudflarestream.com",
-    "connect-src 'self' https://*.izbica24.pl https://api.openai.com https://api.anthropic.com",
+    // FAZA 3 / AI1 — usuniete `https://api.openai.com` i `https://api.anthropic.com`.
+    //
+    // Ten wpis nie mial zadnego dzialania, a byl mylacy. Zapytania do dostawcy
+    // modeli ida z WORKERA (kod serwerowy), a CSP ogranicza wylacznie zapytania
+    // wychodzace z PRZEGLADARKI — regula nigdy nie byla stosowana.
+    //
+    // Gorzej: jej obecnosc sugerowala, ze przegladarka moze rozmawiac
+    // z dostawca bezposrednio. Taki uklad wymagalby wyslania klucza API do
+    // przegladarki, gdzie kazdy czytelnik odczytalby go z zakladki „Siec”.
+    // Klucz zostaje po stronie serwera, a panel rozmawia wylacznie
+    // z `/api/v1/ai/*` pod wlasnym adresem — czyli 'self'.
+    //
+    // Dodatkowa korzysc: zmiana dostawcy (Groq, OpenRouter, wlasny adres)
+    // nie wymaga juz ruszania naglowkow bezpieczenstwa.
+    "connect-src 'self' https://*.izbica24.pl",
     "frame-src 'self' https://www.youtube.com https://player.vimeo.com https://www.facebook.com",
     "frame-ancestors 'self'",
     "form-action 'self'",
