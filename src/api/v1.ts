@@ -60,6 +60,13 @@ import schemasRoute from '../routes/v1/schemas'
 // FAZA 3 / AI1 + AI2 + AI8 + AI10 — dostawca modelu, test polaczenia,
 // generowanie strumieniowe i rejestr kosztow
 import aiRoute from '../routes/v1/ai'
+// Audyt 2026-07-28: /api/v1/version i /api/v1/metrics zwracaly 404, bo moduly
+// byly zamontowane tylko w korzeniu aplikacji (/version, /metrics). Klienci
+// API oczekuja ich pod prefiksem v1 — montujemy te same moduly takze tutaj.
+import versionRoute from '../routes/v1/version'
+import metricsRoute from '../routes/v1/metrics'
+import { listByPrefix } from '../lib/runtime-kv'
+import type { GalleryRecord } from '../lib/media/gallery-store'
 
 const api = new Hono<AppEnv>()
 
@@ -89,9 +96,25 @@ api.route('/media/bulk', mediaBulkRoute)
 api.route('/videos/upload', videoUploadRoute)
 api.route('/videos/list', videoListRoute)
 api.route('/videos/detail', videoDetailRoute)
+// Aliasy zgodne z konwencja REST (audyt 2026-07-28: 404 na oczywistych adresach).
+// GET /api/v1/media i GET /api/v1/videos to te same handlery co /media/list
+// i /videos/list — jeden kod, dwa adresy, zero rozjazdu.
+api.route('/media', mediaListRoute)
+api.route('/videos', videoListRoute)
 api.route('/audio/upload', audioUploadRoute)
 api.route('/podcast', podcastFeedRoute)
 api.route('/multimedia/recent', multimediaRecentRoute)
+// GET /api/v1/galleries (lista) — audyt 2026-07-28: router obslugiwal tylko
+// /:slug, wiec adres bazowy zwracal 404. Lista czyta opublikowane galerie z KV
+// (magazyn gallery-store) — to samo zrodlo, z ktorego korzysta widok galerii.
+api.get('/galleries', async (c) => {
+  const wpisy = await listByPrefix<GalleryRecord>(c.env, 'APP_KV', 'gallery:')
+  const items = wpisy
+    .map((w) => w.value)
+    .filter((g) => g && g.published)
+    .map((g) => ({ slug: g.slug, title: g.title, description: g.description, coverImage: g.coverImage, count: g.items.length, createdAt: g.createdAt }))
+  return c.json({ ok: true, total: items.length, items })
+})
 api.route('/galleries', galleriesPublicRoute)
 api.route('/galleries/create', galleryCreateRoute)
 api.route('/galleries/add-image', galleryAddImageRoute)
@@ -117,6 +140,10 @@ api.route('/mapa', mapaRoute)
 // Mount standalone routers (newsletter + search) for D1-backed endpoints
 api.route('/newsletter', newsletterRouter)
 api.route('/search', searchRouter)
+
+// Diagnostyka pod prefiksem v1 (te same moduly co w korzeniu aplikacji)
+api.route('/', versionRoute)
+api.route('/', metricsRoute)
 
 // ============ B7: HEALTH ============
 api.get('/health', (c) =>

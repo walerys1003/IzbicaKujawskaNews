@@ -62,14 +62,23 @@ route.post('/subscribe', turnstileGuard({ action: 'newsletter-subscribe' }), asy
   const result = await repo.subscribe(email)
   if (!result.ok || !result.token) return c.json(result, 409)
 
+  const link = `${c.env.SITE_URL || 'https://izbica24.pl'}/newsletter/potwierdzenie?token=${result.token}`
+
   // Brak konfiguracji poczty zglaszamy JAWNIE. Cichy powrot do atrapy
   // sprawilby, ze wdrozenie bez klucza wyglada na dzialajace, a zapisy
   // mieszkancow zostaja w 'pending' bez sladu przyczyny.
+  //
+  // WYJATEK — srodowisko developerskie: zwracamy 200 z komunikatem, ktory
+  // NIE udaje wysylki ('confirmation_link_dev'), oraz z linkiem potwierdzenia,
+  // zeby caly przeplyw double opt-in dalo sie przetestowac lokalnie bez
+  // klucza Resend. Na produkcji (ENVIRONMENT != development) nadal 503.
   if (!emailSkonfigurowany(c.env)) {
+    if (c.env.ENVIRONMENT === 'development') {
+      console.log('[DEV NEWSLETTER] Link potwierdzenia (nie wyslano e-maila):', link)
+      return c.json({ ok: true, message: 'confirmation_link_dev', confirmUrl: link })
+    }
     return c.json({ ok: false, message: 'email_not_configured' }, 503)
   }
-
-  const link = `${c.env.SITE_URL || 'https://izbica24.pl'}/newsletter/potwierdzenie?token=${result.token}`
   const wyslane = await createEmailProvider(c.env).send({
     to: email,
     subject: 'Potwierdz zapis na biuletyn izbica24.pl',

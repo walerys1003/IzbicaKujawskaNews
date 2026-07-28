@@ -54,6 +54,19 @@ const httpForProviderError = (error: AiProviderError) => {
 }
 
 /**
+ * Status modułu — publiczny i tani. Zwraca WYŁĄCZNIE fakt konfiguracji
+ * (true/false) i liczbę akcji; ani nazwy dostawcy, ani modelu, ani tym
+ * bardziej kluczy. Audyt 2026-07-28: /api/newsroom/status zwracał 404,
+ * a monitor zdrowia nie miał jak sprawdzić gotowości AI bez tokenu.
+ */
+app.get('/status', (c) =>
+  ok(c, {
+    skonfigurowane: Boolean(c.env.OPENAI_API_KEY || c.env.ANTHROPIC_API_KEY),
+    akcje: ACTION_NAMES.size,
+  }),
+)
+
+/**
  * Lista dostępnych akcji. Wymaga zalogowania, bo ujawnia zakres możliwości
  * panelu redakcyjnego, ale nie wymaga `ai:use` — moderator bez prawa do
  * modeli również widzi menu, tylko wywołanie zwróci mu 403.

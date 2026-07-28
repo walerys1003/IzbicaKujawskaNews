@@ -42,7 +42,7 @@
 | 3. poziom | `/kultura/parafie/blenna`, `/multimedia/wideo/reportaze`, … | ✅ |
 | Artykuł | `/wiadomosci/inwestycje/remont-ulicy-koscielnej-zakonczony` | ✅ |
 | Galeria | `/multimedia/galerie/:sekcja/:slug` | ✅ |
-| Sołectwa | `/solectwa`, `/solectwa/sadlno` (34) | ✅ |
+| Sołectwa | `/solectwa`, `/solectwa/wietrzychowice` (34) | ✅ |
 | Tag | `/tag/:tag` | ✅ |
 | Szukaj | `/szukaj?q=` | ✅ |
 | 404 | dowolna nieistniejąca | ✅ |

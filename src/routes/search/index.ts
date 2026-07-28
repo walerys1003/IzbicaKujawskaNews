@@ -1,11 +1,25 @@
+/**
+ * Trasy /api/search — WSZYSTKIE czytają z D1 (FTS5), nie z mocka.
+ *
+ * Historia: do 2026-07-28 ten plik importował statyczną tablicę ARTICLES
+ * z data-articles.ts. Skutek zmierzony: autocomplete zwracał tytuły,
+ * których nie było w bazie, a artykuł opublikowany w panelu nie istniał
+ * dla wyszukiwarki. Warstwa FTS (search-service.ts) była gotowa i używana
+ * przez stronę /szukaj — API jej nie używało. Teraz oba wejścia
+ * (strona i API) korzystają z tego samego indeksu articles_szukaj.
+ *
+ * ZACHOWANIE PRZY BRAKU BAZY: search-service degraduje się do pustych
+ * wyników z polem `zrodlo`/`ostrzezenie` — trasa przekazuje to dalej,
+ * żeby degradacja była widoczna w diagnostyce, a nie ukryta.
+ */
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 import type { AppEnv, Bindings } from '../../types/env'
 import { requireAuth } from '../auth/middleware/require-auth'
 import type { AuthJwtPayload } from '../auth/helpers/password-utils'
-import { ARTICLES, CATEGORIES_MAP } from '../../data-articles'
-import { globalSearch } from '../../lib/search/global-search'
+import { szukaj, podpowiedzi, zapytaniaBezWynikow } from '../../lib/search/search-service'
 import { suggestSpelling } from '../../lib/search/spell-suggest'
+import { adresArtykuluZBazy } from '../../v4/mapowanie-kategorii'
 import { deleteJson, getJson, listByPrefix, putJson } from '../../lib/runtime-kv'
 import { readJsonObject } from '../../lib/http/envelope'
 
@@ -48,9 +62,7 @@ interface QueryLogRecord {
 }
 
 const route = new Hono<AppEnv>()
-const stripHtml = (value: string) => value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 const normalizeQuery = (value: string) => value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-const escapeHtml = (value: string) => value.replace(/[&<>"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char] || char))
 const savedKey = (userId: string, id: string) => `search:saved:${userId}:${id}`
 const queryKey = (normalized: string) => `search:query:${normalized}`
 const defaultSuggestions = ['kujawianka', 'sesja rady', 'wietrzychowice', 'mgck', 'inwestycje', 'osp', 'dopłaty', 'spzoz']
@@ -64,76 +76,39 @@ const ensureAdmin = (c: Context<AppEnv>) => {
   return null
 }
 
-const highlightSnippet = (text: string, query: string) => {
-  const clean = stripHtml(text)
-  if (!query) return clean.slice(0, 180)
-  const index = clean.toLowerCase().indexOf(query.toLowerCase())
-  const start = index >= 0 ? Math.max(0, index - 60) : 0
-  const snippet = clean.slice(start, start + 180)
-  const safeSnippet = escapeHtml(snippet)
-  return safeSnippet.replace(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig'), '<mark>$1</mark>')
-}
-
-const matches = (haystack: string, needle: string) => normalizeQuery(haystack).includes(normalizeQuery(needle))
-
+/**
+ * Wspólna ścieżka zapytania: FTS5 w D1 przez search-service.
+ * Filtry `filter`/`category` mapują się na kategorię bazy; `sort` inne niż
+ * relevance sortuje wynik strony (FTS zwraca wg bm25).
+ */
 export const runSearchQuery = async (env: Bindings, query: string, filters: SearchFilters = {}) => {
   const cleanQuery = query.trim()
-  if (!cleanQuery) return { total: 0, items: [] as SearchResultItem[] }
+  if (!cleanQuery) return { total: 0, items: [] as SearchResultItem[], zrodlo: 'puste' as const }
 
-  const fts = await globalSearch(env.DB, cleanQuery, 20).catch(() => ({ total: 0, items: [] as Array<Record<string, unknown>> }))
-  if (fts.items.length > 0) {
-    return {
-      total: fts.items.length,
-      items: fts.items.map((item) => ({
-        source: 'article' as const,
-        slug: String(item.slug),
-        title: String(item.title),
-        category: typeof item.category === 'string' ? item.category : undefined,
-        snippet: typeof item.snippet === 'string' ? item.snippet : '',
-        url: String(item.source) === 'events' ? `/kalendarz/${item.slug}` : `/wiadomosci/${item.slug}`,
-      })),
-    }
-  }
+  const kategoria = filters.category || (filters.filter && filters.filter !== 'all' ? filters.filter : undefined)
+  const odp = await szukaj(env.DB as never, cleanQuery, { kategoria, naStrone: 20 })
 
-  let items: SearchResultItem[] = ARTICLES
-    .filter((article) => {
-      const combined = [article.title, article.lede, stripHtml(article.body.join(' ')), article.author, ...(article.tags || [])].join(' ')
-      if (!matches(combined, cleanQuery)) return false
-      if (filters.filter && filters.filter !== 'all' && filters.filter !== article.category) return false
-      if (filters.category && article.category !== filters.category) return false
-      if (filters.author && article.author !== filters.author) return false
-      if (filters.tag && !(article.tags || []).includes(filters.tag)) return false
-      return true
-    })
-    .map((article) => ({
-      source: 'article' as const,
-      slug: article.slug,
-      title: article.title,
-      category: article.category,
-      author: article.author,
-      tags: article.tags,
-      publishedAt: article.publishedAt,
-      snippet: highlightSnippet(`${article.lede} ${article.body.join(' ')}`, cleanQuery),
-      url: `/wiadomosci/${article.slug}`,
-    }))
+  let items: SearchResultItem[] = odp.wyniki.map((w) => ({
+    source: 'article' as const,
+    slug: w.slug,
+    title: w.title,
+    category: w.categorySlug ?? undefined,
+    publishedAt: w.publishedAt ?? undefined,
+    snippet: w.fragment ?? w.lead.slice(0, 180),
+    url: adresArtykuluZBazy({ category_slug: w.categorySlug, subcategory_slug: w.subcategorySlug, slug: w.slug }),
+  }))
 
   if (filters.sort === 'latest') items = [...items].sort((a, b) => String(b.publishedAt || '').localeCompare(String(a.publishedAt || '')))
   if (filters.sort === 'oldest') items = [...items].sort((a, b) => String(a.publishedAt || '').localeCompare(String(b.publishedAt || '')))
-  return { total: items.length, items }
+  return { total: odp.total, items, zrodlo: odp.zrodlo, ostrzezenie: odp.ostrzezenie }
 }
 
-export const getAutocompleteSuggestions = (query: string) => {
+/** Autouzupełnianie z indeksu FTS — tytuły opublikowanych artykułów z D1. */
+export const getAutocompleteSuggestions = async (env: Bindings, query: string) => {
   const clean = normalizeQuery(query)
   if (!clean) return []
-  const suggestions = new Set<string>()
-  for (const article of ARTICLES) {
-    if (normalizeQuery(article.title).includes(clean)) suggestions.add(article.title)
-    for (const tag of article.tags || []) {
-      if (normalizeQuery(tag).includes(clean)) suggestions.add(tag)
-    }
-    if (normalizeQuery(article.author).includes(clean)) suggestions.add(article.author)
-  }
-  return Array.from(suggestions).slice(0, 8)
+  const wyniki = await podpowiedzi(env.DB as never, query, 8)
+  return wyniki.map((w) => w.title)
 }
 
 const getPopularQueries = async (env: Bindings) => {
@@ -167,12 +142,12 @@ route.get('/', async (c) => {
   const q = c.req.query('q') || ''
   const filter = c.req.query('filter') || undefined
   const result = await runSearchQuery(c.env, q, { filter })
-  return c.json({ query: q, filter, total: result.total, items: result.items })
+  return c.json({ query: q, filter, total: result.total, items: result.items, zrodlo: result.zrodlo })
 })
 
-route.get('/autocomplete', (c) => {
+route.get('/autocomplete', async (c) => {
   const q = c.req.query('q') || ''
-  return c.json({ query: q, items: getAutocompleteSuggestions(q) })
+  return c.json({ query: q, items: await getAutocompleteSuggestions(c.env, q) })
 })
 
 route.get('/suggestions', async (c) => {
@@ -198,32 +173,58 @@ route.get('/trending', async (c) => {
 route.get('/zero-results', async (c) => {
   const authError = ensureAdmin(c)
   if (authError) return authError
+  // Dziennik zapytań bez wyników prowadzi teraz D1 (tabela search_queries)
+  // — to samo źródło, do którego pisze search-service. KV zostaje jako
+  // uzupełnienie dla starych wpisów.
+  const zBazy = await zapytaniaBezWynikow(c.env.DB as never)
+  if (zBazy.length > 0) return c.json({ items: zBazy })
   const items = (await getPopularQueries(c.env)).filter((item) => item.zeroResultsCount > 0)
   return c.json({ items })
 })
 
-route.get('/categories', (c) => {
+route.get('/categories', async (c) => {
   const q = c.req.query('q') || ''
-  const items = Object.entries(CATEGORIES_MAP)
-    .filter(([slug, meta]) => matches(`${slug} ${meta.title} ${meta.description}`, q))
-    .map(([slug, meta]) => ({ slug, title: meta.title, description: meta.description, color: meta.color }))
-  return c.json({ items })
+  if (!c.env.DB) return c.json({ items: [] })
+  const like = `%${q.replace(/[%_]/g, '')}%`
+  const rows = await c.env.DB
+    .prepare(`SELECT slug, name, description, color_hex FROM categories WHERE name LIKE ?1 OR slug LIKE ?1 OR IFNULL(description,'') LIKE ?1 ORDER BY order_index LIMIT 30`)
+    .bind(like)
+    .all<{ slug: string; name: string; description: string | null; color_hex: string | null }>()
+  return c.json({ items: (rows.results ?? []).map((r) => ({ slug: r.slug, title: r.name, description: r.description ?? '', color: r.color_hex ?? '' })) })
 })
 
-route.get('/authors', (c) => {
+route.get('/authors', async (c) => {
   const q = c.req.query('q') || ''
-  const items = Array.from(new Set(ARTICLES.map((article) => article.author)))
-    .filter((author) => matches(author, q))
-    .map((author) => ({ id: encodeURIComponent(author), name: author, articles: ARTICLES.filter((item) => item.author === author).length }))
-  return c.json({ items })
+  if (!c.env.DB) return c.json({ items: [] })
+  const like = `%${q.replace(/[%_]/g, '')}%`
+  const rows = await c.env.DB
+    .prepare(
+      `SELECT u.id, u.name, COUNT(a.id) AS articles
+       FROM users u
+       JOIN articles a ON a.author_id = u.id AND a.deleted_at IS NULL AND a.status = 'published'
+       WHERE u.name LIKE ?1 AND u.deleted_at IS NULL
+       GROUP BY u.id ORDER BY articles DESC LIMIT 30`,
+    )
+    .bind(like)
+    .all<{ id: number; name: string; articles: number }>()
+  return c.json({ items: (rows.results ?? []).map((r) => ({ id: String(r.id), name: r.name, articles: r.articles })) })
 })
 
-route.get('/tags', (c) => {
+route.get('/tags', async (c) => {
   const q = c.req.query('q') || ''
-  const items = Array.from(new Set(ARTICLES.flatMap((article) => article.tags || [])))
-    .filter((tag) => matches(tag, q))
-    .map((tag) => ({ tag, count: ARTICLES.filter((article) => (article.tags || []).includes(tag)).length }))
-  return c.json({ items })
+  if (!c.env.DB) return c.json({ items: [] })
+  const like = `%${q.replace(/[%_]/g, '')}%`
+  const rows = await c.env.DB
+    .prepare(
+      `SELECT t.name AS tag, COUNT(at.article_id) AS count
+       FROM tags t
+       LEFT JOIN article_tags at ON at.tag_id = t.id
+       WHERE (t.name LIKE ?1 OR t.slug LIKE ?1) AND t.deleted_at IS NULL
+       GROUP BY t.id ORDER BY count DESC LIMIT 30`,
+    )
+    .bind(like)
+    .all<{ tag: string; count: number }>()
+  return c.json({ items: rows.results ?? [] })
 })
 
 route.get('/advanced', async (c) => {
@@ -265,13 +266,18 @@ route.delete('/saved/:id', async (c) => {
   return c.json({ ok: true, removed: c.req.param('id') })
 })
 
-route.get('/spell-check', (c) => {
+route.get('/spell-check', async (c) => {
   const q = c.req.query('q') || ''
-  const dictionary = Array.from(new Set([
-    ...ARTICLES.map((article) => article.title),
-    ...ARTICLES.flatMap((article) => article.tags || []),
-    ...Object.values(CATEGORIES_MAP).map((category) => category.title),
-  ].map((item) => item.toLowerCase())))
+  if (!c.env.DB || !q) return c.json({ query: q, suggestion: null })
+  // Słownik z żywych danych: tytuły opublikowanych artykułów + tagi + kategorie.
+  const [tytuly, tagi, kategorie] = await Promise.all([
+    c.env.DB.prepare(`SELECT title AS w FROM articles WHERE deleted_at IS NULL AND status='published' LIMIT 500`).all<{ w: string }>(),
+    c.env.DB.prepare(`SELECT name AS w FROM tags WHERE deleted_at IS NULL LIMIT 500`).all<{ w: string }>(),
+    c.env.DB.prepare(`SELECT name AS w FROM categories LIMIT 100`).all<{ w: string }>(),
+  ])
+  const dictionary = Array.from(new Set(
+    [...(tytuly.results ?? []), ...(tagi.results ?? []), ...(kategorie.results ?? [])].map((r) => r.w.toLowerCase()),
+  ))
   const suggestion = suggestSpelling(q.toLowerCase(), dictionary)
   return c.json({ query: q, suggestion })
 })
