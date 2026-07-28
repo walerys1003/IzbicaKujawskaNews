@@ -4,6 +4,7 @@ import type { AppEnv, Bindings } from '../../types/env'
 import { requireAuth } from '../auth/middleware/require-auth'
 import type { AuthJwtPayload } from '../auth/helpers/password-utils'
 import { deleteJson, listByPrefix, putJson } from '../../lib/runtime-kv'
+import { readJsonObject } from '../../lib/http/envelope'
 import { ARTICLES } from '../../data-articles'
 
 interface AnalyticsRecordBase {
@@ -214,7 +215,7 @@ route.use('/funnel', requireAuth)
 route.use('/flush-buffer', requireAuth)
 
 route.post('/pageview', async (c) => {
-  const body = await c.req.json<Record<string, unknown>>().catch(() => ({}))
+  const body = await readJsonObject(c)
   const base = extractBase(c, 'pageview', body)
   const record: PageviewRecord = { ...base, type: 'pageview', title: pickArticleMeta(base.articleSlug).title }
   await putJson(c.env, 'ANALYTICS_BUFFER_KV', bufferKey(record.id), record)
@@ -222,7 +223,7 @@ route.post('/pageview', async (c) => {
 })
 
 route.post('/event', async (c) => {
-  const body = await c.req.json<Record<string, unknown>>().catch(() => ({}))
+  const body = await readJsonObject(c)
   if (typeof body.eventName !== 'string' || !body.eventName) return c.json({ error: 'missing_event_name' }, 400)
   const base = extractBase(c, 'event', body)
   const record: EventRecord = {
@@ -236,7 +237,7 @@ route.post('/event', async (c) => {
 })
 
 route.post('/session-start', async (c) => {
-  const body = await c.req.json<Record<string, unknown>>().catch(() => ({}))
+  const body = await readJsonObject(c)
   const userAgent = c.req.header('User-Agent') || ''
   const sessionId = typeof body.sessionId === 'string' && body.sessionId ? body.sessionId : crypto.randomUUID()
   const record: SessionRecord = {
@@ -253,7 +254,7 @@ route.post('/session-start', async (c) => {
 })
 
 route.post('/session-end', async (c) => {
-  const body = await c.req.json<Record<string, unknown>>().catch(() => ({}))
+  const body = await readJsonObject(c)
   const sessionId = typeof body.sessionId === 'string' ? body.sessionId : ''
   if (!sessionId) return c.json({ error: 'missing_session_id' }, 400)
   const existing = await listByPrefix<SessionRecord>(c.env, 'ANALYTICS_BUFFER_KV', sessionKey(sessionId))

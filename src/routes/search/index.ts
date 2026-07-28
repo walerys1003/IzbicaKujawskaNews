@@ -7,6 +7,7 @@ import { ARTICLES, CATEGORIES_MAP } from '../../data-articles'
 import { globalSearch } from '../../lib/search/global-search'
 import { suggestSpelling } from '../../lib/search/spell-suggest'
 import { deleteJson, getJson, listByPrefix, putJson } from '../../lib/runtime-kv'
+import { readJsonObject } from '../../lib/http/envelope'
 
 export interface SearchResultItem {
   source: 'article' | 'category' | 'author' | 'tag'
@@ -180,7 +181,7 @@ route.get('/suggestions', async (c) => {
 })
 
 route.post('/log', async (c) => {
-  const body = await c.req.json<Record<string, unknown>>().catch(() => ({}))
+  const body = await readJsonObject(c)
   const query = typeof body.query === 'string' ? body.query : ''
   if (!query) return c.json({ error: 'missing_query' }, 400)
   const hits = typeof body.hits === 'number' ? body.hits : 0
@@ -241,7 +242,7 @@ route.get('/advanced', async (c) => {
 route.post('/saved', async (c) => {
   const auth = getAuth(c)
   if (!auth) return c.json({ error: 'missing_bearer_token' }, 401)
-  const body = await c.req.json<Record<string, unknown>>().catch(() => ({}))
+  const body = await readJsonObject(c)
   const query = typeof body.query === 'string' ? body.query.trim() : ''
   if (!query) return c.json({ error: 'missing_query' }, 400)
   const filters = typeof body.filters === 'object' && body.filters ? body.filters as SearchFilters : {}

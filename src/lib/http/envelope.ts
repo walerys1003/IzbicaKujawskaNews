@@ -162,3 +162,49 @@ export const errorCatalogList = () =>
     status: ERROR_CATALOG[code].status,
     message: ERROR_CATALOG[code].message,
   }))
+
+/**
+ * Bezpieczne czytanie ciała żądania jako obiektu JSON.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * NAPRAWIANY WZORZEC — 21 zgłoszeń tsc z JEDNEJ przyczyny
+ * ══════════════════════════════════════════════════════════════════════════
+ * W trasach powtarzał się zapis:
+ *
+ *     const body = await c.req.json<Record<string, unknown>>().catch(() => ({}))
+ *
+ * Typem wyniku jest wtedy UNIA `Record<string, unknown> | {}`. Drugi składnik
+ * unii nie ma ŻADNYCH właściwości, więc każde późniejsze `body.sessionId`,
+ * `body.eventName`, `body.query` było błędem TS2339 „Property does not exist”.
+ * W `analytics` (12) i `search` (9) dawało to 21 z 191 błędów typów.
+ *
+ * ── Dlaczego to NIE była tylko kosmetyka ─────────────────────────────────
+ * Skutek praktyczny był poważniejszy niż liczba w raporcie: ponieważ dostęp
+ * do pól był błędem typu, TypeScript nie sprawdzał NICZEGO poniżej — ani
+ * nazw pól, ani ich typów. Literówka `body.sesionId` byłaby dokładnie tym
+ * samym błędem TS2339 co poprawne `body.sessionId`, więc kompilator nie
+ * odróżniał kodu poprawnego od zepsutego. Zgłoszenie, które nie odróżnia
+ * jednego od drugiego, nie chroni już niczego.
+ *
+ * ── Zachowanie jest zachowane celowo ─────────────────────────────────────
+ * Funkcja nie zmienia semantyki: ciało nie-JSON nadal daje pusty obiekt,
+ * a nie wyjątek. To świadome — trasy analityczne przyjmują dane z beaconów
+ * przeglądarki (`navigator.sendBeacon`), gdzie odrzucenie żądania nic nie
+ * naprawia, bo nadawca nie odbiera odpowiedzi. Trasy, które MUSZĄ odrzucić
+ * niepoprawny JSON (np. moderacja komentarzy), robią to nadal jawnie przez
+ * `try/catch` i `fail(c, 'validation_error', …)` — tego pomocnika tam nie
+ * używamy i nie należy go tam wprowadzać.
+ *
+ * Dodatkowo odsiewamy wartości, które są poprawnym JSON-em, ale nie
+ * obiektem (`null`, `[]`, `42`, `"tekst"`). Bez tego `body.sessionId` na
+ * tablicy dawałoby `undefined`, a na `null` — wyjątek w czasie wykonania.
+ */
+export const readJsonObject = async (c: Context<AppEnv>): Promise<Record<string, unknown>> => {
+  try {
+    const parsed: unknown = await c.req.json()
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
+    return parsed as Record<string, unknown>
+  } catch {
+    return {}
+  }
+}
