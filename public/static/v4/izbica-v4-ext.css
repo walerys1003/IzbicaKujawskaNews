@@ -27,11 +27,23 @@
   opacity:0; visibility:hidden; transform:translate(-50%,-8px);
   transition:opacity var(--t-mid), transform var(--t-mid) var(--ease), visibility var(--t-mid);
   z-index:600;
+  /* Bezpiecznik: nic z wnetrza panelu nie ma prawa wyjsc poza biale tlo. */
+  overflow:hidden;
+  /* Reset dziedziczenia: panel siedzi w .nav-item{white-space:nowrap}
+     (etykiety menu nie moga sie lamac), ale tekst KART musi sie zawijac —
+     bez tego tytuly/opisy uciekaly w prawo i byly uciete w pol slowa
+     (pomiar: p.scrollWidth 470px przy karcie 228px). */
+  white-space:normal;
 }
 .nav-item.has-mega:hover .mega-panel,
 .nav-item.has-mega.is-open .mega-panel{ opacity:1; visibility:visible; transform:translate(-50%,0); }
 
-.mega-inner{ display:grid; grid-template-columns:264px 1fr; min-height:340px; }
+/* minmax(0,1fr), NIE 1fr: kolumna `1fr` ma automatyczne minimum rowne
+   min-content, a min-content karty z <img> to NATYWNA szerokosc zdjecia
+   (np. 1200px). Zdjecia demo rozpychaly grid poza biale tlo panelu —
+   karty „wystawaly" na tresc strony (zrzut redakcji 2026-07-28). Wczesniej
+   maskowal to overflow .nav-inner, ktory caly panel przycinal. */
+.mega-inner{ display:grid; grid-template-columns:264px minmax(0,1fr); min-height:340px; }
 
 /* Kolumna podkategorii */
 .mega-subs{ background:var(--bg); border-right:1px solid var(--rule); padding:10px 0 12px; display:flex; flex-direction:column; }
@@ -70,7 +82,7 @@
 .mega-slate-desc{ font:400 12.5px/1.5 var(--serif); color:var(--ink-4); margin-top:4px; }
 
 /* Rotator: pokazujemy 1 dużą + 3 małe, aktywna karta podmieniana skryptem */
-.mega-cards{ display:grid; grid-template-columns:1.35fr 1fr 1fr; gap:14px; }
+.mega-cards{ display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr); gap:14px; }
 .mega-card{ display:flex; flex-direction:column; background:#fff; cursor:pointer; transition:transform var(--t-fast), box-shadow var(--t-mid); }
 .mega-card:hover{ transform:translateY(-2px); box-shadow:var(--sh-2); }
 .mega-card-img{ aspect-ratio:16/10; overflow:hidden; background:#0a0a0a; }
@@ -79,7 +91,10 @@
 .mega-card-noimg{ width:100%; height:100%; background:linear-gradient(135deg,#1a1a1a,#333); }
 .mega-card-body{ padding:10px 2px 0; display:flex; flex-direction:column; gap:6px; }
 .mega-card-body .tag{ align-self:flex-start; font-size:9.5px; padding:3px 7px; }
-.mega-card-body h4{ font:700 14px/1.2 var(--display); color:var(--ink); }
+.mega-card-body h4{
+  font:700 14px/1.2 var(--display); color:var(--ink);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
 .mega-card:hover .mega-card-body h4{ color:var(--cat); }
 .mega-card-body p{
   font:400 12px/1.45 var(--serif); color:var(--ink-4);
@@ -393,7 +408,7 @@
 /* ============ 12. RESPONSIVE ROZSZERZEŃ ============ */
 @media (max-width:1280px){
   .mega-panel{ width:min(940px, calc(100vw - 32px)); }
-  .mega-cards{ grid-template-columns:1.3fr 1fr; }
+  .mega-cards{ grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); }
   .mega-cards .mega-card:nth-child(4){ display:none; }
   .subcat-tiles{ grid-template-columns:repeat(3,1fr); }
   .sol-page-grid{ grid-template-columns:repeat(3,1fr); }
