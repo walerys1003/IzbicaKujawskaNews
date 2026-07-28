@@ -95,11 +95,12 @@ describe('api push — realna wysyłka zamiast fałszywego raportu', () => {
 
   const srodowisko = async (zKluczami = true) => {
     const kv = new PamiecKV()
+    const db = new MockD1Database()
     const klucze = await wygenerujKluczeVapid()
     return {
       env: {
         JWT_SECRET: 'test-secret',
-        DB: new MockD1Database(),
+        DB: db,
         NOTIFICATIONS_KV: kv as never,
         ...(zKluczami
           ? {
@@ -110,6 +111,7 @@ describe('api push — realna wysyłka zamiast fałszywego raportu', () => {
           : {}),
       },
       kv,
+      db,
     }
   }
 
@@ -158,12 +160,18 @@ describe('api push — realna wysyłka zamiast fałszywego raportu', () => {
     expect(odp.status).toBe(503)
   })
 
-  it('przyjmuje subskrypcję i zapisuje ją w KV', async () => {
-    const { env, kv } = await srodowisko()
+  it('przyjmuje subskrypcję i zapisuje ją w D1 (s8: magazyn push_subscribers)', async () => {
+    const { env, db } = await srodowisko()
     const odp = await zasubskrybuj(env, 'sub-1')
     expect(odp.status).toBe(201)
-    expect(kv.klucze()).toContain('push:subscriber:sub-1')
+    expect(db.pushSubskrybenci.map((w) => w.id)).toContain('sub-1')
+    // KV nie może już być magazynem — zapis tam oznaczałby powrót rozjazdu.
+    expect(kvNieUzyte(env)).toBe(true)
   })
+
+  /** s8: NOTIFICATIONS_KV zostaje w env (inne moduły), ale push nic tam nie pisze. */
+  const kvNieUzyte = (env: { NOTIFICATIONS_KV: unknown }) =>
+    (env.NOTIFICATIONS_KV as PamiecKV).rozmiar === 0
 
   /**
    * NAJWAŻNIEJSZY PRZYPADEK CAŁEGO PLIKU.
@@ -275,9 +283,9 @@ describe('api push — realna wysyłka zamiast fałszywego raportu', () => {
   })
 
   it('usuwa subskrypcję odrzuconą kodem 410', async () => {
-    const { env, kv } = await srodowisko()
+    const { env, db } = await srodowisko()
     await zasubskrybuj(env, 'martwa')
-    expect(kv.klucze()).toContain('push:subscriber:martwa')
+    expect(db.pushSubskrybenci.map((w) => w.id)).toContain('martwa')
 
     odpowiedzDostawcy = () => new Response('', { status: 410 })
 
@@ -297,7 +305,7 @@ describe('api push — realna wysyłka zamiast fałszywego raportu', () => {
 
     // Martwy wpis MUSI zniknąć — inaczej lista rośnie o subskrypcje, które
     // nigdy nic nie odbiorą, a każda wysyłka marnuje na nie żądanie.
-    expect(kv.klucze()).not.toContain('push:subscriber:martwa')
+    expect(db.pushSubskrybenci.map((w) => w.id)).not.toContain('martwa')
     expect(body.message.removedSubscribers).toBe(1)
     expect(body.message.delivered).toBe(0)
   })

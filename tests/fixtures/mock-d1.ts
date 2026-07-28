@@ -395,6 +395,85 @@ class MockStatement implements D1PreparedStatementLike {
       zastosujUpdateKomentarzy(sql, this.params, this.stan.komentarze)
       return []
     }
+    // ── push (s8: magazyn w D1 — tabele z migracji 0036/0059) ───────────
+    // Atrapa ma PAMIĘĆ zapisów, bo trasy push zapisują i natychmiast czytają:
+    // subskrypcja → wysyłka → (410) usunięcie. Mock bez pamięci testowałby
+    // wyłącznie odczyty i każdą ścieżkę wysyłki raportował jako brak odbiorców.
+    if (sql.includes('into push_subscribers')) {
+      const [id, userId, endpoint, p256dh, authKey, categoriesJson, segmentsJson, locale, device, status, createdAt, updatedAt] = this.params
+      // INSERT OR REPLACE honoruje też UNIQUE(endpoint) — jak prawdziwe SQLite.
+      this.stan.pushSubskrybenci = this.stan.pushSubskrybenci.filter(
+        (w) => w.id !== id && w.endpoint !== endpoint,
+      )
+      this.stan.pushSubskrybenci.push({
+        id: String(id), user_id: userId === null || userId === undefined ? null : String(userId),
+        endpoint: String(endpoint), p256dh: String(p256dh), auth_key: String(authKey),
+        categories_json: String(categoriesJson), segments_json: String(segmentsJson),
+        locale: String(locale), device: String(device), status: String(status),
+        created_at: String(createdAt), updated_at: String(updatedAt),
+      })
+      return []
+    }
+    if (sql.startsWith('delete from push_subscribers')) {
+      const id = this.params.find((p) => typeof p === 'string')
+      this.stan.pushSubskrybenci = this.stan.pushSubskrybenci.filter((w) => w.id !== id)
+      return []
+    }
+    if (sql.includes('from push_subscribers')) {
+      if (sql.includes('where id = ?')) {
+        const id = this.params.find((p) => typeof p === 'string')
+        return this.stan.pushSubskrybenci.filter((w) => w.id === id)
+      }
+      return [...this.stan.pushSubskrybenci]
+    }
+    if (sql.includes('into push_messages')) {
+      const p = this.params
+      this.stan.pushWiadomosci = this.stan.pushWiadomosci.filter((w) => w.id !== p[0])
+      this.stan.pushWiadomosci.push({
+        id: String(p[0]), kind: String(p[1]), title: String(p[2]), body: String(p[3]),
+        url: p[4] as string | null, segment: p[5] as string | null, category_slug: p[6] as string | null,
+        scheduled_for: p[7] as string | null, sent_at: p[8] as string | null, status: String(p[9]),
+        delivered: Number(p[10]), opened: Number(p[11]), clicked: Number(p[12]),
+        created_by: p[13] as string | null, created_at: String(p[14]),
+        attempted: p[15] as number | null, failed: p[16] as number | null,
+        removed_subscribers: p[17] as number | null, failure_reasons_json: p[18] as string | null,
+        failure_reason: p[19] as string | null, failure_detail: p[20] as string | null,
+      })
+      return []
+    }
+    if (sql.includes('from push_messages')) {
+      if (sql.includes("kind = 'breaking'")) {
+        const prefiks = String(this.params[0] ?? '').replace(/%$/, '')
+        return { n: this.stan.pushWiadomosci.filter((w) => w.kind === 'breaking' && w.created_at.startsWith(prefiks)).length }
+      }
+      if (sql.includes('count(*) as total')) {
+        return {
+          total: this.stan.pushWiadomosci.length,
+          delivered: this.stan.pushWiadomosci.reduce((a, w) => a + w.delivered, 0),
+          opened: this.stan.pushWiadomosci.reduce((a, w) => a + w.opened, 0),
+          clicked: this.stan.pushWiadomosci.reduce((a, w) => a + w.clicked, 0),
+        }
+      }
+      if (sql.includes("status = 'queued'")) {
+        const teraz = String(this.params[0] ?? new Date().toISOString())
+        return this.stan.pushWiadomosci.filter((w) => w.status === 'queued' && w.scheduled_for && w.scheduled_for <= teraz)
+      }
+      return [...this.stan.pushWiadomosci]
+    }
+    if (sql.includes('into push_preferences')) {
+      const p = this.params
+      this.stan.pushPreferencje = this.stan.pushPreferencje.filter((w) => w.id !== p[0])
+      this.stan.pushPreferencje.push({
+        id: String(p[0]), user_id: String(p[1]), categories_json: String(p[2]),
+        breaking_only: Number(p[3]), quiet_hours_from: p[4] as string | null,
+        quiet_hours_to: p[5] as string | null, updated_at: String(p[6]),
+      })
+      return []
+    }
+    if (sql.includes('from push_preferences')) {
+      const userId = this.params.find((p) => typeof p === 'string')
+      return this.stan.pushPreferencje.filter((w) => w.user_id === userId)
+    }
     if (sql.startsWith('insert into') || sql.startsWith('update ') || sql.startsWith('delete from')) {
       return []
     }
@@ -528,6 +607,27 @@ export class MockD1Database implements D1DatabaseLike {
     { ...WIERSZ_KOMENTARZA },
     { ...DRUGI_KOMENTARZ },
   ]
+
+  /** s8: pamięć tabel push_* — testy sprawdzają ZAWARTOŚĆ bazy po żądaniu. */
+  public pushSubskrybenci: Array<{
+    id: string; user_id: string | null; endpoint: string; p256dh: string; auth_key: string
+    categories_json: string; segments_json: string; locale: string; device: string
+    status: string; created_at: string; updated_at: string
+  }> = []
+
+  public pushWiadomosci: Array<{
+    id: string; kind: string; title: string; body: string; url: string | null
+    segment: string | null; category_slug: string | null; scheduled_for: string | null
+    sent_at: string | null; status: string; delivered: number; opened: number; clicked: number
+    created_by: string | null; created_at: string; attempted: number | null; failed: number | null
+    removed_subscribers: number | null; failure_reasons_json: string | null
+    failure_reason: string | null; failure_detail: string | null
+  }> = []
+
+  public pushPreferencje: Array<{
+    id: string; user_id: string; categories_json: string; breaking_only: number
+    quiet_hours_from: string | null; quiet_hours_to: string | null; updated_at: string
+  }> = []
 
   kolejneId(): number {
     return this.nastepneId++
