@@ -696,3 +696,65 @@
    karta czyta się jako kolejny element tej listy. Linia u góry oddziela
    dwa różne rodzaje treści: wiadomości i dane użytkowe. */
 .hero-side-pogoda{ margin-top:14px; padding-top:14px; border-top:2px solid var(--rule); }
+
+/* ============ F3 / WCAG 2.1 AA — DOSTĘPNOŚĆ ============
+   Naprawy z audytu 27.07.2026. Zmiany dotyczą wyłącznie stanu fokusu
+   i elementu ukrytego do momentu jego otrzymania, więc wygląd strony
+   dla użytkownika myszki pozostaje bez zmian.
+   ======================================================== */
+
+/* --- 1. Skip-link (WCAG 2.4.1 „Bypass Blocks") ---
+   Element jest pierwszy w kolejności czytania, ale niewidoczny do chwili
+   otrzymania fokusu. Nie używamy `display:none` ani `visibility:hidden` —
+   te wartości usuwają element z kolejności tabulacji, więc link nigdy by
+   fokusu nie otrzymał i cała naprawa byłaby pozorna. Zamiast tego element
+   jest wyprowadzony poza kadr przez `top:-100px`. */
+.skip-link{
+  position:absolute; top:-100px; left:16px; z-index:9999;
+  display:inline-block; padding:12px 20px;
+  background:var(--red); color:#fff;
+  font:700 14px var(--display); letter-spacing:.04em; text-transform:uppercase;
+  text-decoration:none; border-radius:0 0 4px 4px;
+  box-shadow:0 4px 16px rgba(0,0,0,.35);
+  transition:top 140ms var(--ease);
+}
+.skip-link:focus{ top:0; }
+.skip-link:focus-visible{ outline:3px solid var(--ink); outline-offset:2px; }
+
+/* Cel skip-linku. `tabindex="-1"` w HTML pozwala przenieść fokus, ale
+   przeglądarka narysowałaby wtedy obwódkę wokół całej treści strony —
+   niepotrzebnie, bo <main> nie jest elementem interaktywnym. */
+main#tresc:focus{ outline:none; }
+
+/* --- 2. Widoczny fokus na polach formularzy (WCAG 2.4.7 „Focus Visible") ---
+   Cztery reguły w szacie ustawiały `outline:none`, zastępując obwódkę samą
+   zmianą koloru ramki. Dla osoby nawigującej klawiaturą zmiana odcienia
+   ramki z #ddd na #999 jest praktycznie niewidoczna, a przy jasnym tle
+   monitora — nierozpoznawalna. Przywracamy wyraźny wskaźnik, zachowując
+   pierwotną zmianę koloru ramki. */
+.comment-form textarea:focus-visible,
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible,
+.header-search input:focus-visible,
+.footer-nl-form input:focus-visible{
+  outline:3px solid var(--red);
+  outline-offset:1px;
+}
+
+/* --- 3. Fokus na linkach i przyciskach ---
+   Wspólny wskaźnik dla nawigacji klawiaturą. `:focus-visible` (nie `:focus`)
+   sprawia, że obwódka nie pojawia się po kliknięciu myszką. */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+summary:focus-visible{
+  outline:3px solid var(--red);
+  outline-offset:2px;
+}
+/* Na czerwonym tle czerwona obwódka byłaby niewidoczna. */
+.live-link:focus-visible,
+.tag:focus-visible,
+.breaking-bar a:focus-visible{
+  outline-color:var(--ink);
+}

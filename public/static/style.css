@@ -31,7 +31,8 @@
   --c-samorzad:   #1a3a5c;
   --c-kujawianka: #1e7a4f;
   --c-kultura:    #7b2d8b;
-  --c-historia:   #b8860b;
+  /* F3 / WCAG 1.4.3 — bylo #b8860b (3,25:1 na bialym, norma AA to 4,5:1). */
+  --c-historia:   #8f6806;
   --c-ludzie:     #c0392b;
   --c-zycie:      #2d6a4f;
   --c-przeglad:   #2563a8;

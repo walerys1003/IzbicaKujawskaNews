@@ -57,7 +57,21 @@ export const renderer = jsxRenderer(({ children, title }) => {
         />
       </head>
       <body>
-        {children}
+        {/*
+          F3 / WCAG 2.4.1 + 1.3.1 — skip-link i <main>.
+          Pięć stron informacyjnych (/kontakt, /redakcja, /reklama,
+          /regulamin, /polityka-prywatnosci) korzysta z tego renderera,
+          nie z v4/Shell, więc naprawa w Shell ich nie objęła. Bez tej
+          zmiany pozostałyby jedynymi podstronami bez punktu orientacyjnego
+          „główna treść" — a to właśnie strony, na których mieszkaniec szuka
+          numeru telefonu i danych kontaktowych.
+        */}
+        <a href="#tresc" class="skip-link">
+          Przejdź do treści
+        </a>
+        <main id="tresc" tabindex={-1}>
+          {children}
+        </main>
         <script>
           {`if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/static/sw.js').catch(() => undefined)) }`}
         </script>

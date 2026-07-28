@@ -5,7 +5,13 @@
   --white:#fff; --bg:#f4f4f4; --bg-2:#ebebeb; --rule:#e0e0e0;
   --dark:#0a0a0a; --dark-2:#1a1a1a; --dark-3:#2a2a2a;
   --c-news:#d6121a; --c-sygnale:#ff1f28; --c-samorzad:#1e4a8a; --c-kujawianka:#0d7a3e;
-  --c-kultura:#8b2c8e; --c-historia:#b8860b; --c-ludzie:#d6121a; --c-zycie:#2d6a4f;
+  /* F3 / WCAG 1.4.3 — --c-historia bylo #b8860b: kontrast 3,25:1 na bialym,
+     norma AA wymaga 4,5:1. Token jest uzywany w OBU kierunkach (kolor tekstu
+     na bialym w .pogoda-stara, oraz tlo pod bialym tekstem w .tag.historia),
+     wiec nowa wartosc musiala spelnic norme dwustronnie. #8f6806 daje 5,06:1
+     w obu przypadkach, zachowujac zloto-brazowy charakter dzialu Historia.
+     Pomiar: scripts/sprawdz-kontrast.mjs */
+  --c-kultura:#8b2c8e; --c-historia:#8f6806; --c-ludzie:#d6121a; --c-zycie:#2d6a4f;
   --c-przeglad:#2563a8; --c-multimedia:#0a0a0a;
   --display:'Barlow Condensed','Arial Narrow',sans-serif;
   --body:'Barlow',system-ui,sans-serif;

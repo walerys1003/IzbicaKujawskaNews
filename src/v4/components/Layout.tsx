@@ -447,16 +447,49 @@ export const Footer: FC = () => (
 )
 
 // ────────────────────────────────────────────────────────────── SHELL STRONY
+/**
+ * F3 / WCAG 2.1 AA — dwie naprawy wykonane w JEDNYM miejscu.
+ *
+ * Audyt z 27.07.2026 wykazał `grep -c "<main"` = 0 na wszystkich 31 trasach
+ * publicznych oraz zero linków pomijających nawigację. Obie rzeczy są
+ * naprawiane tutaj, a nie na 31 stronach osobno — bo `Shell` opakowuje każdą
+ * stronę publiczną, a naprawa rozsypana po stronach oznaczałaby, że kolejna
+ * dodana podstrona znowu nie ma `<main>`. Dokładnie tak powstał ten brak.
+ *
+ * 1. SKIP-LINK (WCAG 2.4.1 „Bypass Blocks")
+ *    Nagłówek portalu to pasek górny, logo, mega-menu z 11 kategoriami
+ *    i pasek pilnych wiadomości. Użytkownik klawiatury lub czytnika ekranu
+ *    musiał przejść przez kilkadziesiąt linków, żeby dotrzeć do treści —
+ *    na KAŻDEJ podstronie. Link jest pierwszym elementem w kolejności
+ *    czytania i widoczny wyłącznie po otrzymaniu fokusu (klasa `skip-link`
+ *    w izbica-v4-ext.css), więc nie zmienia wyglądu strony.
+ *
+ * 2. <main id="tresc"> (WCAG 1.3.1 „Info and Relationships")
+ *    Bez tego znacznika czytnik ekranu nie ma punktu orientacyjnego
+ *    „główna treść", a skip-link nie miałby celu. `tabindex="-1"` jest
+ *    konieczne: bez niego przeglądarki Safari i część wersji Chrome
+ *    przewijają stronę, ale NIE przenoszą fokusu klawiatury — kolejny Tab
+ *    wracałby na początek nawigacji i link byłby pozorny.
+ *
+ * Znacznik jest bezpieczny dla szaty: w arkuszach v4 nie ma ani jednego
+ * selektora `body > *` (sprawdzone), więc dodatkowy poziom zagnieżdżenia
+ * nie zmienia żadnej reguły.
+ */
 export const Shell: FC<{
   children?: Child
   activeCategory?: string
   showBreaking?: boolean
 }> = ({ children, activeCategory, showBreaking = true }) => (
   <>
+    <a href="#tresc" class="skip-link">
+      Przejdź do treści
+    </a>
     <Topbar />
     <Header activeCategory={activeCategory} />
     {showBreaking ? <BreakingBar /> : null}
-    {children}
+    <main id="tresc" tabindex={-1}>
+      {children}
+    </main>
     <Footer />
   </>
 )
