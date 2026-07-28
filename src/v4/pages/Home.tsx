@@ -50,6 +50,34 @@ const metaOf = (a: Article, opts: { author?: boolean; reading?: boolean; views?:
   </div>
 )
 
+/**
+ * Beleczki podkategorii — ten sam wzorzec co w sekcji Wiadomości,
+ * powielony na życzenie redakcji (2026-07-28) do WSZYSTKICH sekcji
+ * strony głównej.
+ *
+ * Linki, nie <button>: każda beleczka MUSI prowadzić do strony
+ * podkategorii (taxonomy sub().path), bo nie każda sekcja ma na
+ * stronie głównej karty z każdej podkategorii. JS (izbica-v4.js)
+ * przechwytuje klik i filtruje na miejscu TYLKO wtedy, gdy w sekcji
+ * są pasujące karty [data-cat] — inaczej kliknięcie filtrowałoby
+ * sekcję do zera i czytelnik widziałby pustkę.
+ */
+const SubcatBar: FC<{ catSlug: string }> = ({ catSlug }) => {
+  const cat = findCategory(catSlug)!
+  return (
+    <div class="news-filters" role="tablist">
+      <a class="news-filter active" data-filter="all" href={cat.path}>
+        Wszystkie
+      </a>
+      {cat.subcategories.map((s) => (
+        <a class="news-filter" data-filter={s.slug} href={s.path}>
+          {s.title}
+        </a>
+      ))}
+    </div>
+  )
+}
+
 const shortDate = (a: Article) => {
   const d = new Date(a.publishedAtISO)
   const dd = String(d.getDate()).padStart(2, '0')
