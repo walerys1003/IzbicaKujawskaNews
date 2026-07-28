@@ -2,6 +2,23 @@
 
 **Metodologia**: audyt oparty na analizie kodu źródłowego (268 plików w `src/`, 51 migracji, 30 n8n workflowów, 20 dokumentów, 19 testów). Każde zadanie zweryfikowane przez sprawdzenie istnienia implementacji w repozytorium.
 
+---
+
+> ## ⚠️ OSTRZEŻENIE O WIARYGODNOŚCI TEGO DOKUMENTU (dopisane 2026-07-28)
+>
+> **„Sprawdzenie istnienia implementacji" to nie to samo co sprawdzenie, że implementacja działa.** Metodologia opisana powyżej weryfikowała obecność plików, nie ich podłączenie ani wykonanie. Skutek zmierzono w praktyce:
+>
+> **2026-07-28 usunięto 33 pliki oznaczone w tej tabeli jako „✅ DONE" lub „✅ STUB".** Wszystkie miały **zero importerów** i **zero obecności w zbudowanym workerze** (`dist/_worker.js`). Rozmiar bundla po usunięciu nie zmienił się ani o bajt — 984.71 kB przed i po, 351 modułów przed i po. To niezależny dowód, że kod nigdy nie był wykonywany.
+>
+> Usunięte katalogi, do których odwołują się pozycje poniżej:
+> - `src/db/models/` (17 plików) — pozycje 72, 77 i pokrewne
+> - `src/lib/kv/` (15 plików) — pozycje 84–93, 122 i pokrewne
+> - `src/routes/analytics/` (1 plik, 24 kB) — router **nigdy nie był zamontowany**, `POST /api/analytics/event` zwracał 404
+>
+> **Wniosek do stosowania przy czytaniu całej tabeli:** status „✅ DONE" w tym dokumencie znaczy „plik istniał", a nie „funkcja działa". Przy każdej pozycji, na której ma się opierać decyzja, należy niezależnie sprawdzić: (1) czy coś ten kod importuje, (2) czy jest w `dist/_worker.js`, (3) czy trasa odpowiada na żywym serwerze. Trzy pytania, których ten audyt nie zadał.
+
+---
+
 **Legenda statusu**:
 - ✅ DONE — implementacja istnieje w kodzie
 - ✅ STUB — istnieje szkielet/mock, ale brak pełnej implementacji

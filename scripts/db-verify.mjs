@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 /**
- * FAZA 1 / D3 — Weryfikacja zgodności modeli z rzeczywistą schemą D1
+ * FAZA 1 / D3 — Weryfikacja spójności schemy D1
  *
- * Powód istnienia tego skryptu: siedemnaście plików w `src/db/models/`
- * deklaruje kolumny tabel jako listy łańcuchów znaków w kodzie
- * TypeScript. To znaczy, że rozjazd między modelem a bazą jest
- * NIEWIDOCZNY dla kompilatora — TypeScript sprawdza tylko, czy kod
- * używa nazw obecnych na liście, a nie czy lista odpowiada bazie.
+ * ZAKRES ZMIENIONY 2026-07-28. Skrypt powstał, by porównywać siedemnaście
+ * plików z `src/db/models/` z rzeczywistą schemą bazy. Katalog usunięto
+ * (0 importerów, 0 obecności w zbudowanym workerze), więc porównanie modeli
+ * zostało wyjęte — patrz komentarz przy sekcji „Kontrola modeli”.
+ *
+ * Skrypt NIE został usunięty razem z katalogiem, bo pozostałe kontrole
+ * dotyczą samej bazy i wykrywają defekty niewidoczne dla kompilatora:
+ * wyzwalacze FTS5, więzy integralności, inwentarz tabel i widoków.
  *
  * Skutek, który wystąpił w praktyce: model `events.ts` deklarował
  * kolumnę `location`, a tabela nazywała ją inaczej, więc `INSERT`
@@ -25,12 +28,10 @@
  */
 
 import { execFileSync } from 'node:child_process'
-import { readFileSync, readdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const MODELS_DIR = join(ROOT, 'src', 'db', 'models')
 const DB_NAME = 'izbica24-production'
 
 const RED = '\u001b[31m'
@@ -89,114 +90,27 @@ for (const row of schemaRows) {
 const tables = [...schema.keys()]
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Odczyt deklaracji z plików modeli
+// Kontrola modeli — USUNIĘTA razem z `src/db/models/`
 // ─────────────────────────────────────────────────────────────────────────────
-
-const modelFiles = readdirSync(MODELS_DIR).filter((f) => f.endsWith('.ts') && f !== 'index.ts' && f !== '_shared.ts')
-
-const models = []
-for (const file of modelFiles) {
-  const source = readFileSync(join(MODELS_DIR, file), 'utf8')
-
-  // const TABLE = 'articles'
-  const tableMatch = source.match(/const\s+TABLE\s*=\s*['"]([^'"]+)['"]/)
-  // const COLUMNS = ["id", "slug", ...] as const
-  const columnsMatch = source.match(/const\s+COLUMNS\s*=\s*\[([\s\S]*?)\]\s*as\s+const/)
-  /**
-   * Tabele wymieniane wprost w zapytaniach SQL. Wzorzec musi wymagać
-   * WIELKICH LITER w słowie kluczowym: wariant bez rozróżniania wielkości
-   * dawał fałszywy alarm na każdym z piętnastu modeli, bo w komunikacie
-   * `throw new Error('ArticlesModel.update requires at least one field')`
-   * dopasowywał „update requires” i uznawał `requires` za nazwę tabeli.
-   */
-  const sqlTables = new Set(
-    [...source.matchAll(/\b(?:FROM|INTO|UPDATE|JOIN)\s+([a-z_][a-z0-9_]*)/g)].map((m) => m[1].toLowerCase()),
-  )
-
-  /**
-   * Normalizacja pozycji listy kolumn. Model `real-estate.ts` ma
-   * w `COLUMNS` wyrażenie `"transaction" AS transaction`, bo `transaction`
-   * jest w SQLite słowem o szczególnym znaczeniu i wymaga cytowania.
-   * Bez tej normalizacji parser widział pozycję `\` oraz
-   * ` AS transaction` i zgłaszał dwa nieistniejące błędy, a jednocześnie
-   * nie wiedział, że kolumna `transaction` JEST obsługiwana.
-   */
-  const rawColumns = columnsMatch ? [...columnsMatch[1].matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1]) : []
-  const columns = []
-  for (const raw of rawColumns) {
-    const unescaped = raw.replace(/\\"/g, '"').trim()
-    if (!unescaped) continue
-    // `"transaction" AS transaction` → `transaction`
-    const aliased = unescaped.match(/\bAS\s+([a-z_][a-z0-9_]*)\s*$/i)
-    const name = (aliased ? aliased[1] : unescaped).replace(/^"|"$/g, '').trim()
-    if (!name || columns.includes(name)) continue
-    columns.push(name)
-  }
-
-  models.push({ file, table: tableMatch?.[1] ?? null, columns, sqlTables: [...sqlTables] })
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Porównanie
-// ─────────────────────────────────────────────────────────────────────────────
+/*
+ * Do 2026-07-28 skrypt czytał siedemnaście plików z `src/db/models/` i
+ * porównywał zadeklarowane w nich listy kolumn z rzeczywistą schemą D1.
+ * Katalog usunięto (0 importerów, 0 obecności w zbudowanym workerze) na
+ * wyraźne polecenie właściciela projektu, więc ta część kontroli nie ma już
+ * czego sprawdzać. Historia jest w gicie — porównanie modeli można odtworzyć
+ * z commita poprzedzającego usunięcie.
+ *
+ * CO ZOSTAJE I DLACZEGO: pozostałe kontrole dotyczą samej bazy, nie kodu
+ * modeli, i wykrywają defekty niewidoczne dla kompilatora:
+ *   • spójność wyzwalaczy FTS5 (indeks pełnotekstowy bez wyzwalaczy cicho
+ *     przestaje się aktualizować — wyszukiwanie zwraca stare wyniki),
+ *   • PRAGMA foreign_key_check (naruszenia więzów integralności),
+ *   • inwentarz tabel, widoków i wyzwalaczy.
+ * Dlatego skrypt NIE został usunięty razem z katalogiem.
+ */
 
 const errors = []
 const warnings = []
-let checkedColumns = 0
-
-for (const model of models) {
-  if (!model.table) {
-    warnings.push(`${model.file}: nie znaleziono deklaracji \`const TABLE = '...'\` — pomijam.`)
-    continue
-  }
-
-  const tableSchema = schema.get(model.table)
-  if (!tableSchema) {
-    errors.push(`${model.file}: model odwołuje się do tabeli \`${model.table}\`, której NIE MA w bazie.`)
-    continue
-  }
-
-  // 1. Kolumny modelu muszą istnieć w tabeli.
-  for (const column of model.columns) {
-    checkedColumns++
-    if (!tableSchema.has(column)) {
-      const similar = [...tableSchema.keys()].filter(
-        (real) => real.replace(/_/g, '') === column.replace(/_/g, '') || real.includes(column) || column.includes(real),
-      )
-      errors.push(
-        `${model.file}: kolumna \`${model.table}.${column}\` NIE ISTNIEJE w bazie.` +
-          (similar.length ? ` Podobne w tabeli: ${similar.join(', ')}.` : ''),
-      )
-    }
-  }
-
-  // 2. Kolumny obowiązkowe (NOT NULL, bez DEFAULT, nie klucz główny)
-  //    muszą być obsługiwane przez model — inaczej INSERT zawsze zawiedzie.
-  for (const [name, info] of tableSchema) {
-    if (info.notNull && !info.hasDefault && !info.pk && !model.columns.includes(name)) {
-      errors.push(
-        `${model.file}: kolumna \`${model.table}.${name}\` jest NOT NULL bez wartości domyślnej, ` +
-          `ale model jej nie zna — każdy INSERT przez ten model zawiedzie.`,
-      )
-    }
-  }
-
-  // 3. Kolumny istniejące w bazie, o których model nie wie — to nie błąd,
-  //    ale sygnał, że migracja dodała pole i model został pominięty.
-  const unknown = [...tableSchema.keys()].filter((name) => !model.columns.includes(name))
-  if (unknown.length) {
-    warnings.push(
-      `${model.file}: tabela \`${model.table}\` ma kolumny nieobsługiwane przez model: ${unknown.join(', ')}.`,
-    )
-  }
-
-  // 4. Tabele wymieniane w SQL modelu, których nie ma w bazie.
-  for (const sqlTable of model.sqlTables) {
-    if (!schema.has(sqlTable) && !['select', 'values'].includes(sqlTable)) {
-      errors.push(`${model.file}: zapytanie SQL odwołuje się do tabeli \`${sqlTable}\`, której nie ma w bazie.`)
-    }
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Wyzwalacze i widoki — inwentarz kontrolny
@@ -247,14 +161,12 @@ if (fkCheck.length) {
 // Raport
 // ─────────────────────────────────────────────────────────────────────────────
 
-console.log(`\n${DIM}izbica24.pl — weryfikacja modeli D1 (D3)${OFF}`)
+console.log(`\n${DIM}izbica24.pl — weryfikacja schemy D1 (D3)${OFF}`)
 console.log(`${DIM}${'─'.repeat(72)}${OFF}`)
 console.log(`Tabel w bazie:            ${tables.length}`)
 console.log(`Tabel pełnotekstowych:    ${ftsTables.length}`)
 console.log(`Widoków:                  ${views.length}`)
 console.log(`Wyzwalaczy:               ${triggers.length}`)
-console.log(`Plików modeli:            ${models.length}`)
-console.log(`Sprawdzonych kolumn:      ${checkedColumns}`)
 console.log(`Naruszeń kluczy obcych:   ${fkCheck.length}`)
 
 if (warnings.length) {
@@ -269,4 +181,4 @@ if (errors.length) {
   process.exit(1)
 }
 
-console.log(`\n${GREEN}Modele zgodne ze schemą bazy.${OFF}\n`)
+console.log(`\n${GREEN}Schema bazy spójna: wyzwalacze FTS5 i więzy integralności bez zarzutu.${OFF}\n`)
