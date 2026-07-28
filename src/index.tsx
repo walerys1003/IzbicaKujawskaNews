@@ -110,6 +110,57 @@ app.use('*', responsePerformanceMiddleware)
 // Własny renderer (rendererV4) ładuje izbica-v4.css — szatę 1:1.
 // Starsze widoki (v2/v3) pozostają dostępne pod /v3 i /v2 do porównania.
 // ════════════════════════════════════════════════════════════════════════════
+/**
+ * Strona potwierdzenia zapisu na biuletyn.
+ *
+ * Zarejestrowana PRZED `v4InfoRoutes`, bo w Hono wygrywa procedura
+ * zarejestrowana pierwsza — trasa dodana po nich zostalaby przeslonieta
+ * (tak wlasnie zginely wczesniej /rodo, /faq i /polityka-cookies).
+ *
+ * Powstala razem z poprawka newslettera: list potwierdzajacy zawiera odnosnik
+ * do tego adresu, a przed poprawka `GET /newsletter/potwierdzenie` zwracalo
+ * 404. Wyslanie mieszkancowi odnosnika prowadzacego w blad jest gorsze od
+ * niewyslania listu, dlatego strona musi istniec razem z wysylka.
+ *
+ * Potwierdzenie wykonuje przegladarka (fetch na /api/v1/newsletter/confirm),
+ * bo trasa API jest chroniona przez Turnstile, a token zuzywa sie przy pierwszym
+ * uzyciu. Gdyby potwierdzal serwer przy renderowaniu strony, token skasowalby
+ * kazdy podglad odnosnika — w tym automatyczne skanery antywirusowe dostawcow
+ * poczty, ktore otwieraja linki przed pokazaniem ich adresatowi.
+ */
+app.get('/newsletter/potwierdzenie', (c) => {
+  const token = c.req.query('token') ?? ''
+  return c.html(`<!DOCTYPE html>
+<html lang="pl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Potwierdzenie zapisu na biuletyn — izbica24.pl</title>
+<link rel="stylesheet" href="/static/css/izbica-v4.css"></head>
+<body><main style="max-width:640px;margin:0 auto;padding:48px 20px">
+<h1>Potwierdzenie zapisu na biuletyn</h1>
+<p id="stan-potwierdzenia">Sprawdzamy odnosnik…</p>
+<p><a href="/">Wroc na strone glowna</a></p>
+</main>
+<script>
+(async () => {
+  const stan = document.getElementById('stan-potwierdzenia');
+  const token = ${JSON.stringify(token)};
+  if (!token) { stan.textContent = 'Odnosnik jest niepelny — brak tokenu potwierdzenia.'; return; }
+  try {
+    const r = await fetch('/api/v1/newsletter/confirm', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
+    stan.textContent = r.ok
+      ? 'Zapis potwierdzony. Od teraz bedziesz otrzymywac biuletyn izbica24.pl.'
+      : 'Tego odnosnika nie da sie uzyc — mogl juz zostac wykorzystany lub wygasnac. Zapisz sie ponownie.';
+  } catch (e) {
+    stan.textContent = 'Nie udalo sie polaczyc z serwerem. Spróbuj ponownie za chwile.';
+  }
+})();
+</script></body></html>`)
+})
+
 app.route('/', v4InfoRoutes)
 app.route('/', v4Router)
 

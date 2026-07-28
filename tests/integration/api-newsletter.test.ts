@@ -89,21 +89,32 @@ describe('api newsletter', () => {
 
   // ── zapis ────────────────────────────────────────────────────────────────
 
-  it('przyjmuje zapis i zwraca informację o wysłaniu potwierdzenia', async () => {
+  /**
+   * ZMIANA OCZEKIWANIA — wcześniej ten przypadek utrwalał NIEPRAWDĘ.
+   *
+   * Test wymagał `200 {"ok":true,"message":"confirmation_sent"}` w środowisku
+   * BEZ skonfigurowanej poczty (fixture nie ustawia RESEND_API_KEY). Trasa
+   * spełniała ten warunek, bo nie próbowała niczego wysłać — komunikat
+   * „wysłaliśmy potwierdzenie” był stałą tekstową, nie relacją ze zdarzenia.
+   * Test chronił więc dokładnie ten defekt: gdyby ktoś dodał realną wysyłkę,
+   * test by PADŁ.
+   *
+   * Teraz brak konfiguracji poczty daje 503 `email_not_configured`, bo bez
+   * klucza list nie ma jak opuścić serwera, a mieszkaniec zostałby z
+   * subskrypcją na zawsze w stanie 'pending'.
+   */
+  it('bez skonfigurowanej poczty NIE twierdzi, że wysłał potwierdzenie', async () => {
     const response = await zapytaj('/api/v1/newsletter/subscribe', swiezeSrodowisko(), {
       method: 'POST',
       body: JSON.stringify({ email: fixtureNewsletter.email }),
     })
     const body = await cialo(response)
 
-    expect(response.status).toBe(200)
-    expect(body.ok).toBe(true)
-    // Konkretna wartość, nie `toBeDefined()`: zapis MUSI kończyć się etapem
-    // potwierdzenia (double opt-in). Gdyby trasa zaczęła od razu potwierdzać
-    // subskrypcję, wysyłalibyśmy wiadomości na adresy, których właściciel
-    // nigdy nie potwierdził — i to my bylibyśmy nadawcą spamu.
-    expect(body.message).toBe('confirmation_sent')
-    expect(body.message).not.toBe('confirmed')
+    expect(response.status).toBe(503)
+    expect(body.ok).toBe(false)
+    expect(body.message).toBe('email_not_configured')
+    // Sedno regresu: odpowiedź nie może oznajmiać wysyłki, której nie było.
+    expect(body.message).not.toBe('confirmation_sent')
   })
 
   it('odrzuca adres bez znaku @ kodem 400', async () => {
@@ -114,7 +125,25 @@ describe('api newsletter', () => {
     const body = await cialo(response)
 
     expect(response.status).toBe(400)
-    expect(body.error).toBe('invalid_email')
+    // Pole `message`, nie `error` — router ujednolicono przy poprawce wysyłki.
+    expect(body.message).toBe('invalid_email')
+  })
+
+  /**
+   * Poprzednim warunkiem poprawności adresu było `email.includes('@')`, które
+   * przepuszcza '@', 'a@' i '@b'. Każdy taki zapis to wiersz w bazie i jedna
+   * nieudana próba wysyłki, liczona u dostawcy poczty jako odbicie — a odbicia
+   * obniżają reputację domeny, czyli szkodzą dostarczalności listów do
+   * mieszkańców, którzy zapisali się poprawnie.
+   */
+  it('odrzuca adresy pozornie poprawne, przechodzące przez samo includes("@")', async () => {
+    for (const zly of ['@', 'a@', '@b', 'a@b', 'a@b.', 'a b@c.pl']) {
+      const response = await zapytaj('/api/v1/newsletter/subscribe', swiezeSrodowisko(), {
+        method: 'POST',
+        body: JSON.stringify({ email: zly }),
+      })
+      expect(response.status, `adres ${JSON.stringify(zly)} powinien być odrzucony`).toBe(400)
+    }
   })
 
   it('odrzuca zapis bez pola email', async () => {
@@ -127,16 +156,33 @@ describe('api newsletter', () => {
 
   // ── potwierdzenie i wypisanie ────────────────────────────────────────────
 
-  it('potwierdzenie zwraca ok:true, a nie samo „pole istnieje”', async () => {
+  /**
+   * REGRES OCHRONY DANYCH. Wcześniej `/confirm` przyjmowało `{email}` i
+   * potwierdzało subskrypcję KAŻDEMU, kto zna adres mieszkańca — a test tego
+   * wymagał (`expect(body.ok).toBe(true)` dla obcego adresu). Podwójne
+   * potwierdzenie było więc pozorne: nie mieliśmy dowodu, że zgodę wyraził
+   * właściciel skrzynki (RODO art. 7 wymaga możliwości jej wykazania).
+   *
+   * Teraz potwierdzenie wymaga losowego tokenu z listu, a próba potwierdzenia
+   * samym adresem kończy się odmową.
+   */
+  it('NIE potwierdza subskrypcji na podstawie samego adresu e-mail', async () => {
     const response = await zapytaj('/api/v1/newsletter/confirm', swiezeSrodowisko(), {
       method: 'POST',
       body: JSON.stringify({ email: fixtureNewsletter.email }),
     })
     const body = await cialo(response)
 
-    expect(response.status).toBe(200)
-    // Poprzednio: expect(body.ok).toBeDefined() — przechodziło też dla false.
-    expect(body.ok).toBe(true)
+    expect(response.status).toBe(400)
+    expect(body.ok).toBe(false)
+  })
+
+  it('NIE potwierdza subskrypcji na zgadnięty token', async () => {
+    const response = await zapytaj('/api/v1/newsletter/confirm', swiezeSrodowisko(), {
+      method: 'POST',
+      body: JSON.stringify({ token: 'a'.repeat(64) }),
+    })
+    expect(response.status).toBe(404)
   })
 
   it('wypisanie zwraca ok:true', async () => {
@@ -150,7 +196,7 @@ describe('api newsletter', () => {
     expect(body.ok).toBe(true)
   })
 
-  it('potwierdzenie i wypisanie bez adresu kończy się 400', async () => {
+  it('potwierdzenie bez tokenu i wypisanie bez adresu kończy się 400', async () => {
     for (const sciezka of ['/api/v1/newsletter/confirm', '/api/v1/newsletter/unsubscribe']) {
       const response = await zapytaj(sciezka, swiezeSrodowisko(), {
         method: 'POST',

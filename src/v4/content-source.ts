@@ -30,7 +30,7 @@
 import type { Context } from 'hono'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import type { Article, Author, ContentBlock, ContentType, Gallery, PublishStatus } from './content-types'
-import { findCategory, findSubcategory } from './taxonomy'
+import { rozwiazTaksonomie } from './mapowanie-kategorii'
 
 // Autor zapasowy definiowany lokalnie, a NIE importowany z content-db.
 // content-db importuje `snapshot()` z tego pliku, wiec import w druga strone
@@ -210,62 +210,14 @@ const toContentType = (value: string | null): ContentType => {
  *
  * Drobniejszy podzial z bazy nie ginie — zapisujemy go jako podkategorie.
  */
-const CATEGORY_MAP: Record<string, { category: string; subcategory?: string }> = {
-  wiadomosci: { category: 'wiadomosci' },
-  komunikaty: { category: 'wiadomosci', subcategory: 'komunikaty' },
-  inwestycje: { category: 'wiadomosci', subcategory: 'inwestycje' },
-  edukacja: { category: 'wiadomosci', subcategory: 'edukacja' },
-  zdrowie: { category: 'wiadomosci', subcategory: 'zdrowie' },
-  spoleczne: { category: 'wiadomosci', subcategory: 'spoleczne' },
-  srodowisko: { category: 'wiadomosci', subcategory: 'srodowisko' },
-  rolnictwo: { category: 'wiadomosci', subcategory: 'rolnictwo' },
-  samorzad: { category: 'samorzad' },
-  rada: { category: 'samorzad', subcategory: 'rada' },
-  solectwa: { category: 'samorzad', subcategory: 'solectwa' },
-  'na-sygnale': { category: 'na-sygnale' },
-  kultura: { category: 'kultura' },
-  kalendarz: { category: 'kultura', subcategory: 'kalendarz' },
-  historia: { category: 'historia' },
-  ludzie: { category: 'ludzie' },
-  sport: { category: 'kujawianka' },
-  kujawianka: { category: 'kujawianka' },
-  multimedia: { category: 'multimedia' },
-  'przeglad-mediow': { category: 'przeglad-mediow' },
-  zycie: { category: 'zycie-codzienne' },
-  'zycie-codzienne': { category: 'zycie-codzienne' },
-  ogloszenia: { category: 'ogloszenia' },
-  nekrologi: { category: 'ogloszenia', subcategory: 'nekrologi' },
-  praca: { category: 'ogloszenia', subcategory: 'praca' },
-  nieruchomosci: { category: 'ogloszenia', subcategory: 'nieruchomosci' },
-  uslugi: { category: 'ogloszenia', subcategory: 'uslugi' },
-}
-
 /**
- * Zwraca kategorie i podkategorie w slowniku szaty.
- *
- * Podkategoria jest sprawdzana wzgledem taksonomii, bo `articleUrl` buduje z
- * niej adres `/kategoria/podkategoria/slug`, a router rejestruje takie trasy
- * tylko dla par obecnych w CATEGORIES. Podkategoria z bazy nieznana szacie
- * dawalaby link prowadzacy w 404 — lepiej pokazac artykul pod adresem
- * `/kategoria/slug`, ktory na pewno istnieje.
+ * Mapowanie kategorii bazy na taksonomie szaty przeniesiono do
+ * `./mapowanie-kategorii`, bo potrzebowaly go DWIE warstwy: strony (tutaj)
+ * oraz trasy API. Kopia byla tylko w tym pliku, wiec API skladalo adresy
+ * wprost z kolumn bazy i 21 z 30 ogloszonych adresow zwracalo 404
+ * (pomiar: `GET /api/v1/articles?limit=30`, kazdy `url` sprawdzony osobno).
+ * Jedno zrodlo prawdy sprawia, ze portal i API nie moga sie rozjechac.
  */
-const resolveTaxonomy = (
-  categorySlug: string | null,
-  subcategorySlug: string | null,
-): { category: string; subcategory?: string } => {
-  const mapped = CATEGORY_MAP[categorySlug ?? ''] ?? { category: 'wiadomosci' }
-  const known = findCategory(mapped.category)
-  const category = known ? mapped.category : 'wiadomosci'
-
-  const candidate = subcategorySlug ?? mapped.subcategory
-  const valid =
-    candidate && findSubcategory(category, candidate) ? candidate : mapped.subcategory
-
-  return {
-    category,
-    subcategory: valid && findSubcategory(category, valid) ? valid : undefined,
-  }
-}
 
 const STATUSES: PublishStatus[] = ['draft', 'review', 'scheduled', 'published', 'archived']
 const toStatus = (value: string): PublishStatus =>
@@ -322,7 +274,7 @@ const parseTypeData = (json: string | null): Record<string, unknown> => {
 const toArticle = (row: ArticleRow, blocks: ContentBlock[]): Article => {
   const typeData = parseTypeData(row.type_data_json)
   const when = row.published_at ?? row.created_at
-  const taxonomy = resolveTaxonomy(row.category_slug, row.subcategory_slug)
+  const taxonomy = rozwiazTaksonomie(row.category_slug, row.subcategory_slug)
 
   const article: Article = {
     id: String(row.id),

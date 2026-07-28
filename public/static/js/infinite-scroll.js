@@ -63,7 +63,22 @@
           : '/api/v1/articles?category=' + encodeURIComponent(category) + '&offset=' + offset + '&limit=' + limit;
         const response = await fetch(endpoint, { headers: { Accept: 'application/json' } });
         const payload = await response.json();
-        const items = Array.isArray(payload.items) ? payload.items : [];
+        /*
+         * Dwa formaty odpowiedzi, bo dwa routery:
+         *   /api/v1/search   -> { query, total, items: [...] }
+         *   /api/v1/articles -> { ok, data: [...], meta: {...} }   (koperta envelope.ts)
+         *
+         * Poprzednio czytano tylko `payload.items`. Dla strony kategorii
+         * `payload.items` bylo `undefined`, wiec `items.length === 0` i skrypt
+         * natychmiast oglaszal „To juz wszystkie materialy” oraz ustawial
+         * `finished = true`. Doladowywanie na stronach kategorii nie dzialalo
+         * nigdy — bez zadnego bledu w konsoli, bo brak pola nie jest wyjatkiem.
+         */
+        const items = Array.isArray(payload.items)
+          ? payload.items
+          : Array.isArray(payload.data)
+            ? payload.data
+            : [];
         if (!items.length) {
           finished = true;
           status.textContent = 'To już wszystkie materiały.';

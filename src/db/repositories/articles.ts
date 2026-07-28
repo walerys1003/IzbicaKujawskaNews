@@ -23,6 +23,7 @@
 import type { Context } from 'hono'
 import { slugify } from '../../lib/slugify'
 import { blocksToPlainText, type ValidatedBlock } from '../../lib/validation/blocks'
+import { slugiBazyDlaFiltru } from '../../v4/mapowanie-kategorii'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Typy
@@ -440,8 +441,13 @@ export const list = async (c: Context, opts: ListOptions): Promise<ListResult> =
   }
 
   if (opts.category) {
-    where.push('c.slug = ?')
-    binds.push(opts.category)
+    // Parametr moze byc slugiem szaty (`kujawianka`, `wiadomosci`) albo bazy
+    // (`sport`, `inwestycje`) — patrz `slugiBazyDlaFiltru`. Porownanie wprost z
+    // `c.slug` dawalo `total = 0` dla kazdego sluga szaty, a wlasnie takie
+    // wysyla `infinite-scroll.js` (bierze je z window.location.pathname).
+    const slugi = slugiBazyDlaFiltru(opts.category)
+    where.push(`c.slug IN (${slugi.map(() => '?').join(', ')})`)
+    binds.push(...slugi)
   }
   if (opts.subcategory) {
     where.push('a.subcategory_slug = ?')

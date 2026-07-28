@@ -16,9 +16,11 @@ export interface EmailProvider {
 }
 
 // Resend provider
-export function createResendProvider(apiKey: string): EmailProvider {
+export function createResendProvider(apiKey: string, from?: string): EmailProvider {
   const baseUrl = 'https://api.resend.com/emails'
-  const defaultFrom = 'izbica24.pl <newsletter@izbica24.pl>'
+  // Nadawca jako konfiguracja: domena wysylkowa musi byc zweryfikowana u
+  // dostawcy, a przy zmianie domeny portalu nie powinna wymagac zmiany kodu.
+  const defaultFrom = from || 'izbica24.pl <newsletter@izbica24.pl>'
 
   return {
     async send(message) {
@@ -73,11 +75,38 @@ export function createMockEmailProvider(): EmailProvider {
   }
 }
 
-// Factory: create provider based on available env
+/**
+ * Czy wysylka poczty jest skonfigurowana.
+ *
+ * Rozdzielone od `createEmailProvider`, bo trasy MUSZA umiec odroznic „list
+ * wyslany” od „list zalogowany do konsoli”. Bez tego rozroznienia trasa
+ * odpowiada mieszkancowi „wyslalismy potwierdzenie”, gdy zaden list nie
+ * opuscil serwera — patrz src/routes/newsletter/index.ts.
+ */
+export function emailSkonfigurowany(env: Bindings): boolean {
+  return typeof env.RESEND_API_KEY === 'string' && env.RESEND_API_KEY.length > 0
+}
+
+/**
+ * Wybiera dostawce poczty na podstawie konfiguracji.
+ *
+ * POPRAWKA. Poprzednia wersja brzmiala:
+ *
+ *     const apiKey = env.OPENAI_API_KEY ? undefined : undefined
+ *     if (!apiKey) return createMockEmailProvider()
+ *
+ * Oba ramiona warunku daja `undefined`, wiec `apiKey` bylo `undefined` zawsze,
+ * `!apiKey` zawsze prawdziwe i funkcja zwracala atrape RÓWNIEŻ na produkcji z
+ * poprawnie ustawionym kluczem. `createResendProvider` byl kodem martwym.
+ *
+ * Druga usterka: `createEmailProvider` nie bylo wywolywane z ZADNEGO miejsca
+ * w projekcie (sprawdzone grep-em po calym src/). Caly modul poczty byl
+ * odlaczony — dlatego usterka mogla przetrwac, nie objawiajac sie w zaden
+ * widoczny sposob.
+ */
 export function createEmailProvider(env: Bindings): EmailProvider {
-  const apiKey = env.OPENAI_API_KEY ? undefined : undefined // Placeholder — in production: env.RESEND_API_KEY
-  if (!apiKey) return createMockEmailProvider()
-  return createResendProvider(apiKey)
+  if (!emailSkonfigurowany(env)) return createMockEmailProvider()
+  return createResendProvider(env.RESEND_API_KEY as string, env.EMAIL_FROM)
 }
 
 // Newsletter email template

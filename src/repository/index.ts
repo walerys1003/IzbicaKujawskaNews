@@ -192,44 +192,105 @@ function mapCommentRow(row: Record<string, unknown>): CommentRow {
 }
 
 // ====== Newsletter Repository ======
+/**
+ * Losowy token potwierdzenia — 64 znaki szesnastkowe (32 bajty entropii).
+ *
+ * `crypto.getRandomValues` zamiast `Math.random()`: `Math.random()` nie jest
+ * generatorem kryptograficznym, jego wyniki daja sie przewidziec na podstawie
+ * poprzednich, a token, ktory da sie przewidziec, pozwala potwierdzic cudzy
+ * adres. Web Crypto jest dostepne w Cloudflare Workers bez dodatkowych flag.
+ */
+const losowyToken = (): string => {
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
 export function createNewsletterRepo(db: D1DatabaseLike) {
   return {
     // Tabelą kanoniczną jest `newsletters` (0002_core_schema.sql).
     // Wcześniej zapytania kierowano do nieistniejącej `newsletter_subs`,
     // co powodowało błąd 500 przy każdej próbie zapisu do newslettera.
     // Dozwolone statusy wg CHECK w schemacie: 'pending' | 'confirmed' | 'unsubscribed'.
-    async subscribe(email: string): Promise<{ ok: boolean; message: string }> {
+    /**
+     * Zapisuje adres ze statusem 'pending' i ZWRACA token potwierdzenia.
+     *
+     * DWIE USTERKI, ktore to naprawia.
+     *
+     * (1) Kolumna `token` nigdy nie byla wypelniana. Pomiar po zapisie:
+     *       SELECT email, token IS NULL FROM newsletters
+     *       -> test@example.com | 1
+     *     Schemat ma kolumne `token`, wiec podwojne potwierdzenie bylo
+     *     zaprojektowane — tylko nieziszczone.
+     *
+     * (2) Skutek dla `confirm()`: potwierdzenie identyfikowalo subskrypcje
+     *     WYLACZNIE adresem e-mail. Kazdy, kto zna adres mieszkanca, mogl go
+     *     potwierdzic za niego jednym zapytaniem HTTP. To wywraca sens
+     *     podwojnego potwierdzenia (RODO, art. 7 — zgoda musi byc wykazana):
+     *     nie mielismy dowodu, ze wlasciciel skrzynki wyrazil zgode, bo
+     *     potwierdzenie moglo przyjsc od kogokolwiek.
+     *
+     * Token jest losowy (Web Crypto, 32 bajty), wiec nie da sie go zgadnac ani
+     * wyliczyć z adresu.
+     */
+    async subscribe(email: string): Promise<{ ok: boolean; message: string; token?: string }> {
       const existing = await db.prepare(
         `SELECT id, status FROM newsletters WHERE email = ? AND deleted_at IS NULL`
       ).bind(email).first<{ id: number; status: string }>()
+
+      const token = losowyToken()
 
       if (existing) {
         // Powtórny zapis po wypisaniu przywraca subskrypcję do potwierdzenia.
         if (existing.status === 'unsubscribed') {
           await db.prepare(
             `UPDATE newsletters
-                SET status = 'pending', unsubscribed_at = NULL, confirmed_at = NULL,
+                SET status = 'pending', token = ?, unsubscribed_at = NULL, confirmed_at = NULL,
                     updated_at = CURRENT_TIMESTAMP
               WHERE id = ?`
-          ).bind(existing.id).run()
-          return { ok: true, message: 'confirmation_sent' }
+          ).bind(token, existing.id).run()
+          return { ok: true, message: 'confirmation_sent', token }
+        }
+        // Adres oczekujacy na potwierdzenie: wystawiamy NOWY token, bo
+        // poprzedni list mogl nie dotrzec. Bez tego mieszkaniec, ktory zgubil
+        // wiadomosc, nie mial zadnej drogi do potwierdzenia zgody.
+        if (existing.status === 'pending') {
+          await db.prepare(
+            `UPDATE newsletters SET token = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+          ).bind(token, existing.id).run()
+          return { ok: true, message: 'confirmation_sent', token }
         }
         return { ok: false, message: 'already_subscribed' }
       }
 
       await db.prepare(
-        `INSERT INTO newsletters (email, status, consent_version, created_at, updated_at)
-         VALUES (?, 'pending', '1.0', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
-      ).bind(email).run()
-      return { ok: true, message: 'confirmation_sent' }
+        `INSERT INTO newsletters (email, status, token, consent_version, created_at, updated_at)
+         VALUES (?, 'pending', ?, '1.0', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+      ).bind(email, token).run()
+      return { ok: true, message: 'confirmation_sent', token }
     },
-    async confirm(email: string): Promise<{ ok: boolean }> {
+
+    /**
+     * Potwierdza zgode na podstawie TOKENU, nie adresu e-mail.
+     *
+     * Token jest zuzywany (`token = NULL`), wiec przechwycony odnosnik nie
+     * daje sie uzyc po raz drugi. Zwracamy `ok: false` dla tokenu nieznanego
+     * lub juz zuzytego — bez informacji, ktora z tych sytuacji zachodzi, zeby
+     * nie potwierdzac istnienia adresu w bazie.
+     */
+    async confirm(token: string): Promise<{ ok: boolean }> {
+      const row = await db.prepare(
+        `SELECT id FROM newsletters
+          WHERE token = ? AND status = 'pending' AND deleted_at IS NULL`
+      ).bind(token).first<{ id: number }>()
+      if (!row) return { ok: false }
+
       await db.prepare(
         `UPDATE newsletters
             SET status = 'confirmed', confirmed_at = CURRENT_TIMESTAMP,
-                updated_at = CURRENT_TIMESTAMP
-          WHERE email = ? AND deleted_at IS NULL`
-      ).bind(email).run()
+                token = NULL, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?`
+      ).bind(row.id).run()
       return { ok: true }
     },
     async unsubscribe(email: string): Promise<{ ok: boolean }> {

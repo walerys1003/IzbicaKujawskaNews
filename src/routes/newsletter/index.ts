@@ -6,8 +6,17 @@ import { createNewsletterRepo } from '../../repository'
 import { turnstileGuard } from '../../middleware/turnstile'
 import { requireAuth } from '../../middleware/require-auth'
 import { requirePermission } from '../../middleware/require-permission'
+import { createEmailProvider, emailSkonfigurowany } from '../../lib/email/provider'
 
 const route = new Hono<AppEnv>()
+
+/**
+ * Sprawdzenie adresu. Poprzednio warunkiem bylo `email.includes('@')`, ktory
+ * przepuszcza '@', 'a@' i '@b' — adresy niemozliwe do dostarczenia. Kazdy taki
+ * zapis to wiersz w bazie i jedna nieudana proba wysylki, ktora u dostawcy
+ * poczty liczy sie jako odbicie i obniza reputacje domeny.
+ */
+const POPRAWNY_EMAIL = /^[^\s@]+@[^\s@.]+\.[^\s@]{2,}$/
 
 /**
  * Etap I9 — dlaczego chronione są wszystkie trzy adresy, nie tylko `/subscribe`.
@@ -22,22 +31,77 @@ const route = new Hono<AppEnv>()
  *
  * `/confirm` bez ochrony pozwala zgadywać tokeny potwierdzeń masowo.
  */
+/**
+ * ODPOWIEDŹ „confirmation_sent” BYŁA NIEPRAWDZIWA.
+ *
+ * Pomiar przed poprawka:
+ *   POST /api/v1/newsletter/subscribe {"email":"test@example.com"}
+ *     -> 200 {"ok":true,"message":"confirmation_sent"}
+ *   SELECT email, token IS NULL FROM newsletters
+ *     -> test@example.com | 1        (token NIE zostal wygenerowany)
+ *
+ * Trasa nie wywolywala ZADNEJ funkcji wysylki — modul `src/lib/email/provider.ts`
+ * nie byl importowany w tym pliku ani nigdzie indziej. Mieszkaniec dostawal
+ * komunikat „wyslalismy potwierdzenie” i czekal na list, ktory nie mial zostac
+ * nadany. Subskrypcja zostawala na zawsze w stanie 'pending', czyli nie
+ * otrzymywal tez zadnego biuletynu.
+ *
+ * Teraz komunikat opisuje stan faktyczny:
+ *   'confirmation_sent'      — list poszedl do dostawcy poczty
+ *   'email_not_configured'   — brak RESEND_API_KEY, list NIE poszedl (503)
+ *   'send_failed'            — dostawca odrzucil wysylke (502)
+ * Zamiast oglaszac sukces, ktorego nie ma, zwracamy blad — inaczej awaria
+ * poczty jest niewidoczna dla obslugi portalu.
+ */
 route.post('/subscribe', turnstileGuard({ action: 'newsletter-subscribe' }), async (c) => {
-  const body = await c.req.json<{ email?: string }>().catch(() => ({}))
+  const body = await c.req.json<{ email?: string }>().catch(() => ({}) as { email?: string })
   const email = body.email?.trim().toLowerCase()
-  if (!email || !email.includes('@')) return c.json({ error: 'invalid_email' }, 400)
+  if (!email || !POPRAWNY_EMAIL.test(email)) return c.json({ ok: false, message: 'invalid_email' }, 400)
+
   const repo = createNewsletterRepo(c.env.DB!)
   const result = await repo.subscribe(email)
-  return c.json(result, result.ok ? 200 : 409)
+  if (!result.ok || !result.token) return c.json(result, 409)
+
+  // Brak konfiguracji poczty zglaszamy JAWNIE. Cichy powrot do atrapy
+  // sprawilby, ze wdrozenie bez klucza wyglada na dzialajace, a zapisy
+  // mieszkancow zostaja w 'pending' bez sladu przyczyny.
+  if (!emailSkonfigurowany(c.env)) {
+    return c.json({ ok: false, message: 'email_not_configured' }, 503)
+  }
+
+  const link = `${c.env.SITE_URL || 'https://izbica24.pl'}/newsletter/potwierdzenie?token=${result.token}`
+  const wyslane = await createEmailProvider(c.env).send({
+    to: email,
+    subject: 'Potwierdz zapis na biuletyn izbica24.pl',
+    text: `Aby potwierdzic zapis na biuletyn, otworz odnosnik:\n\n${link}\n\n`
+      + 'Jesli to nie Ty zamawiales biuletyn, zignoruj te wiadomosc — bez '
+      + 'potwierdzenia nie wysylamy zadnych informacji.',
+    html: `<p>Aby potwierdzic zapis na biuletyn <strong>izbica24.pl</strong>, otworz odnosnik:</p>`
+      + `<p><a href="${link}">Potwierdzam zapis na biuletyn</a></p>`
+      + `<p style="color:#555;font-size:13px">Jesli to nie Ty zamawiales biuletyn, zignoruj te wiadomosc — bez potwierdzenia nie wysylamy zadnych informacji.</p>`,
+  })
+  if (!wyslane.ok) return c.json({ ok: false, message: 'send_failed' }, 502)
+
+  return c.json({ ok: true, message: 'confirmation_sent' })
 })
 
+/**
+ * Potwierdzenie na TOKEN, nie na adres e-mail.
+ *
+ * Wersja poprzednia przyjmowala `{"email":"..."}` i potwierdzala subskrypcje
+ * kazdemu, kto zna adres mieszkanca. Zgoda potwierdzona przez osobe trzecia
+ * nie jest zgoda (RODO art. 7 — trzeba umiec ja wykazac), a mechanizm
+ * podwojnego potwierdzenia stawal sie pozorny.
+ */
 route.post('/confirm', turnstileGuard({ action: 'newsletter-confirm' }), async (c) => {
-  const body = await c.req.json<{ email?: string }>().catch(() => ({}))
-  const email = body.email?.trim().toLowerCase()
-  if (!email) return c.json({ error: 'invalid_email' }, 400)
+  const body = await c.req.json<{ token?: string }>().catch(() => ({}) as { token?: string })
+  const token = body.token?.trim()
+  if (!token) return c.json({ ok: false, message: 'invalid_token' }, 400)
   const repo = createNewsletterRepo(c.env.DB!)
-  const result = await repo.confirm(email)
-  return c.json(result)
+  const result = await repo.confirm(token)
+  // 404, bo token nieznany lub juz zuzyty. Nie rozrozniamy tych przypadkow w
+  // komunikacie, zeby odpowiedz nie potwierdzala istnienia adresu w bazie.
+  return c.json(result, result.ok ? 200 : 404)
 })
 
 route.post('/unsubscribe', turnstileGuard({ action: 'newsletter-unsubscribe' }), async (c) => {

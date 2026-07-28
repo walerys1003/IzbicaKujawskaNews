@@ -198,6 +198,25 @@ export interface Bindings {
   IP_HASH_SALT?: string
 
   /**
+   * Klucz do wysylki poczty (Resend).
+   *
+   * Nie istnial, mimo ze `src/lib/email/provider.ts` ma gotowego dostawce
+   * `createResendProvider`. Fabryka `createEmailProvider` zawierala zapis:
+   *     const apiKey = env.OPENAI_API_KEY ? undefined : undefined
+   * ktory jest `undefined` niezaleznie od warunku, wiec ZAWSZE zwracala atrape
+   * logujaca do konsoli. Brak zmiennej w typie oznaczal, ze poprawnego zapisu
+   * nie dalo sie napisac bez bledu kompilacji.
+   *
+   * Brak klucza jest dopuszczalny (wtedy atrapa), ale MUSI byc rozpoznawalny —
+   * patrz `emailSkonfigurowany()`.
+   */
+  RESEND_API_KEY?: string
+  /** Nadawca listow, np. 'izbica24.pl <newsletter@izbica24.pl>'. */
+  EMAIL_FROM?: string
+  /** Adres bazowy portalu do budowy odnoszników w listach. Brak = https://izbica24.pl */
+  SITE_URL?: string
+
+  /**
    * Sekret Turnstile (Cloudflare, ochrona formularzy przed botami).
    *
    * Nie bylo tego klucza w `Bindings`, wiec `src/middleware/turnstile.ts`

@@ -29,11 +29,24 @@ import { ArticlesRepo, type ArticleListItem } from '../../db/repositories/articl
 
 const route = new Hono<AppEnv>()
 
-/** Adres artykulu na portalu — zgodny z `articleUrl()` z src/v4/content-types.ts. */
-export const publicUrl = (a: { category_slug: string | null; subcategory_slug: string | null; slug: string }): string => {
-  if (!a.category_slug) return `/artykul/${a.slug}`
-  return a.subcategory_slug ? `/${a.category_slug}/${a.subcategory_slug}/${a.slug}` : `/${a.category_slug}/${a.slug}`
-}
+/**
+ * Adres artykulu na portalu.
+ *
+ * POPRAWKA: wersja poprzednia skladala adres wprost z kolumn bazy:
+ *
+ *     return `/${a.category_slug}/${a.slug}`
+ *
+ * Kategorie bazy (21) nie pokrywaja sie z kategoriami szaty v4 (11), a router
+ * rejestruje trasy tylko dla tych drugich. Pomiar wszystkich 30 adresow
+ * zwroconych przez `GET /api/v1/articles?limit=30`: 9 x 200, 21 x 404.
+ * `inwestycje` z bazy dawalo `/inwestycje/<slug>` (404), gdy artykul jest pod
+ * `/wiadomosci/inwestycje/<slug>` (200).
+ *
+ * Teraz uzywamy tego samego mapowania, ktore stosuja strony i mapa witryny,
+ * wiec API i portal nie moga sie juz rozjechac.
+ */
+export { adresArtykuluZBazy as publicUrl } from '../../v4/mapowanie-kategorii'
+import { adresArtykuluZBazy } from '../../v4/mapowanie-kategorii'
 
 const card = (a: ArticleListItem) => ({
   id: a.id,
@@ -55,7 +68,7 @@ const card = (a: ArticleListItem) => ({
   viewCount: a.view_count,
   commentCount: a.comment_count,
   aiAssisted: a.ai_assisted === 1,
-  url: publicUrl(a),
+  url: adresArtykuluZBazy(a),
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -165,7 +178,7 @@ route.get('/:slug', async (c) => {
     author: article.author_id ? { name: article.author_name } : null,
     publishedAt: article.published_at,
     updatedAt: article.updated_at,
-    url: publicUrl(article),
+    url: adresArtykuluZBazy(article),
     powiazane: related.items.filter((r) => r.id !== article.id).slice(0, 3).map(card),
   })
 })
