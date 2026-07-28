@@ -114,6 +114,35 @@ const WIERSZ_UZYTKOWNIKA = {
   deleted_at: null,
 }
 
+/**
+ * Sesja użytkownika — bez niej NIE DA SIĘ przetestować żadnej trasy chronionej
+ * przez `src/middleware/require-auth`.
+ *
+ * To middleware sprawdza nie tylko podpis tokenu, ale też czy sesja nadal
+ * istnieje w `user_sessions` (dzięki temu „Wyloguj” działa natychmiast).
+ * Atrapa nie znała tej tabeli, więc `getSession()` zwracało `null` i nawet
+ * poprawnie podpisany token redaktora dawał 401 „Sesja została zakończona”.
+ *
+ * Skutek dla testów: każdy test trasy administracyjnej, który dostawał 401,
+ * wyglądał na „poprawnie zabezpieczoną trasę”, choć w rzeczywistości
+ * potwierdzał tylko lukę atrapy. Dokładnie ten fałszywy sygnał pozwolił
+ * zaakceptować tautologię `expect(status === 200 || status === 500)`.
+ *
+ * `expires_at` jest ustawione w przyszłość, bo zapytanie filtruje
+ * `expires_at > CURRENT_TIMESTAMP` i `revoked_at IS NULL`.
+ */
+const WIERSZ_SESJI = {
+  id: 'sesja-testowa',
+  user_id: 1,
+  refresh_token_hash: 'skrot-nieistotny-dla-testow',
+  user_agent: 'vitest',
+  ip_hash: null as string | null,
+  created_at: TERAZ,
+  last_seen_at: TERAZ,
+  expires_at: '2099-12-31 23:59:59',
+  revoked_at: null as string | null,
+}
+
 class MockStatement implements D1PreparedStatementLike {
   private params: unknown[] = []
 
@@ -241,6 +270,14 @@ class MockStatement implements D1PreparedStatementLike {
       return this.stan.artykuly.slice(offset, offset + limit)
     }
 
+    // ── sesje ───────────────────────────────────────────────────────────
+    // Musi być sprawdzane PRZED `from users`: zapytanie o sesję zawiera
+    // JOIN-y i nazwy kolumn, które mogłyby trafić w inną regułę.
+    if (sql.includes('user_sessions')) {
+      const id = this.params.find((p) => typeof p === 'string')
+      return this.stan.sesje.filter((s) => s.id === id)
+    }
+
     // ── użytkownicy ─────────────────────────────────────────────────────
     if (sql.includes('from users')) {
       const email = this.params.find((p) => typeof p === 'string' && p.includes('@'))
@@ -281,6 +318,9 @@ export class MockD1Database implements D1DatabaseLike {
   public uzytkownicy: Array<Record<string, unknown> & { id: number; email: string }> = [
     { ...WIERSZ_UZYTKOWNIKA },
   ]
+
+  /** Aktywne sesje. Test może je wyczyścić, by sprawdzić skutek wylogowania. */
+  public sesje: Array<Record<string, unknown> & { id: string }> = [{ ...WIERSZ_SESJI }]
 
   kolejneId(): number {
     return this.nastepneId++

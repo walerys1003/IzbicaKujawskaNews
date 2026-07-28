@@ -82,6 +82,14 @@ export const PERMISSIONS = [
   // Ogloszenia mieszkancow (nekrologi, praca, nieruchomosci)
   'listing:moderate',
 
+  // Newsletter — lista adresow e-mail mieszkancow to dane osobowe.
+  // GET /api/v1/newsletter/subscribers nie mial ZADNEJ ochrony: kazdy
+  // niezalogowany zapytaniem HTTP dostawal pelną liste adresow wraz ze
+  // statusem subskrypcji. To wyciek danych osobowych (RODO) i gotowa lista
+  // do spamu. Uprawnienie jest osobne od 'user:read', bo zapisany na
+  // newsletter mieszkaniec nie jest uzytkownikiem systemu.
+  'newsletter:read',
+
   // Uzytkownicy i konfiguracja
   'user:read',
   'user:create',
@@ -130,6 +138,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'media:delete:own',
     'media:delete:any',
     'listing:moderate',
+    'newsletter:read',
     'user:read',
     'settings:read',
     'ai:use',

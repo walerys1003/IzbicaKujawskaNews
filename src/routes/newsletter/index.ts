@@ -4,6 +4,8 @@ import type { AppEnv } from '../../types/env'
 import { createNewsletterRepo } from '../../repository'
 // Etap I9 — ochrona formularzy zapisu na newsletter.
 import { turnstileGuard } from '../../middleware/turnstile'
+import { requireAuth } from '../../middleware/require-auth'
+import { requirePermission } from '../../middleware/require-permission'
 
 const route = new Hono<AppEnv>()
 
@@ -47,7 +49,28 @@ route.post('/unsubscribe', turnstileGuard({ action: 'newsletter-unsubscribe' }),
   return c.json(result)
 })
 
-route.get('/subscribers', async (c) => {
+/**
+ * WYCIEK DANYCH OSOBOWYCH — ten adres nie miał żadnej ochrony.
+ *
+ * Pomiar (`GET /api/v1/newsletter/subscribers` bez nagłówka Authorization)
+ * zwracał `200 {"total":0,"items":[]}`, czyli trasa działała i odpowiadała
+ * każdemu. Na produkcji z realnymi danymi to pełna lista adresów e-mail
+ * mieszkańców gminy wraz ze statusem subskrypcji — wydana anonimowo, jednym
+ * żądaniem HTTP, bez logowania i bez śladu w rejestrze dostępu.
+ *
+ * Skutki: naruszenie ochrony danych osobowych (RODO) oraz gotowa lista
+ * odbiorców do spamu i phishingu podszywającego się pod gminę.
+ *
+ * Defekt nie został wcześniej wychwycony, bo jedyny test tego adresu brzmiał
+ * `expect(response.status === 200 || response.status === 500).toBe(true)` —
+ * warunek prawdziwy dla obu możliwych wyników, więc nie mógł paść. Test
+ * przechodził i przy otwartym, i przy zepsutym adresie.
+ *
+ * Pozostałe trasy tego routera są publiczne celowo (mieszkaniec zapisuje się
+ * bez konta) i chroni je `turnstileGuard`. Tutaj chodzi o CZYTANIE zbioru,
+ * więc wymagane jest zalogowanie i uprawnienie.
+ */
+route.get('/subscribers', requireAuth, requirePermission('newsletter:read'), async (c) => {
   const repo = createNewsletterRepo(c.env.DB!)
   const items = await repo.getSubscribers()
   return c.json({ total: items.length, items })
