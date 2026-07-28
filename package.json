@@ -28,7 +28,8 @@
     "clean-port": "fuser -k 3000/tcp 2>/dev/null || true",
     "db:verify": "node scripts/db-verify.mjs",
     "check:hotlinks": "node scripts/sprawdz-hotlinki.mjs",
-    "i11:fix-images": "node scripts/i11-usun-obrazy-zewnetrzne.mjs"
+    "i11:fix-images": "node scripts/i11-usun-obrazy-zewnetrzne.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "hono": "^4.12.23",
