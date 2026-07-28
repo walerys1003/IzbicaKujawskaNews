@@ -854,3 +854,25 @@ summary:focus-visible{
   --body: 'Barlow', 'Barlow Fallback', system-ui, sans-serif;
   --serif: 'Source Serif 4', 'Source Serif 4 Fallback', Georgia, serif;
 }
+
+/* ==========================================================================
+   Etap I8 — kontrolka powiadomień push w stopce.
+
+   Wysokość jest ustalona (min-height) niezależnie od stanu przycisku, bo
+   push-client.js podmienia jego treść: „Włącz powiadomienia" → „Włączanie…"
+   → „Powiadomienia włączone" / komunikat błędu. Bez rezerwacji wysokości
+   dłuższy komunikat („Powiadomienia zablokowane — zmień to w ustawieniach
+   przeglądarki.") zawijałby się do drugiej linii i przesuwał stopkę,
+   psując CLS wyprowadzony w etapie F4 do 0,0022 na desktopie.
+   ========================================================================== */
+.footer-push{margin-top:16px;padding-top:14px;border-top:1px solid #1a1a1a}
+.footer-push-btn{width:100%;min-height:42px;background:transparent;color:#fff;border:1px solid #333;padding:12px;font:800 12px var(--display);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:border-color var(--t-fast),background var(--t-fast),color var(--t-fast)}
+.footer-push-btn:hover:not([disabled]){border-color:var(--red);background:var(--red);color:#fff}
+.footer-push-btn:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+/* Stan aktywny: przycisk jest wyłączony, więc musi WYGLĄDAĆ na nieaktywny —
+   inaczej czytelnik klika w coś, co nie reaguje, i uznaje stronę za zepsutą. */
+.footer-push-btn[data-push-stan="aktywne"]{border-color:#2f6b3f;color:#8fd0a3;cursor:default}
+.footer-push-btn[data-push-stan="blad"]{border-color:#6b2f2f;color:#e08f8f;font-size:11px;text-transform:none;letter-spacing:0}
+.footer-push-btn[data-push-stan="oczekiwanie"]{color:#888;cursor:progress}
+.footer-push-btn[disabled]{opacity:1}
+.footer-push-note{margin-top:8px;font:400 10px var(--body);color:#666;line-height:1.5}

@@ -1,3 +1,57 @@
+/*
+  ==========================================================================
+  ETAP I8 — DECYZJA O MAGAZYNIE: KV JEST JEDYNYM ŹRÓDŁEM PRAWDY
+  ==========================================================================
+
+  Stan zastany (zmierzony 2026-07-28): migracja 0036_push_notifications.sql
+  tworzy tabele push_subscribers / push_preferences / push_messages, ale
+  ŻADNA trasa w tym pliku nie wykonuje na nich zapytania — cała warstwa
+  używa NOTIFICATIONS_KV. Grep po `env.DB` w src/routes/push/ nie zwraca
+  ani jednego trafienia. Tabele stały puste od wdrożenia migracji.
+
+  To był realny problem, nie kosmetyczny: dwa równoległe magazyny, z których
+  jeden jest deklarowany w schemacie, a drugi faktycznie działa, gwarantują,
+  że przy pierwszej próbie raportu z D1 panel pokaże zero subskrybentów przy
+  tysiącu realnych.
+
+  WYBRANO KV. Uzasadnienie oparte na charakterystyce dostępu, nie preferencji:
+
+  1. Dostęp jest wyłącznie po kluczu i po prefiksie. Cała logika sprowadza
+     się do „daj mi tego subskrybenta" i „daj mi wszystkich aktywnych".
+     Nie ma tu ani jednego JOIN-a, agregatu ani zapytania po zakresie dat.
+     Relacyjność D1 nie miałaby czego obsłużyć.
+
+  2. Zapis przy wysyłce jest punktowy i częsty. Odpowiedź 410 od dostawcy
+     wymaga usunięcia JEDNEJ subskrypcji. W KV to jedno `delete`. W D1
+     każde takie usunięcie to zapytanie do bazy o jednym regionie zapisu,
+     a przy wysyłce do tysiąca odbiorców takich operacji jest tyle, ile
+     martwych subskrypcji.
+
+  3. Czytanie listy odbiorców zdarza się rzadko (moment wysyłki), a czytanie
+     pojedynczej subskrypcji — przy każdym wejściu czytelnika na stronę.
+     KV jest replikowane do wszystkich lokalizacji brzegowych, D1 ma jeden
+     region zapisu i replikę czytającą.
+
+  ZNANE OGRANICZENIE, ŚWIADOMIE PRZYJĘTE
+  --------------------------------------
+  listByPrefix() w src/lib/runtime-kv.ts ma `limit: 500` i NIE obsługuje
+  kursora — sprawdzone w kodzie, nie założone. Powyżej 500 subskrybentów
+  wysyłka po cichu pominie nadwyżkę i nikt tego nie zauważy, bo `delivered`
+  będzie zgodne z liczbą PODJĘTYCH prób. Portal gminy o ~2,8 tys.
+  subskrybentach newslettera realnie ten próg przekroczy.
+
+  Dlatego trasa /send-broadcast raportuje `attempted` obok `delivered`
+  i ostrzega, gdy lista dobiła do limitu (patrz OSTRZEZENIE_LIMIT_KV).
+  Stronicowanie listByPrefix jest osobnym zadaniem — wymaga zmiany
+  sygnatury używanej przez inne moduły (newsletter, analytics), więc nie
+  wchodzi w zakres I8. Do tego czasu limit jest widoczny w odpowiedzi API,
+  a nie ukryty.
+
+  Tabele D1 z migracji 0036 pozostają nieużywane. NIE usuwam ich migracją
+  wycofującą, bo to nie jest bezpieczne bez wglądu w stan produkcji —
+  wymaga potwierdzenia, że są puste na środowisku produkcyjnym.
+  ==========================================================================
+*/
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 import type { AppEnv, Bindings } from '../../types/env'
@@ -5,6 +59,13 @@ import { requireAuth } from '../auth/middleware/require-auth'
 import type { AuthJwtPayload } from '../auth/helpers/password-utils'
 import { deleteJson, getJson, listByPrefix, putJson, upsertCollectionItem } from '../../lib/runtime-kv'
 import { kluczeVapidZeSrodowiska, wyslijPowiadomienie, type PowodNiepowodzenia } from '../../lib/push/webpush'
+
+/*
+  Limit odpowiada `limit: 500` w listByPrefix (src/lib/runtime-kv.ts).
+  Trzymam go tutaj jako stałą, żeby ostrzeżenie w API nie rozjechało się
+  z faktycznym zachowaniem warstwy KV przy zmianie tamtej wartości.
+*/
+const LIMIT_LISTY_KV = 500
 
 /** Wynik wysyłki do jednego subskrybenta — z jego identyfikatorem. */
 interface WynikSubskrybenta {
@@ -73,6 +134,12 @@ export interface PushMessageRecord {
   /** Powód całkowitego niepowodzenia (np. brak konfiguracji VAPID). */
   failureReason?: string
   failureDetail?: string
+  /**
+   * true, gdy lista subskrybentów dobiła do limitu listByPrefix (500) i część
+   * odbiorców NIE została uwzględniona. Bez tego pola „dostarczono 500/500"
+   * wyglądałoby na pełny sukces przy tysiącach pominiętych osób.
+   */
+  listaUcieta?: boolean
 }
 
 const route = new Hono<AppEnv>()
@@ -168,6 +235,23 @@ const sendMessage = async (env: Bindings, message: PushMessageRecord) => {
   const subscribers = await listSubscribers(env)
   const recipients = subscribers.filter((subscriber) => matchRecipient(subscriber, message))
 
+  /*
+    Wykrycie ucięcia listy przez limit KV. Gdy listSubscribers zwróci
+    dokładnie LIMIT_LISTY_KV pozycji, jest praktycznie pewne, że dalsze
+    subskrypcje istnieją, ale nie zostały pobrane — listByPrefix nie
+    obsługuje kursora. Bez tego ostrzeżenia panel pokazałby „dostarczono
+    500/500" i wyglądałoby to na pełny sukces, gdy 2 300 osób nie dostało
+    nic. Zgłaszam to jawnie, zamiast udawać, że problem nie istnieje.
+  */
+  const listaUcieta = subscribers.length >= LIMIT_LISTY_KV
+  if (listaUcieta) {
+    console.error(
+      `[push] OSTRZEZENIE_LIMIT_KV: pobrano ${subscribers.length} subskrypcji, ` +
+        `czyli dokładnie limit listByPrefix. Subskrypcje powyżej tego progu NIE ` +
+        `otrzymają wiadomości ${message.id}. Wymagane stronicowanie listByPrefix.`,
+    )
+  }
+
   const kluczeVapid = kluczeVapidZeSrodowiska(env)
 
   // ── Brak konfiguracji: zapisujemy porażkę, nie sukces ─────────────────
@@ -180,6 +264,7 @@ const sendMessage = async (env: Bindings, message: PushMessageRecord) => {
       failureReason: 'brak_konfiguracji_vapid',
       failureDetail: 'Brak VAPID_PUBLIC_KEY lub VAPID_PRIVATE_KEY — powiadomienia nie zostały wysłane.',
       attempted: recipients.length,
+      listaUcieta: listaUcieta || undefined,
     }
     await putJson(env, 'NOTIFICATIONS_KV', messageKey(message.id), saved)
     console.error('[push] Wysyłka przerwana: brak kluczy VAPID w środowisku.')
@@ -242,6 +327,7 @@ const sendMessage = async (env: Bindings, message: PushMessageRecord) => {
     failed: nieudane,
     removedSubscribers: doUsuniecia.length,
     failureReasons: Object.keys(powody).length ? powody : undefined,
+    listaUcieta: listaUcieta || undefined,
     sentAt: new Date().toISOString(),
     // 'sent' tylko wtedy, gdy cokolwiek faktycznie doszło. Zero dostarczeń
     // przy niepustej liście adresatów to porażka, nie wysłana wiadomość.

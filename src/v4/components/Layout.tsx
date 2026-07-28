@@ -425,6 +425,30 @@ export const Footer: FC = () => (
             <div class="l">działalności</div>
           </div>
         </div>
+
+        {/*
+          Etap I8 — kontrolka powiadomień push.
+
+          Przycisk jest domyślnie ukryty (hidden) i pokazuje go dopiero
+          push-client.js po sprawdzeniu, że przeglądarka obsługuje
+          serviceWorker + PushManager + Notification. Odwrotna kolejność
+          (widoczny, ukrywany skryptem) dawałaby przebłysk martwego przycisku
+          w Safari na iOS bez PWA i przeskok układu — dokładnie to, co
+          usuwaliśmy w etapie F4.
+
+          Bez atrybutu data-push-subscribe cała warstwa kliencka jest
+          nieosiągalna: push-client.js szuka wyłącznie tego selektora, więc
+          do 2026-07-28 subskrypcja nie dała się włączyć z żadnej strony.
+        */}
+        <div class="footer-push" id="powiadomienia-push">
+          <button type="button" class="footer-push-btn" data-push-subscribe hidden>
+            Włącz powiadomienia
+          </button>
+          <p class="footer-push-note">
+            Powiadomienie o pilnych informacjach z gminy. Zgodę możesz w każdej chwili wycofać
+            w ustawieniach przeglądarki.
+          </p>
+        </div>
       </div>
     </div>
 

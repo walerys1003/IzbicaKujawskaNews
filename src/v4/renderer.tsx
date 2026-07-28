@@ -151,6 +151,39 @@ export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, 
         */}
         <ZgodaCookies token={tokenAnalityki} />
         <script src="/static/v4/izbica-v4-zgoda.js" defer></script>
+        {/*
+          Etap I8 — powiadomienia push.
+
+          Rejestracja celowo wskazuje /sw.js, NIE /static/sw.js. Zakres
+          Service Workera wynika z katalogu, z którego pobrano skrypt, a
+          nagłówka Service-Worker-Allowed nie ustawiamy nigdzie w projekcie
+          (sprawdzone greppem 2026-07-28). Worker z /static/ nie kontrolowałby
+          adresów /, /artykul/... ani /mapa — jego handler `fetch` nigdy nie
+          dostawałby zdarzenia, więc cała warstwa offline byłaby martwa.
+          Dokładnie taki stan zastałem w v3 rendererze.
+
+          Rejestruję po zdarzeniu `load`, żeby pobranie i instalacja workera
+          nie konkurowały o pasmo z zasobami widocznej części strony (LCP).
+        */}
+        {/*
+          UWAGA — dlaczego dangerouslySetInnerHTML, a nie <script>{'...'}</script>.
+
+          Zmierzone 2026-07-28: Hono JSX traktuje dziecko elementu <script>
+          jak zwykły tekst i escapuje apostrofy do &#39;. Wewnątrz <script>
+          przeglądarka NIE dekoduje encji HTML (to element typu raw text),
+          więc do silnika JS trafiał literalny ciąg &#39;serviceWorker&#39;
+          i skrypt kończył się SyntaxError. Ten sam wzorzec stał w
+          src/renderer.tsx od początku projektu — rejestracja Service Workera
+          nigdy w tym portalu nie zadziałała. Audyt raportował ją jako
+          „gotową", bo obecność <script> w kodzie źródłowym sprawdzono
+          wzrokowo, a nie przez uruchomienie.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}",
+          }}
+        />
+        <script src="/static/push-client.js" defer></script>
       </body>
     </html>
   )

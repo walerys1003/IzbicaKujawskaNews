@@ -72,9 +72,25 @@ export const renderer = jsxRenderer(({ children, title }) => {
         <main id="tresc" tabindex={-1}>
           {children}
         </main>
-        <script>
-          {`if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/static/sw.js').catch(() => undefined)) }`}
-        </script>
+        {/*
+          Etap I8 — poprawka zakresu. Wcześniej rejestrowano '/static/sw.js',
+          co dawało Service Workera o zakresie /static/. Taki worker nie
+          kontroluje żadnej strony portalu, więc jego handler `fetch` nigdy
+          się nie uruchamiał, a precache w `install` był czystym marnotrawstwem
+          transferu. Nagłówka Service-Worker-Allowed projekt nie ustawia.
+          Jeden worker o zakresie / obsługuje teraz cache i powiadomienia.
+        */}
+        {/*
+          dangerouslySetInnerHTML jest tu konieczne: Hono JSX escapuje
+          apostrofy w treści <script> do &#39;, a <script> jest elementem
+          raw text — przeglądarka encji nie dekoduje i dostaje SyntaxError.
+          Szczegóły pomiaru w src/v4/renderer.tsx.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}",
+          }}
+        />
         <script src="/static/app.js" defer></script>
         <script src="/static/v3-app.js" defer></script>
         <script src="/static/vitals.js" defer></script>

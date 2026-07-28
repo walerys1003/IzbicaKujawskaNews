@@ -1,66 +1,42 @@
-const VERSION = 'izbica24-v4'
-const STATIC_CACHE = `${VERSION}-static`
-const HTML_CACHE = `${VERSION}-html`
-const STATIC_EXTENSIONS = /\.(?:css|js|png|jpg|jpeg|webp|avif|svg|woff2?)$/i
+/*
+  PLIK MIGRACYJNY — nie dopisuj tu logiki.
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(STATIC_CACHE)
-      .then((cache) =>
-        cache.addAll([
-          '/',
-          '/static/design-tokens.css',
-          '/static/v3-base.css',
-          '/static/v3-header.css',
-          '/static/v3-hero.css',
-          '/static/v3-modules.css',
-          '/static/v3-fix.css',
-        ])
-      )
-  )
+  Do 2026-07-28 ten plik był Service Workerem z warstwą cache. Miał jednak
+  zakres /static/ (bo tak wynika z katalogu, a nagłówka Service-Worker-Allowed
+  nigdzie nie ustawiano), więc nie kontrolował żadnej strony portalu i jego
+  handler `fetch` nigdy nie był wywoływany. Cała warstwa offline była martwa.
+
+  Warstwa cache i powiadomienia push mieszkają teraz w /sw.js (zakres /).
+
+  Problem: czytelnicy, którzy odwiedzili portal wcześniej, mają w przeglądarce
+  ZAPISANĄ rejestrację tego pliku. Sama zmiana rejestracji w HTML jej nie
+  usuwa — stary worker zostałby na zawsze obok nowego. Dlatego ten skrypt
+  wyrejestrowuje sam siebie i sprząta cache po wersjach v3/v4.
+
+  Plik można usunąć, gdy telemetria pokaże brak rejestracji o zakresie
+  /static/ — czyli po okresie dłuższym niż typowa przerwa między wizytami
+  stałego czytelnika. Usunięcie go za wcześnie da 404, a wtedy przeglądarka
+  zostawi starą rejestrację w spokoju i migracja nigdy się nie dokończy.
+*/
+
+self.addEventListener('install', () => {
   self.skipWaiting()
 })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(keys.filter((key) => !key.startsWith(VERSION)).map((key) => caches.delete(key)))
-      )
-  )
-  self.clients.claim()
-})
+    (async () => {
+      const klucze = await caches.keys()
+      await Promise.all(klucze.filter((klucz) => klucz.startsWith('izbica24-')).map((klucz) => caches.delete(klucz)))
+      await self.registration.unregister()
 
-self.addEventListener('fetch', (event) => {
-  const request = event.request
-  if (request.method !== 'GET') return
-
-  const url = new URL(request.url)
-  if (url.origin !== self.location.origin) return
-
-  if (STATIC_EXTENSIONS.test(url.pathname)) {
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached
-        return fetch(request).then((response) => {
-          const copy = response.clone()
-          caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy))
-          return response
-        })
-      })
-    )
-    return
-  }
-
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        const copy = response.clone()
-        caches.open(HTML_CACHE).then((cache) => cache.put(request, copy))
-        return response
-      })
-      .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
+      /*
+        Po unregister() strony pozostają kontrolowane przez tego workera do
+        następnego przeładowania. Wymuszam je, żeby czytelnik od razu trafił
+        pod kontrolę /sw.js, a nie dopiero przy kolejnej wizycie.
+      */
+      const okna = await self.clients.matchAll({ type: 'window' })
+      okna.forEach((okno) => okno.navigate(okno.url))
+    })()
   )
 })
