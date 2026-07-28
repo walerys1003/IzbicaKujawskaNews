@@ -150,8 +150,31 @@ export const errorHandler: ErrorHandler<AppEnv> = (error, c) => {
     ip: anonymizeIp(clientIp((nazwa) => c.req.header(nazwa))),
   })
   // Na Workers zapis dokańczamy w tle, żeby nie wydłużać odpowiedzi.
-  if (typeof c.executionCtx?.waitUntil === 'function') {
-    try { c.executionCtx.waitUntil(persist) } catch { /* poza kontekstem żądania */ }
+  //
+  // A9 — DLACZEGO CAŁOŚĆ JEST W try/catch, A NIE TYLKO WYWOŁANIE
+  //
+  // Poprzedni warunek brzmiał `typeof c.executionCtx?.waitUntil === 'function'`.
+  // Wyglądał bezpiecznie, ale `Context.executionCtx` w Hono jest GETTEREM,
+  // który sam RZUCA `Error('This context has no ExecutionContext')`, gdy
+  // kontekst powstał bez niego. Operator `?.` chroni przed `null`/`undefined`,
+  // NIE przed wyjątkiem z gettera — więc sam odczyt wywracał obsługę błędów.
+  //
+  // Skutek zmierzony (vitest, `app.request()` bez ExecutionContext):
+  // żądanie kończące się błędem 500 dostawało DRUGI błąd — już wewnątrz
+  // raportowania — i tracone było zarówno utrwalenie w `error_log`, jak i
+  // czytelna odpowiedź. Ten sam scenariusz zachodzi przy każdym wywołaniu
+  // aplikacji poza runtime Workera (testy, SSR w narzędziach, skrypty).
+  //
+  // Awaria zapisu dziennika nie może przesłonić błędu, który go wywołał —
+  // dlatego przy braku ExecutionContext dokańczamy zapis „bez oczekiwania”
+  // (obietnica i tak jest już w toku), tłumiąc jedynie odrzucenie.
+  try {
+    const ctx = c.executionCtx
+    if (typeof ctx?.waitUntil === 'function') ctx.waitUntil(persist)
+    else void persist.catch(() => {})
+  } catch {
+    // Brak ExecutionContext — poza runtime Workera. Zapis leci bez nadzoru.
+    void persist.catch(() => {})
   }
 
   // ── 4. Odpowiedź w jednolitej kopercie ────────────────────────────────

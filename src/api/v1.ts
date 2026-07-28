@@ -188,10 +188,17 @@ api.get('/roads', (c) =>
  * milczy i pamięć podręczna jest pusta, przekazuje 503 dalej.
  */
 api.get('/weather', async (c) => {
+  // `Context.executionCtx` jest getterem, który RZUCA wyjątek przy braku
+  // kontekstu wykonania (poza runtime Workera — testy, skrypty). Odczyt bez
+  // osłony wywracał tę trasę zamiast po prostu pominąć `waitUntil` wewnątrz
+  // podtrasy. Ten sam błąd naprawiony w src/middleware/error-handler.ts.
+  let ctx: unknown
+  try { ctx = c.executionCtx } catch { ctx = undefined }
+
   const odp = await pogodaRoute.fetch(
     new Request(new URL('/', c.req.url).toString(), { headers: c.req.raw.headers }),
     c.env as never,
-    c.executionCtx as never
+    ctx as never
   )
   const dane = (await odp.json()) as Record<string, any>
 
