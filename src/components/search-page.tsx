@@ -34,7 +34,7 @@ export const SearchPage = ({ query, results, total, filters, trending, suggestio
             </p>
           </div>
 
-          <form class="search-form search-form-advanced" method="GET" action="/szukaj" data-search-form>
+          <form class="search-form search-form-advanced" method="get" action="/szukaj" data-search-form>
             <div class="search-autocomplete-shell">
               <input
                 type="search"

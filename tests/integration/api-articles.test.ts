@@ -22,7 +22,7 @@ describe('api articles', () => {
   it('zwraca listę w kopercie z metadanymi stronicowania', async () => {
     const env = { JWT_SECRET: 'test-secret', DB: new MockD1Database() }
     const response = await app.request('/api/v1/articles?limit=2', {}, env)
-    const body = await response.json()
+    const body = await response.json() as Record<string, any>
 
     expect(response.status).toBe(200)
     expect(body.ok).toBe(true)
@@ -39,7 +39,7 @@ describe('api articles', () => {
   it('honoruje limit strony', async () => {
     const env = { JWT_SECRET: 'test-secret', DB: new MockD1Database() }
     const response = await app.request('/api/v1/articles?limit=1', {}, env)
-    const body = await response.json()
+    const body = await response.json() as Record<string, any>
 
     expect(response.status).toBe(200)
     expect(body.data).toHaveLength(1)
@@ -48,7 +48,7 @@ describe('api articles', () => {
   it('zwraca szczegóły artykułu po slugu', async () => {
     const env = { JWT_SECRET: 'test-secret', DB: new MockD1Database() }
     const response = await app.request('/api/v1/articles/remont-koscielnej-zakonczony', {}, env)
-    const body = await response.json()
+    const body = await response.json() as Record<string, any>
 
     expect(response.status).toBe(200)
     expect(body.ok).toBe(true)
@@ -65,7 +65,7 @@ describe('api articles', () => {
   it('zwraca 404 na nieznany slug', async () => {
     const env = { JWT_SECRET: 'test-secret', DB: new MockD1Database() }
     const response = await app.request('/api/v1/articles/nie-ma-takiego-tekstu', {}, env)
-    const body = await response.json()
+    const body = await response.json() as Record<string, any>
 
     expect(response.status).toBe(404)
     expect(body.ok).toBe(false)

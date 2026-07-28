@@ -168,7 +168,7 @@ const modelTekstowyZRejestrem = async (
     return null
   }
 
-  const auth = getAuth(c)
+  const auth = getAuth(ctx)
   const uid = auth?.sub ? Number(auth.sub) || null : null
   const env = c.env as unknown as { AI_DEFAULT_MODEL?: string; AI_DEFAULT_PROVIDER?: string }
   const started = Date.now()

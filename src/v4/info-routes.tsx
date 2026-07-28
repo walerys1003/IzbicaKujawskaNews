@@ -4,6 +4,7 @@
 // ============================================================================
 
 import { Hono } from 'hono'
+import type { AppEnv } from '../types/env'
 import { CATEGORIES, SOLECTWA } from './taxonomy'
 import { GMINA } from './gmina-fakty'
 import { rendererV4 } from './renderer'
@@ -21,7 +22,7 @@ import { INSTYTUCJE } from './instytucje'
 import { PogodaPageV4 } from './pages/Pogoda'
 import { pogodaZPamieci, powietrzeZPamieci } from '../lib/integrations/pogoda-cache'
 
-const app = new Hono()
+const app = new Hono<AppEnv>()
 app.use('*', rendererV4)
 
 const page = (

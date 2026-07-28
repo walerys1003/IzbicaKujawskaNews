@@ -14,13 +14,13 @@ const getMemoryNamespace = (name: RuntimeKvBinding): KVNamespaceLike => {
   const memory = memoryNamespaces.get(name)!
 
   return {
-    get: async (key: string, type?: 'text' | 'json' | 'arrayBuffer') => {
+    get: (async (key: string, type?: 'text' | 'json' | 'arrayBuffer') => {
       const raw = memory.get(key) ?? null
       if (raw === null) return null
       if (type === 'json') return JSON.parse(raw) as unknown
       if (type === 'arrayBuffer') return new TextEncoder().encode(raw).buffer
       return raw
-    },
+    }) as KVNamespaceLike['get'],
     put: async (key: string, value: string | ArrayBuffer | ArrayBufferView) => {
       if (typeof value === 'string') {
         memory.set(key, value)

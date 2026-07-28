@@ -43,7 +43,9 @@ export function renderCookieConsentBanner(): string {
 const gdprRouter = new Hono<AppEnv>()
 
 gdprRouter.post('/consent', async (c) => {
-  const body = await c.req.json<{ level?: string; path?: string }>().catch(() => ({}))
+  // `catch` z pustym obiektem musi deklarować ten sam kształt co payload —
+  // inaczej unia `{level?...} | {}` blokuje dostęp do pól mimo `?`.
+  const body = await c.req.json<{ level?: string; path?: string }>().catch(() => ({} as { level?: string; path?: string }))
   const level = body.level || 'unknown'
   const path = body.path || '/'
   // FAZA 4 / I12 — poprawka błędu anonimizacji.
@@ -90,7 +92,7 @@ gdprRouter.get('/export', async (c) => {
 
 // GDPR data deletion endpoint
 gdprRouter.post('/delete', async (c) => {
-  const body = await c.req.json<{ userId?: string; email?: string }>().catch(() => ({}))
+  const body = await c.req.json<{ userId?: string; email?: string }>().catch(() => ({} as { userId?: string; email?: string }))
   const key = body.userId || body.email || 'unknown'
   if (c.env.USER_PREFS_KV) {
     await c.env.USER_PREFS_KV.put(`gdpr:deletion:${key}`, JSON.stringify({

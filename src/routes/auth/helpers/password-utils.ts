@@ -65,7 +65,7 @@ const toBase64Url = (bytes: Uint8Array) =>
 const fromBase64 = (value: string) => Uint8Array.from(atob(value), (char) => char.charCodeAt(0))
 
 const getKvStore = (env: Bindings): KVNamespaceLike => ({
-  get: async (key) => {
+  get: async (key: string) => {
     if (env.APP_KV) return env.APP_KV.get(key, 'text')
     return memoryStore.get(key) ?? null
   },

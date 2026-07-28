@@ -190,7 +190,7 @@ describe('api push — realna wysyłka zamiast fałszywego raportu', () => {
     )
 
     expect(odp.status).toBe(200)
-    const body = await odp.json()
+    const body = await odp.json() as Record<string, any>
 
     // Dwa subskrybenty = DWA prawdziwe żądania HTTP. Stara wersja kodu
     // raportowała `delivered: 2` przy ZERO żądaniach — to tego pilnujemy.
@@ -218,7 +218,7 @@ describe('api push — realna wysyłka zamiast fałszywego raportu', () => {
       env,
     )
 
-    const body = await odp.json()
+    const body = await odp.json() as Record<string, any>
     expect(zadaniaDoDostawcy).toHaveLength(1)
     expect(body.message.delivered).toBe(0)
     // Zero dostarczeń przy niepustej liście adresatów to PORAŻKA, nie 'sent'.
@@ -265,7 +265,7 @@ describe('api push — realna wysyłka zamiast fałszywego raportu', () => {
       },
       env,
     )
-    const body = await odp.json()
+    const body = await odp.json() as Record<string, any>
 
     // Środowisko bez sekretów NIE MOŻE udawać, że wysłało powiadomienia.
     expect(zadaniaDoDostawcy).toHaveLength(0)
@@ -293,7 +293,7 @@ describe('api push — realna wysyłka zamiast fałszywego raportu', () => {
       },
       env,
     )
-    const body = await odp.json()
+    const body = await odp.json() as Record<string, any>
 
     // Martwy wpis MUSI zniknąć — inaczej lista rośnie o subskrypcje, które
     // nigdy nic nie odbiorą, a każda wysyłka marnuje na nie żądanie.

@@ -129,7 +129,7 @@ export const ensurePanelSession = async (
       const session = await getSession(env, payload.sessionId)
       if (session) {
         return {
-          userId: payload.sub,
+          userId: Number(payload.sub),
           email: payload.email,
           role: toRole(payload.role),
           sessionId: payload.sessionId,

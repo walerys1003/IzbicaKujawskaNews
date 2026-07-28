@@ -130,7 +130,7 @@ aiRouter.post(
 
   try {
     const result = await callStructuredModel({
-      bindings: c.env,
+      bindings: c.env as never,
       model,
       systemPrompt: prompt.systemPrompt,
       userPrompt,

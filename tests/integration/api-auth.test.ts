@@ -50,7 +50,7 @@ describe('api auth', () => {
       },
       env,
     )
-    const body = await response.json()
+    const body = await response.json() as Record<string, any>
 
     expect(response.status).toBe(201)
     expect(body.ok).toBe(true)
@@ -80,7 +80,7 @@ describe('api auth', () => {
       },
       env,
     )
-    const body = await response.json()
+    const body = await response.json() as Record<string, any>
 
     expect(response.status).toBe(201)
     expect(body.data.user.role).toBe('viewer')
@@ -118,7 +118,7 @@ describe('api auth', () => {
       { headers: { authorization: 'Bearer dowolny-token' } },
       { DB: new MockD1Database() },
     )
-    const body = await response.json()
+    const body = await response.json() as Record<string, any>
 
     expect(response.status).toBe(503)
     expect(body.error.code).toBe('service_unavailable')
@@ -150,7 +150,7 @@ describe('api auth', () => {
       },
       swiezeSrodowisko(),
     )
-    const body = await response.json()
+    const body = await response.json() as Record<string, any>
 
     expect(response.status).toBe(400)
     expect(body.error.code).toBe('validation_error')
@@ -170,7 +170,7 @@ describe('api auth', () => {
     )
 
     expect((await zadanie()).status).toBe(201)
-    const body = await (await zadanie()).json()
+    const body = await (await zadanie()).json() as Record<string, any>
     expect(body.ok).toBe(false)
     expect(body.error.code).toBe('conflict')
   })

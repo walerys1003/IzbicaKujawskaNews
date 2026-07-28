@@ -9,7 +9,7 @@ export const SearchPage = (props: { query: string; results: any[]; total: number
           <h1 class="search-title">
             <Icon.Search size={28} /> Wyszukiwarka
           </h1>
-          <form class="search-form" method="GET" action="/szukaj">
+          <form class="search-form" method="get" action="/szukaj">
             <input
               type="search"
               name="q"

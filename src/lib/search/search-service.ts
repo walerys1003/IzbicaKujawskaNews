@@ -17,7 +17,9 @@
  * degradacja jest widoczna w diagnostyce, a nie ukryta.
  */
 
-import type { D1Database } from '@cloudflare/workers-types'
+// Typ poszerzony do D1DatabaseLike: to ten sam kontrakt co Bindings.DB,
+// wiec trasy nie musza rzutowac `as never` przy kazdym wywolaniu.
+import type { D1DatabaseLike as D1Database } from '../../types/env'
 import { budujZapytanie, foldPolish } from './normalize-pl'
 
 export interface WynikSzukania {

@@ -33,7 +33,7 @@ describe('api comments', () => {
       { method: 'POST', headers: naglowki(), body: JSON.stringify(fixtureComment) },
       swiezeSrodowisko(),
     )
-    const body = await response.json()
+    const body = await response.json() as Record<string, any>
 
     expect(response.status).toBe(201)
     expect(body.ok).toBe(true)
@@ -52,7 +52,7 @@ describe('api comments', () => {
       { method: 'POST', headers: naglowki(), body: JSON.stringify({ ...fixtureComment, articleSlug: 'nie-ma-takiego-artykulu' }) },
       swiezeSrodowisko(),
     )
-    const body = await response.json()
+    const body = await response.json() as Record<string, any>
 
     expect(response.status).toBe(404)
     expect(body.ok).toBe(false)
@@ -79,7 +79,7 @@ describe('api comments', () => {
       { method: 'POST', headers: naglowki(), body: JSON.stringify({ ...fixtureComment, website: 'https://spam.example' }) },
       swiezeSrodowisko(),
     )
-    const body = await response.json()
+    const body = await response.json() as Record<string, any>
 
     expect(response.status).toBe(201)
     expect(body.data.accepted).toBe(false)

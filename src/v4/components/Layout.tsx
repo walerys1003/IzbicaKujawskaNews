@@ -191,7 +191,9 @@ const MegaPanel: FC<{ category: Category }> = ({ category }) => {
                     </div>
                     <div class="mega-card-body">
                       <span class={`tag ${CATEGORY_BY_SLUG[a.category]?.tagClass ?? category.tagClass}`}>
-                        {findSubcategory(a.category, a.subcategory)?.title ??
+                        {(a.subcategory
+                          ? findSubcategory(a.category, a.subcategory)?.subcategory.title
+                          : undefined) ??
                           CATEGORY_BY_SLUG[a.category]?.title ??
                           g.sub.title}
                       </span>

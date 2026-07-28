@@ -88,6 +88,7 @@ const clip = (value: Record<string, unknown> | null | undefined): string | null 
  * Reeksportujemy pod tymi samymi nazwami, zeby nie zmieniac wywolan.
  */
 export { hashIp } from './privacy/ip-anonymize'
+import { hashIp } from './privacy/ip-anonymize'
 
 /** Adres klienta widziany przez Cloudflare (opakowanie na wspolny helper). */
 export const clientIp = (c: Context): string | undefined =>

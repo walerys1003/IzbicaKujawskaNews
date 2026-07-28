@@ -59,7 +59,10 @@ export const MainNav = () => (
   </header>
 )
 
-export const DemoStrip = ({ active }: { active: string }) => (
+// `active` jest opcjonalne: strony błędów (404/500/503) i podstrony spoza
+// menu renderują pasek bez podświetlonej pigułki — to stan poprawny, a nie
+// brakujący argument, więc typ nie powinien go wymuszać.
+export const DemoStrip = ({ active }: { active?: string } = {}) => (
   <div class="demo-pages-strip">
     <div class="container demo-inner">
       <a href="/" class={`demo-pill ${active === 'home' ? 'active' : ''}`}>

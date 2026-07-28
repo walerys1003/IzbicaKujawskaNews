@@ -1,4 +1,5 @@
 import type { Context } from 'hono'
+import type { JSX } from 'hono/jsx/jsx-runtime'
 import { DemoStrip, Footer, MainNav, SuperHeader } from '../../components/layout'
 import type { AppEnv } from '../../types/env'
 

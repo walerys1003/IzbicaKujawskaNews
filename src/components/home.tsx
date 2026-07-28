@@ -129,7 +129,7 @@ export const Wiadomosci = () => (
           <div class="news-main-image">
             <img src={NEWS_MAIN.image} alt="" loading="lazy" />
           </div>
-          <div class="eyebrow">{NEWS_MAIN.subcategory.toUpperCase()}</div>
+          <div class="eyebrow">{NEWS_MAIN.subcategory?.toUpperCase()}</div>
           <h2 class="news-main-title">
             <span class="dateline">IZBICA —</span> {NEWS_MAIN.title}
           </h2>
@@ -151,7 +151,7 @@ export const Wiadomosci = () => (
           {NEWS_CARDS.map((n) => (
             <li class="news-card" data-cat={n.subcategory}>
               <div>
-                <div class="eyebrow">{n.subcategory.toUpperCase()}</div>
+                <div class="eyebrow">{n.subcategory?.toUpperCase()}</div>
                 <h3 class="news-card-title">{n.title}</h3>
                 <div class="news-card-meta">
                   <span>{n.author}</span>

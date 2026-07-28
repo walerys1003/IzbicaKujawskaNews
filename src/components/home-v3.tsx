@@ -570,7 +570,7 @@ const MainLayout = () => {
               <div class="v3-newsletter-icon"><Icon.Mail size={22} /></div>
               <h3 class="v3-newsletter-title">Newsletter Kujawski</h3>
               <p class="v3-newsletter-desc">Najważniejsze wiadomości z gminy. Co poniedziałek o 7:00 — prosto do skrzynki.</p>
-              <form class="v3-newsletter-form" action="/api/v1/newsletter/subscribe" method="POST">
+              <form class="v3-newsletter-form" action="/api/v1/newsletter/subscribe" method="post">
                 <input type="email" name="email" class="v3-newsletter-input" placeholder="twoj@email.pl" required />
                 <button type="submit" class="v3-newsletter-btn">Zapisz się</button>
               </form>

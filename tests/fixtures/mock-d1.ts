@@ -548,8 +548,8 @@ export class MockD1Database implements D1DatabaseLike {
     return new MockStatement(query, this.handlers, this.log, this)
   }
 
-  async batch<T = unknown>(statements: D1PreparedStatementLike[]): Promise<T[]> {
-    const results: T[] = []
+  async batch<T = unknown>(statements: D1PreparedStatementLike[]) {
+    const results = []
     for (const statement of statements) results.push(await statement.run<T>())
     return results
   }

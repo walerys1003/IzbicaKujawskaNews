@@ -114,7 +114,7 @@ route.post('/confirm', turnstileGuard({ action: 'newsletter-confirm' }), async (
 })
 
 route.post('/unsubscribe', turnstileGuard({ action: 'newsletter-unsubscribe' }), async (c) => {
-  const body = await c.req.json<{ email?: string }>().catch(() => ({}))
+  const body = await c.req.json<{ email?: string }>().catch(() => ({} as { email?: string }))
   const email = body.email?.trim().toLowerCase()
   if (!email) return c.json({ error: 'invalid_email' }, 400)
   const repo = createNewsletterRepo(c.env.DB!)

@@ -142,7 +142,7 @@ export const MapaPageV4: FC<{
                 `${odmien(liczbaSolectw, 'sołectwa', 'sołectw', 'sołectw')} gminy Izbica Kujawska. ` +
                 `Pełna lista sołectw z odnośnikami znajduje się bezpośrednio pod mapą.`
               }
-              tabindex="0"
+              tabindex={0}
             >
               <div class="mapa-ladowanie" id="mapa-ladowanie">
                 <span class="mapa-ladowanie-tekst">Wczytywanie mapy…</span>

@@ -52,7 +52,7 @@ export const CommentForm = ({ articleSlug }: { articleSlug: string }) => (
       <label for="comment-author" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #555;">
         Imię / pseudonim <span style="color: #e94560;">*</span>
       </label>
-      <input type="text" id="comment-author" name="author" required minlength="2" maxlength="50"
+      <input type="text" id="comment-author" name="author" required minlength={2} maxlength={50}
         style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;"
         placeholder="Twoje imię lub pseudonim" />
     </div>
@@ -61,7 +61,7 @@ export const CommentForm = ({ articleSlug }: { articleSlug: string }) => (
       <label for="comment-content" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #555;">
         Twój komentarz <span style="color: #e94560;">*</span>
       </label>
-      <textarea id="comment-content" name="content" required minlength="10" maxlength="2000" rows={4}
+      <textarea id="comment-content" name="content" required minlength={10} maxlength={2000} rows={4}
         style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box; resize: vertical;"
         placeholder="Napisz, co myślisz... (minimum 10 znaków)"></textarea>
     </div>

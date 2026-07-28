@@ -1172,7 +1172,7 @@ export const NewsletterBleed = () => (
             <span class="v3-newsletter-bleed-stat"><b>4.8/5</b>ocena czytelników</span>
           </div>
         </div>
-        <form class="v3-newsletter-bleed-form" action="/api/v1/newsletter/subscribe" method="POST">
+        <form class="v3-newsletter-bleed-form" action="/api/v1/newsletter/subscribe" method="post">
           <label for="nl-email" style="display:block; font:700 0.78rem/1 Inter,sans-serif; letter-spacing:0.1em; text-transform:uppercase; color:#c8a951; margin-bottom:0.5rem;">Twój email</label>
           <input id="nl-email" type="email" name="email" placeholder="np. jan.kowalski@interia.pl" required class="v3-newsletter-bleed-input" />
           <label class="v3-newsletter-bleed-check">

@@ -4,6 +4,7 @@
 // ============================================================================
 
 import { Hono } from 'hono'
+import type { AppEnv } from '../types/env'
 import { rendererV4 } from './renderer'
 import { loadSnapshot, runWithSnapshot } from './content-source'
 import { Shell } from './components/Layout'
@@ -57,7 +58,7 @@ import type { Gallery } from './content-types'
 import { articleUrl } from './content-types'
 
 const PER_PAGE = 12
-const app = new Hono()
+const app = new Hono<AppEnv>()
 
 /**
  * Migawka tresci na zadanie (etap D4).

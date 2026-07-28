@@ -3,7 +3,12 @@ const decoder = new TextDecoder()
 
 const ensureKeyBytes = async (secret: string): Promise<ArrayBuffer> => crypto.subtle.digest('SHA-256', encoder.encode(secret))
 const bytesToBase64 = (bytes: Uint8Array): string => btoa(String.fromCharCode(...bytes))
-const base64ToBytes = (value: string): Uint8Array => Uint8Array.from(atob(value), (char) => char.charCodeAt(0))
+const base64ToBytes = (value: string): Uint8Array<ArrayBuffer> => {
+  const raw = atob(value)
+  const out = new Uint8Array(raw.length)
+  for (let i = 0; i < raw.length; i += 1) out[i] = raw.charCodeAt(i)
+  return out
+}
 
 export const encryptBackup = async (payload: string, secret: string) => {
   const iv = crypto.getRandomValues(new Uint8Array(12))
