@@ -597,7 +597,16 @@
   .pogoda-dzien:nth-child(4){ border-left:none; }
 }
 @media (max-width:640px){
-  .topbar-weather, .topbar-weather:empty{ min-width:0; }
+  /* F4 / CLS — było `min-width:0`, czyli na mobile pasek pogody NIE
+     rezerwował miejsca. Pogoda jest dociągana po stronie klienta
+     (/api/v1/pogoda/pasek), więc pusty span rozpychał `topbar-left`
+     dopiero po odpowiedzi API — pomiar przypisywał temu elementowi
+     przesunięcia (h:50→42). Zerowanie min-width na wąskim ekranie miało
+     chronić przed zawinięciem paska, ale skutkiem był skok układu.
+     220px mieści najdłuższy warunek („Pochmurno z przejaśnieniami"),
+     a `min-height` domyka wariant, w którym tekst zawinie się do
+     drugiego wiersza. Pomiar: scripts/zmierz-cls.mjs */
+  .topbar-weather, .topbar-weather:empty{ min-width:120px; min-height:16px; }
   .pogoda-szczegoly{ grid-template-columns:repeat(2,1fr); }
   .inst-poz{ grid-template-columns:1fr; gap:0; }
 }
@@ -757,4 +766,91 @@ summary:focus-visible{
 .tag:focus-visible,
 .breaking-bar a:focus-visible{
   outline-color:var(--ink);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   F4 / CLS — CZCIONKI ZASTĘPCZE O DOPASOWANYCH METRYKACH
+   ═══════════════════════════════════════════════════════════════════════
+
+   Audyt (08-AUDYT-2026-07-27.md, poz. F4) wskazał jako przyczynę CLS brak
+   atrybutów width/height na 296 obrazach. Pomiar w silniku układu
+   (scripts/zmierz-cls.mjs) tej diagnozy NIE potwierdził:
+
+     • wszystkie 296 obrazów siedzą w kontenerach z `aspect-ratio`
+       (.img-wrap 16/10, .hero-main 16/10, .mm-thumb 1/1, .p-img 1/1 …),
+       więc miejsce jest zarezerwowane PRZED dekodowaniem obrazu —
+       atrybut width/height jest tylko drugą drogą do tego samego celu;
+     • liczba obrazów o zerowej wysokości układu, które są WIDOCZNE: 0
+       (225 zerowych to karty w zwiniętym mega-menu, `display:none`);
+     • eksperyment rozdzielający przyczyny (5 przebiegów każdy, mobile 390px):
+           bazowo                    mediana 0,0081   MAX 0,1096
+           z zablokowanymi fontami   mediana 0,0037   MAX 0,0037
+           z zablokowaną pogodą      mediana 0,0317   MAX 0,1065
+           bez fontów i bez pogody   mediana 0        MAX 0
+       Zablokowanie obrazów nie zmieniało nic; zablokowanie fontów
+       sprowadzało CLS do wartości stałej. Winowajcą jest podmiana
+       czcionki, nie obraz.
+
+   Mechanizm: `display=swap` w adresie Google Fonts każe przeglądarce
+   narysować tekst natychmiast czcionką zastępczą, a po dociągnięciu
+   webfontu przerysować go. Arial Narrow jest o ~19% szerszy od Barlow
+   Condensed, więc każdy nagłówek zmienia liczbę zajmowanych wierszy i
+   przepycha treść poniżej. Na mobile, gdzie wiersze są krótkie, jedno
+   przewinięcie wiersza wystarcza do przekroczenia progu 0,1.
+
+   Rozwiązanie: `@font-face` z `size-adjust` + `ascent-override` /
+   `descent-override` tworzy czcionkę zastępczą o metrykach webfontu.
+   Tekst zapasowy zajmuje wtedy tyle samo miejsca co docelowy, więc
+   podmiana nic nie przepycha. To standardowa technika (odpowiednik
+   `next/font` `adjustFontFallback`), ale wymaga PRAWDZIWYCH liczb —
+   wartości zgadnięte pogorszyłyby sprawę, dając przesunięcie w drugą
+   stronę.
+
+   Liczby poniżej są ZMIERZONE w przeglądarce (Canvas TextMetrics,
+   `measureText` na tej samej próbce tekstu polskiego dla webfontu i dla
+   zastępnika, przy `document.fonts.ready`):
+
+     Barlow Condensed → Arial Narrow : 2904,9 / 3462,8 px → 83,89%
+     Barlow           → Arial        : 3549,0 / 3757,5 px → 94,45%
+     Source Serif 4   → Georgia      : 3962,0 / 3462,8 px → 114,42%
+
+   ascent/descent przeliczone względem em PO przeskalowaniu przez
+   size-adjust (bo size-adjust skaluje także metryki pionowe).
+   Skrypt pomiarowy: scripts/zmierz-cls.mjs (pomiar CLS + weryfikacja). */
+
+@font-face {
+  font-family: 'Barlow Condensed Fallback';
+  src: local('Arial Narrow'), local('Liberation Sans Narrow'), local('Nimbus Sans Narrow');
+  size-adjust: 83.89%;
+  ascent-override: 119.20%;
+  descent-override: 23.84%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Barlow Fallback';
+  src: local('Arial'), local('Liberation Sans'), local('Helvetica');
+  size-adjust: 94.45%;
+  ascent-override: 105.87%;
+  descent-override: 21.17%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Source Serif 4 Fallback';
+  src: local('Georgia'), local('Liberation Serif'), local('Times New Roman');
+  size-adjust: 114.42%;
+  ascent-override: 90.90%;
+  descent-override: 29.72%;
+  line-gap-override: 0%;
+}
+
+/* Wstawiamy zastępnik PRZED ogólnym `sans-serif`/`serif`, zachowując
+   dotychczasowe ogniwa łańcucha. Gdy użytkownik nie ma Arial Narrow ani
+   Liberation Sans Narrow, `local()` nie znajdzie nic, `@font-face` zostanie
+   pominięty i łańcuch zadziała jak dotąd — nie tracimy niczego. */
+:root {
+  --display: 'Barlow Condensed', 'Barlow Condensed Fallback', 'Arial Narrow', sans-serif;
+  --body: 'Barlow', 'Barlow Fallback', system-ui, sans-serif;
+  --serif: 'Source Serif 4', 'Source Serif 4 Fallback', Georgia, serif;
 }

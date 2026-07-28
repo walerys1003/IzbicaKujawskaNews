@@ -7,8 +7,9 @@ import { jsxRenderer, useRequestContext } from 'hono/jsx-renderer'
 // w Shell: Shell nie jest używany na wszystkich stronach (panel redakcji,
 // strony błędów), a obowiązek uzyskania zgody dotyczy każdej odsłony.
 import { ZgodaCookies } from './components/ZgodaCookies'
+import { buildCanonicalUrl, buildOrganizationJsonLd } from '../seo'
 
-export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, canonical }) => {
+export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, canonical, jsonLd }) => {
   /**
    * Token analityki czytamy z kontekstu żądania, nie z propsów.
    *
@@ -27,6 +28,43 @@ export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, 
     (description as string) ||
     'Aktualne wiadomości z Izbicy Kujawskiej. Samorząd, Kujawianka, kultura, historia, sołectwa.'
 
+  /**
+   * F5 / SEO — adres kanoniczny wyliczany z kontekstu żądania.
+   *
+   * Slot `<link rel="canonical">` istniał tu już wcześniej, ale zależał od
+   * propsa `canonical` przekazywanego przez trasę. Żadna z 22 tras go nie
+   * przekazywała, więc audyt zmierzył zero wystąpień w wygenerowanym HTML —
+   * mechanizm był obecny w kodzie i nieobecny na stronie.
+   *
+   * Dlatego domyślną wartość liczymy TUTAJ ze ścieżki żądania, tak jak
+   * token analityki dwie linijki wyżej i z tego samego powodu: przy 22
+   * trasach każde rozwiązanie wymagające pamiętania o dopisaniu propsa
+   * kończy się brakami. Trasa może nadal podać `canonical` jawnie i wtedy
+   * jej wartość ma pierwszeństwo — to potrzebne np. przy stronicowaniu,
+   * gdzie /wiadomosci?strona=2 ma wskazywać na /wiadomosci.
+   *
+   * `buildCanonicalUrl` (src/seo.ts, przetestowane w tests/unit/seo/) obcina
+   * parametry zapytania i normalizuje ukośnik końcowy — bez tego /szukaj?q=x
+   * i /szukaj byłyby dla wyszukiwarki dwoma adresami o tej samej treści,
+   * a parametry utm_* mnożyłyby duplikaty.
+   */
+  const sciezka = ctx?.req?.path ?? '/'
+  const adresKanoniczny = (canonical as string) || buildCanonicalUrl(sciezka)
+
+  /**
+   * JSON-LD. Dane organizacji dokładamy na KAŻDEJ podstronie, bo Google
+   * czyta je z dowolnego adresu i nie ma pewności, którą stronę zindeksuje
+   * pierwszą. Trasa może dołożyć własny obiekt (NewsArticle na artykule,
+   * BreadcrumbList w kategorii) — wtedy w dokumencie znajdą się oba, co jest
+   * zgodne ze specyfikacją schema.org i zalecane przez Google.
+   *
+   * `JSON.stringify` z filtrem `undefined` — pola opcjonalne (np.
+   * dateModified przy artykule bez aktualizacji) nie mogą wyjść jako
+   * "dateModified": null, bo walidator Google traktuje null jako błąd typu.
+   */
+  const dodatkoweJsonLd = Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []
+  const wszystkieJsonLd = [buildOrganizationJsonLd(), ...dodatkoweJsonLd]
+
   return (
     <html lang="pl">
       <head>
@@ -44,7 +82,8 @@ export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, 
         <meta property="og:locale" content="pl_PL" />
         {ogImage ? <meta property="og:image" content={ogImage as string} /> : null}
         <meta name="twitter:card" content="summary_large_image" />
-        {canonical ? <link rel="canonical" href={canonical as string} /> : null}
+        <meta property="og:url" content={adresKanoniczny} />
+        <link rel="canonical" href={adresKanoniczny} />
 
         {/* Fonty — literalnie jak w szacie */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -65,6 +104,23 @@ export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, 
           type="image/svg+xml"
           href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Ctext x='16' y='23' font-family='Arial Narrow,sans-serif' font-size='19' font-weight='900' fill='%23d6121a' text-anchor='middle'%3E24%3C/text%3E%3C/svg%3E"
         />
+        {/* F5 — dane strukturalne. Każdy obiekt w osobnym <script>, bo
+            pojedynczy blok z tablicą jest wprawdzie dopuszczalny, ale
+            narzędzie testowe Google raportuje wtedy błędy zbiorczo, bez
+            wskazania, który obiekt jest wadliwy. */}
+        {wszystkieJsonLd.map((obiekt, i) => (
+          <script
+            key={i}
+            type="application/ld+json"
+            /* eslint-disable-next-line react/no-danger */
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(obiekt, (_k, v) => (v === undefined ? undefined : v)).replace(
+                /</g,
+                '\\u003c',
+              ),
+            }}
+          />
+        ))}
       </head>
       <body>
         {children}

@@ -254,3 +254,116 @@ export const generateArticleSitemapEntries = (): string[] => {
   const today = new Date().toISOString().slice(0, 10)
   return ARTICLES.map((a) => `<url><loc>${buildCanonicalUrl(`/wiadomosci/${a.slug}`)}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`)
 }
+
+// ════════════════════════════════════════════════════════════════════════
+// F5 — DANE STRUKTURALNE DLA PORTALU v4
+// ════════════════════════════════════════════════════════════════════════
+//
+// Dlaczego osobne funkcje, a nie rozszerzenie buildArticleJsonLd:
+// istniejący `buildArticleJsonLd` przyjmuje `typeof ARTICLES[number]`
+// z src/data-articles.ts, gdzie `author` jest łańcuchem znaków. Żywy portal
+// (src/v4) używa własnego typu `Article` z src/v4/content-types.ts, gdzie
+// `author` jest obiektem { slug, name, role }, a adres artykułu zależy od
+// kategorii i podkategorii, nie od stałego prefiksu /wiadomosci/.
+// Podstawienie jednego typu pod drugi dałoby "author": { "name": undefined }
+// — czyli dane strukturalne, które przechodzą build i są nieprawidłowe
+// dopiero w narzędziu Google. Dwie funkcje o jawnych typach są uczciwsze
+// niż jedna z rzutowaniem.
+
+/** Minimalny kształt artykułu v4 wymagany do zbudowania NewsArticle. */
+export interface ArticleDlaJsonLd {
+  slug: string
+  title: string
+  lede: string
+  heroImage?: string
+  publishedAtISO: string
+  updatedAt?: string
+  author: { name: string; slug?: string }
+  category: string
+  tags: string[]
+  readingMinutes?: number
+}
+
+/**
+ * NewsArticle dla artykułu portalu.
+ *
+ * `url` i `mainEntityOfPage.@id` muszą wskazywać na TEN SAM adres co
+ * `<link rel="canonical">`, inaczej Google zgłasza niespójność i może
+ * zindeksować inny wariant adresu. Dlatego funkcja przyjmuje gotową
+ * ścieżkę z trasy (która zna pełną hierarchię kategoria/podkategoria),
+ * a nie składa jej sama z pola `category`.
+ */
+export const buildNewsArticleJsonLd = (
+  a: ArticleDlaJsonLd,
+  sciezkaArtykulu: string,
+): Record<string, unknown> => {
+  const adres = buildCanonicalUrl(sciezkaArtykulu)
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline: a.title.slice(0, 110), // Google ucina powyżej 110 znaków
+    description: a.lede,
+    // Obraz podajemy jako adres bezwzględny — ścieżka względna jest przez
+    // walidator Google odrzucana, a w kodzie widoków figuruje jako /static/…
+    image: a.heroImage ? [new URL(a.heroImage, SITE_URL).toString()] : undefined,
+    datePublished: a.publishedAtISO,
+    dateModified: a.updatedAt || a.publishedAtISO,
+    author: {
+      '@type': 'Person',
+      name: a.author.name,
+      url: a.author.slug ? `${SITE_URL}/autor/${a.author.slug}` : undefined,
+    },
+    publisher: {
+      '@type': 'NewsMediaOrganization',
+      name: SITE_NAME,
+      logo: { '@type': 'ImageObject', url: `${SITE_URL}/static/logo.png` },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': adres },
+    url: adres,
+    isAccessibleForFree: true,
+    articleSection: a.category,
+    keywords: a.tags.length ? a.tags.join(', ') : undefined,
+    wordCount: a.readingMinutes ? a.readingMinutes * 200 : undefined,
+    inLanguage: 'pl-PL',
+  }
+}
+
+/**
+ * BreadcrumbList — okruszki. Google wyświetla je w wyniku wyszukiwania
+ * zamiast surowego adresu URL, co ma bezpośredni wpływ na klikalność.
+ *
+ * `position` liczony od 1 (zero jest przez walidator odrzucane).
+ * Ostatni element ścieżki celowo NIE dostaje `item`: zalecenie Google mówi,
+ * że bieżąca strona nie powinna linkować do siebie samej.
+ */
+export const buildBreadcrumbJsonLd = (
+  okruszki: readonly { nazwa: string; sciezka?: string }[],
+): Record<string, unknown> => ({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: okruszki.map((o, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: o.nazwa,
+    item: o.sciezka ? buildCanonicalUrl(o.sciezka) : undefined,
+  })),
+})
+
+/**
+ * WebSite z SearchAction — pozwala Google pokazać pole wyszukiwania
+ * wewnątrz portalu bezpośrednio w wyniku. Wymaga, by adres podany
+ * w `urlTemplate` faktycznie obsługiwał parametr — tu /szukaj?q=,
+ * zgodnie z trasą w src/v4/router.tsx.
+ */
+export const buildWebSiteJsonLd = (): Record<string, unknown> => ({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: SITE_URL,
+  inLanguage: 'pl-PL',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/szukaj?q={search_term_string}` },
+    'query-input': 'required name=search_term_string',
+  },
+})

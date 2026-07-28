@@ -24,6 +24,14 @@ import { MapaPageV4, type PunktMapy } from './pages/Mapa'
 import { SearchResultsV4 } from './pages/SearchResults'
 import { szukaj, podpowiedzi } from '../lib/search/search-service'
 import { pogodaZPamieci, powietrzeZPamieci } from '../lib/integrations/pogoda-cache'
+// F5 — dane strukturalne i adres kanoniczny. Renderer dokłada Organization
+// na każdej podstronie; tutaj podajemy tylko obiekty zależne od treści.
+import {
+  buildCanonicalUrl,
+  buildNewsArticleJsonLd,
+  buildBreadcrumbJsonLd,
+  buildWebSiteJsonLd,
+} from '../seo'
 import {
   CATEGORIES,
   SOLECTWA,
@@ -133,6 +141,10 @@ app.get('/', async (c) => {
       title: 'Izbica24.pl — Niezależny portal informacyjny gminy Izbica Kujawska',
       description:
         'Aktualne wiadomości z Izbicy Kujawskiej. Samorząd, Kujawianka, kultura, historia, sołectwa.',
+      // F5 — WebSite z SearchAction tylko na stronie głównej. Google czyta
+      // ten obiekt wyłącznie z adresu głównego witryny, więc powtarzanie go
+      // na podstronach dodawałoby wagi bez efektu.
+      jsonLd: buildWebSiteJsonLd(),
     }
   )
 })
@@ -401,6 +413,33 @@ app.get('/multimedia/galerie/:section/:slug', (c) => {
 // ════════════════════════════════════ HELPER: RENDER ARTYKUŁU
 function renderArticle(c: any, a: NonNullable<ReturnType<typeof findArticleV4>>) {
   const cat = findCategory(a.category)!
+  const sciezka = articleUrl(a)
+
+  /**
+   * F5 — dane strukturalne artykułu.
+   *
+   * Okruszki budujemy z tej samej taksonomii, z której powstaje widoczny
+   * komponent `Breadcrumbs`, a nie z rozbioru ścieżki URL. Rozbiór ścieżki
+   * dawałby w okruszkach slug („inwestycje") zamiast nazwy działu
+   * („Inwestycje"), a w danych strukturalnych widzianych przez czytelnika
+   * w wyniku wyszukiwania to różnica widoczna gołym okiem.
+   *
+   * Ostatni element (tytuł artykułu) nie ma `sciezka`, więc nie dostanie
+   * `item` — bieżąca strona nie powinna linkować do siebie.
+   */
+  // findSubcategory zwraca PARĘ { category, subcategory } — nie samą
+  // podkategorię. Pierwsze podejście czytało `sub.title` i dawało puste
+  // `name` w okruszkach; wychwycił to walidator scripts/sprawdz-jsonld.mjs,
+  // bo blok był składniowo poprawnym JSON-em i grep uznałby go za obecny.
+  const para = a.subcategory ? findSubcategory(a.category, a.subcategory) : undefined
+  const sub = para?.subcategory
+  const okruszki = [
+    { nazwa: 'Strona główna', sciezka: '/' },
+    { nazwa: cat.title, sciezka: cat.path },
+    ...(sub ? [{ nazwa: sub.title, sciezka: sub.path }] : []),
+    { nazwa: a.title },
+  ]
+
   return c.render(
     <Shell activeCategory={a.category}>
       <ArticlePageV4
@@ -417,7 +456,25 @@ function renderArticle(c: any, a: NonNullable<ReturnType<typeof findArticleV4>>)
       title: `${a.title} — ${cat.title} — Izbica24.pl`,
       description: a.lede.slice(0, 300),
       ogImage: a.heroImage,
-      canonical: `https://izbica24.pl${articleUrl(a)}`,
+      canonical: buildCanonicalUrl(sciezka),
+      jsonLd: [
+        buildNewsArticleJsonLd(
+          {
+            slug: a.slug,
+            title: a.title,
+            lede: a.lede,
+            heroImage: a.heroImage,
+            publishedAtISO: a.publishedAtISO,
+            updatedAt: a.updatedAt,
+            author: { name: a.author.name, slug: a.author.slug },
+            category: cat.title,
+            tags: a.tags,
+            readingMinutes: a.readingMinutes,
+          },
+          sciezka,
+        ),
+        buildBreadcrumbJsonLd(okruszki),
+      ],
     }
   )
 }
