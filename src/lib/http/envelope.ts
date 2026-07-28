@@ -21,6 +21,7 @@
  */
 
 import type { Context } from 'hono'
+import type { AppEnv, D1DatabaseLike } from '../../types/env'
 import { ERROR_CATALOG, type ErrorCode, messageForCode, statusForCode } from './errors'
 
 export interface PageMeta {
@@ -132,10 +133,25 @@ export const fail = (
  *   const db = requireDb(c)
  *   if (db instanceof Response) return db
  *   // dalej `db` jest już bezpiecznie typowane
+ *
+ * ── Dlaczego sygnatura jest wypisana jawnie ──────────────────────────────
+ *
+ * Wcześniej parametr miał typ `Context` bez parametru generycznego, więc
+ * `c.env` było typu `any`. Skutek: `c.env?.DB` też było `any`, wynik funkcji
+ * był wnioskowany jako `any`, a każde `db.prepare(...).first<T>()` w trasach
+ * TypeScript raportował jako TS2347 „Untyped function calls may not accept
+ * type arguments” — 43 błędy w `src/routes/v1`. Parametr typu `<T>` przy
+ * `.first()` / `.all()` był w kodzie obecny, ale nie miał żadnego wpływu:
+ * wynik i tak był `any`, więc literówka w nazwie kolumny lub zmiana schematu
+ * bazy nie mogła zostać wykryta.
+ *
+ * `Context<AppEnv>` wiąże `c.env` z interfejsem `Bindings`, a jawny typ
+ * zwracany `D1DatabaseLike | Response` sprawia, że pominięcie sprawdzenia
+ * `instanceof Response` jest błędem kompilacji, nie cichą awarią runtime.
  */
-export const requireDb = (c: Context) => {
+export const requireDb = (c: Context<AppEnv>): D1DatabaseLike | Response => {
   const db = c.env?.DB
-  if (!db) return fail(c, 'database_unavailable')
+  if (!db) return fail(c, 'database_unavailable') as unknown as Response
   return db
 }
 

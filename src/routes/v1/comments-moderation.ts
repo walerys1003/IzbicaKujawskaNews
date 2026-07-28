@@ -36,7 +36,7 @@
  */
 
 import { Hono } from 'hono'
-import type { AppEnv } from '../../types/env'
+import type { AppEnv, D1DatabaseLike } from '../../types/env'
 import { ok, fail, requireDb } from '../../lib/http/envelope'
 import { requireAuth } from '../../middleware/require-auth'
 import { requirePermission, getAuth } from '../../middleware/require-permission'
@@ -69,10 +69,36 @@ const clientIp = (c: { req: { header: (name: string) => string | undefined } }):
   'unknown'
 
 /**
+ * Identyfikator moderatora do kolumn `moderated_by` / `edited_by`.
+ *
+ * Ten plik odczytywał `auth?.userId` w czterech miejscach. Pole `userId` NIE
+ * ISTNIEJE w `AuthContext` — tożsamość ma pola `sub`, `email`, `role`,
+ * `sessionId` (patrz `src/middleware/require-permission.ts`). `auth?.userId`
+ * było więc zawsze `undefined`, a `?? null` zamieniało to w ciche `NULL`.
+ *
+ * Skutek w produkcji: KAŻDA decyzja moderacyjna (zatwierdzenie, odrzucenie,
+ * oznaczenie spamu, usunięcie, edycja treści, operacja zbiorcza) zapisywała
+ * `moderated_by = NULL`. Widok z migracji 0049 (`LEFT JOIN users u ON
+ * u.id = c.moderated_by`) zwracał puste dane moderatora, więc nie było jak
+ * ustalić, kto usunął komentarz — dokładnie w tabeli, której jedynym celem
+ * jest rozliczalność. Defekt był niewidoczny, bo `requireDb(c)` zwracało
+ * wcześniej `any`, co wyłączało kontrolę typów na całym `auth`.
+ *
+ * Kolumny są `INTEGER REFERENCES users(id)`, a `sub` to `String(user.id)`,
+ * więc wymagana jest konwersja. Wartość niebędąca liczbą daje `null` —
+ * lepiej brak wpisu niż złamany klucz obcy.
+ */
+export const moderatorId = (auth: { sub?: string } | undefined): number | null => {
+  if (!auth?.sub) return null
+  const id = Number.parseInt(auth.sub, 10)
+  return Number.isFinite(id) && id > 0 ? id : null
+}
+
+/**
  * Przelicza liczbe zatwierdzonych komentarzy artykulu. Wolane po kazdej
  * zmianie statusu — zobacz punkt 3 w naglowku.
  */
-const recountArticleComments = async (db: D1Database, articleId: number): Promise<number> => {
+const recountArticleComments = async (db: D1DatabaseLike, articleId: number): Promise<number> => {
   const row = await db
     .prepare(
       `SELECT COUNT(*) AS n FROM comments
@@ -89,6 +115,7 @@ const recountArticleComments = async (db: D1Database, articleId: number): Promis
 
 route.get('/', requireAuth, requirePermission('comment:moderate'), async (c) => {
   const db = requireDb(c)
+  if (db instanceof Response) return db
   const status = c.req.query('status')
   const articleId = Number.parseInt(c.req.query('articleId') ?? '', 10)
   const q = (c.req.query('q') ?? '').trim()
@@ -176,6 +203,7 @@ const safeJson = (value: string): unknown => {
 
 route.get('/:id', requireAuth, requirePermission('comment:moderate'), async (c) => {
   const db = requireDb(c)
+  if (db instanceof Response) return db
   const id = Number.parseInt(c.req.param('id'), 10)
   if (!Number.isFinite(id) || id < 1) return fail(c, 'validation_error', 'Nieprawidłowy identyfikator komentarza.')
 
@@ -232,6 +260,7 @@ route.get('/:id', requireAuth, requirePermission('comment:moderate'), async (c) 
 
 route.post('/:id/moderate', requireAuth, requirePermission('comment:moderate'), async (c) => {
   const db = requireDb(c)
+  if (db instanceof Response) return db
   const auth = getAuth(c)
   const id = Number.parseInt(c.req.param('id'), 10)
   if (!Number.isFinite(id) || id < 1) return fail(c, 'validation_error', 'Nieprawidłowy identyfikator komentarza.')
@@ -280,7 +309,7 @@ route.post('/:id/moderate', requireAuth, requirePermission('comment:moderate'), 
                 updated_at = CURRENT_TIMESTAMP
           WHERE id = ?5`,
       )
-      .bind(body.status, auth?.userId ?? null, reason, editedContent, id),
+      .bind(body.status, moderatorId(auth), reason, editedContent, id),
   ]
   await db.batch(statements)
 
@@ -307,6 +336,7 @@ route.post('/:id/moderate', requireAuth, requirePermission('comment:moderate'), 
 
 route.post('/bulk-moderate', requireAuth, requirePermission('comment:moderate'), async (c) => {
   const db = requireDb(c)
+  if (db instanceof Response) return db
   const auth = getAuth(c)
 
   let body: { ids?: unknown; status?: unknown; reason?: unknown }
@@ -350,7 +380,7 @@ route.post('/bulk-moderate', requireAuth, requirePermission('comment:moderate'),
               moderation_reason = ?3, updated_at = CURRENT_TIMESTAMP
         WHERE id IN (${placeholders}) AND deleted_at IS NULL`,
     )
-    .bind(body.status, auth?.userId ?? null, reason, ...ids)
+    .bind(body.status, moderatorId(auth), reason, ...ids)
     .run()
 
   // Kazdy dotkniety artykul dostaje przeliczony licznik — inaczej operacja
@@ -373,6 +403,7 @@ route.post('/bulk-moderate', requireAuth, requirePermission('comment:moderate'),
 
 route.post('/:id/report', async (c) => {
   const db = requireDb(c)
+  if (db instanceof Response) return db
   const id = Number.parseInt(c.req.param('id'), 10)
   if (!Number.isFinite(id) || id < 1) return fail(c, 'validation_error', 'Nieprawidłowy identyfikator komentarza.')
 
@@ -435,6 +466,7 @@ route.post('/:id/report', async (c) => {
 
 route.delete('/:id', requireAuth, requirePermission('comment:delete'), async (c) => {
   const db = requireDb(c)
+  if (db instanceof Response) return db
   const auth = getAuth(c)
   const id = Number.parseInt(c.req.param('id'), 10)
   if (!Number.isFinite(id) || id < 1) return fail(c, 'validation_error', 'Nieprawidłowy identyfikator komentarza.')
@@ -453,7 +485,7 @@ route.delete('/:id', requireAuth, requirePermission('comment:delete'), async (c)
               moderated_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?2`,
     )
-    .bind(auth?.userId ?? null, id)
+    .bind(moderatorId(auth), id)
     .run()
 
   const commentCount = await recountArticleComments(db, existing.article_id)
@@ -477,6 +509,7 @@ route.delete('/:id', requireAuth, requirePermission('comment:delete'), async (c)
  */
 route.get('/article/:slug', async (c) => {
   const db = requireDb(c)
+  if (db instanceof Response) return db
   const slug = c.req.param('slug')
 
   const article = await db

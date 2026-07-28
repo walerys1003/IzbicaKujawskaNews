@@ -3,18 +3,68 @@
 // ============================================================================
 
 // ---------- D1 (Sandbox 3) ----------
+
+/** Metryki zapisu zwracane przez D1 po `run()` / `batch()`. */
+export interface D1MetaLike {
+  /** Identyfikator wiersza po INSERT — czytany w 7 miejscach w projekcie. */
+  last_row_id?: number
+  changes?: number
+  duration?: number
+  rows_read?: number
+  rows_written?: number
+}
+
+/**
+ * Koperta wyniku D1.
+ *
+ * Wcześniej `run<T>()` było zadeklarowane jako `Promise<T>`, czyli parametr
+ * typu opisywał CAŁY wynik, a nie wiersz. Deklaracja była nieprawdziwa: D1
+ * zwraca `{ success, meta: { last_row_id, changes }, results? }`. Konsekwencje:
+ *
+ *  1. Żadne z 142 wywołań `.run()` nie podawało parametru typu (`.run<` = 0
+ *     trafień), bo pod tą deklaracją nie dawało się go sensownie podać.
+ *  2. Kod czytający identyfikator musiał obchodzić typ rzutowaniem
+ *     `(result as { meta?: { last_row_id?: number } })` — trzy takie miejsca.
+ *  3. Tam, gdzie rzutowania nie było, `unknown` dawał TS18046 na poprawnym
+ *     kodzie (`result.meta?.last_row_id`).
+ *
+ * Ten typ opisuje to, co D1 faktycznie zwraca, więc `last_row_id` jest
+ * dostępne bez rzutowania, a `batch()` zachowuje `.results` na każdej pozycji.
+ */
+export interface D1ResultLike<T = unknown> {
+  results?: T[]
+  success?: boolean
+  meta?: D1MetaLike
+}
+
 export interface D1PreparedStatementLike {
   bind(...values: unknown[]): D1PreparedStatementLike
   first<T = unknown>(columnName?: string): Promise<T | null>
-  run<T = unknown>(): Promise<T>
+  run<T = unknown>(): Promise<D1ResultLike<T>>
   all<T = unknown>(): Promise<{ results: T[] }>
   raw<T = unknown>(): Promise<T[]>
 }
 
+/**
+ * `batch` i `exec` NIE są opcjonalne.
+ *
+ * Były zadeklarowane jako `batch?` / `exec?`, co opisywało bazę, która może
+ * nie mieć transakcji wsadowych. Taka baza w tym projekcie nie istnieje:
+ * `batch` jest wywoływane bezwarunkowo w 20 miejscach (m.in. zapis artykułu
+ * z wersją, moderacja zbiorcza, indeks wektorowy RAG), `exec` w 9 — a i
+ * prawdziwe D1, i atrapa w `tests/fixtures/mock-d1.ts` obie metody mają.
+ *
+ * Znak `?` powodował wyłącznie fałszywe TS2722 („Cannot invoke an object
+ * which is possibly undefined”) na poprawnym kodzie i zachęcał do obchodzenia
+ * ich przez `!` albo `?.`. `db.batch?.(statements)` byłoby tu groźne: przy
+ * braku metody cicho pomijałoby CAŁY zapis wsadowy i zwracało `undefined`,
+ * więc trasa zgłaszałaby sukces bez zapisania czegokolwiek. Deklaracja jest
+ * dopasowana do rzeczywistości zamiast zmuszać wywołania do udawania.
+ */
 export interface D1DatabaseLike {
   prepare(query: string): D1PreparedStatementLike
-  batch?<T = unknown>(statements: D1PreparedStatementLike[]): Promise<T[]>
-  exec?(query: string): Promise<unknown>
+  batch<T = unknown>(statements: D1PreparedStatementLike[]): Promise<D1ResultLike<T>[]>
+  exec(query: string): Promise<unknown>
 }
 
 // ---------- KV (merged Sandbox 2 + Sandbox 3) ----------
