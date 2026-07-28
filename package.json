@@ -38,7 +38,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260702.1",
     "@hono/vite-build": "^1.2.0",
-    "@hono/vite-dev-server": "^0.25.2",
+    "@hono/vite-dev-server": "^0.26.1",
     "@playwright/test": "^1.60.0",
     "@types/node": "^22.20.1",
     "@vitest/coverage-v8": "^4.1.7",
