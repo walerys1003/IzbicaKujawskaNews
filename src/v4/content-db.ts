@@ -1445,8 +1445,19 @@ export function searchV4(q: string): Article[] {
     .sort(byDateDesc)
 }
 
+/**
+ * s10: pula galerii na tej samej zasadzie co pool() dla artykulow —
+ * migawka D1, a gdy baza jest pusta, tresc demonstracyjna szaty.
+ * Dzieki temu galeria opublikowana w panelu pojawia sie na portalu,
+ * a srodowisko bez danych nadal pokazuje kompletna strone.
+ */
+export function allGalleries(): Gallery[] {
+  const snap = snapshot()
+  return snap.galleries.length > 0 ? snap.galleries : GALLERIES
+}
+
 export function findGallery(id: string): Gallery | undefined {
-  return GALLERIES.find((g) => g.id === id || g.slug === id)
+  return allGalleries().find((g) => g.id === id || g.slug === id)
 }
 
 /** Ticker "Na sygnale" — pasek breaking na górze strony */

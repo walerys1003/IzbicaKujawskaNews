@@ -13,6 +13,7 @@ import {
   byType,
   incidents,
   findArticleV4,
+  allGalleries,
   findGallery,
   latest,
   slot,
@@ -883,7 +884,11 @@ const MultimediaSection: FC = () => {
   const video = slot('wideo-dni-izbicy-2026-zapowiedz', { category: 'multimedia', used: slotsUsed() })!
   const pod = slot('podcast-23-burmistrz-termomodernizacja', { category: 'multimedia', used: slotsUsed() })!
   const podEps = byType('audio').filter((a) => a.slug !== pod.slug).slice(0, 3)
-  const gal = findGallery('dni-izbicy-2025')!
+  // s10: preferowany slug z szaty, a gdy redakcja opublikuje wlasne galerie
+  // bez tego sluga — najswiezsza galeria z D1. Asercja `!` na sztywnym slugu
+  // dawalaby undefined i bialy 500 dla calej strony glownej (ten sam blad,
+  // ktory slot() naprawil dla artykulow).
+  const gal = findGallery('dni-izbicy-2025') ?? allGalleries()[0]
 
   const filters = [
     { key: 'all', label: 'Wszystkie' },
@@ -971,22 +976,26 @@ const MultimediaSection: FC = () => {
           </div>
         </div>
 
-        <div class="mm-gallery" data-mmtype="galerie">
-          <div class="mm-gallery-head">
-            <h3>
-              <a href="/multimedia/galerie/kultura/dni-izbicy-2025">Galeria · {gal.title}</a>
-            </h3>
-            <p class="lead">{gal.description}</p>
+        {gal ? (
+          <div class="mm-gallery" data-mmtype="galerie">
+            <div class="mm-gallery-head">
+              <h3>
+                <a href={`/multimedia/galerie/${gal.section ?? 'kultura'}/${gal.slug}`}>Galeria · {gal.title}</a>
+              </h3>
+              <p class="lead">{gal.description}</p>
+            </div>
+            <div class="mm-thumb-grid">
+              {gal.photos.slice(0, 4).map((p, i) => (
+                <a class="mm-thumb" href={`/multimedia/galerie/${gal.section ?? 'kultura'}/${gal.slug}`}>
+                  {i === 3 && gal.photos.length > 4 ? (
+                    <div class="mm-thumb-count">+{gal.photos.length - 4}</div>
+                  ) : null}
+                  <img src={p.src} alt={p.alt} loading="lazy" />
+                </a>
+              ))}
+            </div>
           </div>
-          <div class="mm-thumb-grid">
-            {gal.photos.slice(0, 4).map((p, i) => (
-              <a class="mm-thumb">
-                {i === 3 ? <div class="mm-thumb-count">+120</div> : null}
-                <img src={p.src} alt={p.alt} loading="lazy" />
-              </a>
-            ))}
-          </div>
-        </div>
+        ) : null}
       </div>
     </section>
   )

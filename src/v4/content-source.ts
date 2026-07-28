@@ -86,6 +86,30 @@ interface BlockRow {
   payload_json: string
 }
 
+// s10: galerie z D1 (migracja 0052). Panel zapisuje przez galleries-admin.ts,
+// ale migawka zwracala na sztywno `galleries: []` — galeria opublikowana w
+// panelu nigdy nie trafiala na portal. To samo rozdwojenie, ktore etap D4
+// naprawil dla artykulow.
+interface GalleryRow {
+  id: number
+  slug: string
+  title: string
+  description: string | null
+  category_slug: string | null
+  event_date: string | null
+  published_at: string | null
+  cover_key: string | null
+}
+
+interface GalleryItemRow {
+  gallery_id: number
+  position: number
+  caption: string | null
+  credit: string | null
+  asset_key: string | null
+  alt: string | null
+}
+
 // ───────────────────────────────────────────────────────────── MIGAWKA
 
 export interface ContentSnapshot {
@@ -354,6 +378,57 @@ const BLOCKS_SQL = `
    ORDER BY b.article_id, b.position
 `
 
+// s10: galerie i ich zdjecia — dwa zapytania w tym samym batchu co artykuly,
+// wiec migawka z galeriami NIE dodaje rund do D1 (batch to jedna runda).
+const GALLERIES_SQL = `
+  SELECT g.id, g.slug, g.title, g.description, g.category_slug,
+         g.event_date, g.published_at,
+         cm.asset_key AS cover_key
+    FROM galleries g
+    LEFT JOIN media_assets cm ON cm.id = g.cover_media_id AND cm.deleted_at IS NULL
+   WHERE g.status = 'published'
+     AND g.deleted_at IS NULL
+   ORDER BY COALESCE(g.published_at, g.created_at) DESC
+   LIMIT 100
+`
+
+const GALLERY_ITEMS_SQL = `
+  SELECT gi.gallery_id, gi.position, gi.caption, gi.credit,
+         m.asset_key, m.alt
+    FROM gallery_items gi
+    JOIN galleries g ON g.id = gi.gallery_id
+    LEFT JOIN media_assets m ON m.id = gi.media_id AND m.deleted_at IS NULL
+   WHERE g.status = 'published'
+     AND g.deleted_at IS NULL
+   ORDER BY gi.gallery_id, gi.position
+`
+
+/** Wiersze D1 → model `Gallery` szaty v4 (ta sama konwencja co toArticle). */
+const toGallery = (row: GalleryRow, items: GalleryItemRow[]): Gallery => {
+  const photos = items
+    .filter((i) => i.asset_key)
+    .map((i) => ({
+      src: mediaUrl(i.asset_key) ?? '',
+      alt: i.alt ?? row.title,
+      caption: i.caption ?? undefined,
+      credit: i.credit ?? undefined,
+    }))
+  return {
+    // Szata adresuje galerie tekstowym id (blok 'gallery' w artykule trzyma
+    // galleryId). Panel nadaje galeriom numeryczne id — slug jest jedynym
+    // wspolnym, stabilnym adresem, wiec uzywamy go jako id.
+    id: row.slug,
+    slug: row.slug,
+    title: row.title,
+    description: row.description ?? undefined,
+    cover: mediaUrl(row.cover_key) ?? photos[0]?.src ?? '',
+    section: row.category_slug ?? undefined,
+    photos,
+    publishedAt: formatPl(row.published_at),
+    eventDate: row.event_date ?? undefined,
+  }
+}
+
 /**
  * Buduje migawke tresci. Dwa zapytania zamiast N+1: artykuly i wszystkie ich
  * bloki naraz, potem zszycie w pamieci. Przy kilkuset artykulach to jest
@@ -368,13 +443,17 @@ export const loadSnapshot = async (c: Context): Promise<ContentSnapshot> => {
   }
 
   try {
-    const [articlesResult, blocksResult] = await db.batch([
+    const [articlesResult, blocksResult, galleriesResult, galleryItemsResult] = await db.batch([
       db.prepare(ARTICLES_SQL),
       db.prepare(BLOCKS_SQL),
+      db.prepare(GALLERIES_SQL),
+      db.prepare(GALLERY_ITEMS_SQL),
     ])
 
     const rows = (articlesResult.results ?? []) as unknown as ArticleRow[]
     const blockRows = (blocksResult.results ?? []) as unknown as BlockRow[]
+    const galleryRows = (galleriesResult.results ?? []) as unknown as GalleryRow[]
+    const galleryItemRows = (galleryItemsResult.results ?? []) as unknown as GalleryItemRow[]
 
     const blocksByArticle = new Map<number, BlockRow[]>()
     for (const row of blockRows) {
@@ -383,10 +462,18 @@ export const loadSnapshot = async (c: Context): Promise<ContentSnapshot> => {
       else blocksByArticle.set(row.article_id, [row])
     }
 
+    const itemsByGallery = new Map<number, GalleryItemRow[]>()
+    for (const row of galleryItemRows) {
+      const list = itemsByGallery.get(row.gallery_id)
+      if (list) list.push(row)
+      else itemsByGallery.set(row.gallery_id, [row])
+    }
+
     const articles = rows.map((row) => toArticle(row, blocksFrom(blocksByArticle.get(row.id) ?? [])))
     const bySlug = new Map(articles.map((a) => [a.slug, a]))
+    const galleries = galleryRows.map((row) => toGallery(row, itemsByGallery.get(row.id) ?? []))
 
-    return { articles, bySlug, galleries: [], used: new Set() }
+    return { articles, bySlug, galleries, used: new Set() }
   } catch (error) {
     // Awaria bazy nie moze oznaczac bialej strony — portal pokaze pusta
     // sekcje, a blad trafi do logow.

@@ -51,7 +51,7 @@ import {
   mostRead,
   relatedArticles,
   searchV4,
-  GALLERIES,
+  allGalleries,
   latest,
 } from './content-db'
 import type { Gallery } from './content-types'
@@ -78,7 +78,11 @@ app.use('*', async (c, next) => {
 
 app.use('*', rendererV4)
 
-const galleryMap: Record<string, Gallery> = Object.fromEntries(GALLERIES.map((g) => [g.id, g]))
+// s10: mapa MUSI byc liczona na zadanie z allGalleries() (migawka D1 z
+// awaryjnym demo), a nie raz na start modulu z GALLERIES — stala modulu
+// zamrozilaby tresc demonstracyjna na zawsze, niezaleznie od tego, co
+// redakcja opublikuje w panelu.
+const galleryMap = (): Record<string, Gallery> => Object.fromEntries(allGalleries().map((g) => [g.id, g]))
 
 const pageParam = (v: string | undefined) => {
   const n = parseInt(v || '1', 10)
@@ -450,7 +454,7 @@ function renderArticle(c: any, a: NonNullable<ReturnType<typeof findArticleV4>>)
         sameCategory={byCategory(a.category)
           .filter((x) => x.slug !== a.slug)
           .slice(0, 4)}
-        galleries={galleryMap}
+        galleries={galleryMap()}
       />
     </Shell>,
     {
