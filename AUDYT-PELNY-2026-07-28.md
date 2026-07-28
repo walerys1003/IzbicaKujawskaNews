@@ -13,23 +13,32 @@
 | Obszar | Wdrożenie | Ocena |
 |---|---:|---|
 | **1. Frontend (portal publiczny v4)** | **85%** | 🟢 dobry |
-| **2. Backend (logika serwerowa)** | **70%** | 🟡 zaawansowany |
+| **2. Backend (logika serwerowa)** | **78%** | 🟢 dobry (typy 0 błędów, push na D1, treść publiczna z D1) |
 | **3. Baza danych (D1)** | **80%** | 🟢 dobry (schemat 95%, dane realne 0%) |
-| **4. API (REST v1 + pozostałe)** | **65%** | 🟡 częściowy |
+| **4. API (REST v1 + pozostałe)** | **75%** | 🟢 dobry (version/metrics/media/galleries/videos/newsroom-status → 200; VAPID → 200) |
 | **5. Panel redakcyjny (admin)** | **70%** | 🟡 zaawansowany |
 | **6. Autoryzacja i bezpieczeństwo** | **75%** | 🟢 dobry |
-| **7. Wyszukiwarka** | **45%** | 🟠 działa na mockach |
+| **7. Wyszukiwarka** | **75%** | 🟢 API + strona na FTS5/D1 (zmierzone: wyniki z indeksu articles_szukaj) |
 | **8. Integracje zewnętrzne** | **40%** | 🟠 częściowe |
 | **9. AI (newsroom, prompty, RAG)** | **35%** | 🟠 kod gotowy, brak kluczy i danych |
-| **10. Media (upload, R2, galerie)** | **55%** | 🟠 lokalnie działa, prod niegotowy |
-| **11. Powiadomienia (push, e-mail, newsletter)** | **45%** | 🟠 kod gotowy, brak konfiguracji |
-| **12. Testy i jakość kodu** | **60%** | 🟡 testy OK, 134 błędy typów |
-| **13. CI/CD** | **15%** | 🔴 brak workflowów |
+| **10. Media (upload, R2, galerie)** | **60%** | 🟠 lokalnie działa (galerie publiczne z D1 od s10), prod niegotowy |
+| **11. Powiadomienia (push, e-mail, newsletter)** | **60%** | 🟡 push na D1 (s8, bez limitu 500), VAPID dev działa; e-mail nadal mock |
+| **12. Testy i jakość kodu** | **72%** | 🟢 168/168 testów, **0 błędów typów** (było 134), zapadka=0 |
+| **13. CI/CD** | **35%** | 🟠 `.github/workflows/ci.yml` istnieje; brak auto-deploya i stagingu |
 | **14. Wdrożenie produkcyjne (Cloudflare)** | **0%** | 🔴 nie wdrożono |
 | **15. n8n / automatyzacje treści** | **30%** | 🟠 definicje gotowe, nie uruchomione |
 | **16. Wtyczka WordPress (izbica24-newsroom)** | **50%** | 🟠 kod + zip, nie testowana na WP |
 | | | |
-| **CAŁOŚĆ PROJEKTU (średnia ważona)** | **≈ 58–62%** | 🟡 |
+| **CAŁOŚĆ PROJEKTU (średnia ważona)** | **≈ 66–70%** | 🟡 |
+
+> **Aktualizacja 2026-07-28 (po sesjach napraw s6/s8/s10)** — procenty powyżej
+> zaktualizowane na podstawie ponownych pomiarów: błędy typów 134 → **0**,
+> `/api/search` przepięte na FTS5/D1 (wyniki z `articles_szukaj`, nie z mocka),
+> push subscriptions w D1 (tabele 0036 + migracja 0059, UNIQUE endpoint,
+> bez limitu 500 z KV), sekcje strony głównej (artykuły + galerie) czytają
+> migawkę D1 — dowód: INSERT/UPDATE w bazie widoczny na `/` po odświeżeniu.
+> Trasy ogłoszone jako martwe (version, metrics, media, galleries, videos,
+> newsroom/status) zwracają dziś **200**; `vapid-public-key` → **200** (klucze dev).
 
 **Interpretacja ogólna**: rdzeń portalu (frontend + baza + panel + auth) jest w stanie
 zaawansowanym i realnie działa na D1. Do produkcji brakuje przede wszystkim:
@@ -43,7 +52,7 @@ VAPID, KV/R2 w chmurze), przepięcia wyszukiwarki i RAG z mocków na D1 oraz rea
 | Pomiar | Wynik | Data pomiaru |
 |---|---|---|
 | Build produkcyjny (`vite build`) | ✅ sukces, 350 modułów, `dist/_worker.js` = **981 kB**, 3.9 s | 2026-07-28 |
-| Kontrola typów (`tsc --noEmit`) | ⚠️ **134 błędy TS** (historycznie: 374 → 284 → 226 → 144 → 136 → 134) | 2026-07-28 |
+| Kontrola typów (`tsc --noEmit`) | ✅ **0 błędów TS** (historycznie: 374 → 284 → 226 → 144 → 136 → 134 → **0**; zapadka lint = 0) | 2026-07-28 |
 | Testy (`vitest run`) | ✅ **29 plików / 168 testów — wszystkie zaliczone** (23.5 s) | 2026-07-28 |
 | Serwer lokalny | ✅ `pm2` + `wrangler pages dev dist --d1 --local`, port 3000, HTTP 200 | 2026-07-28 |
 | Baza D1 (lokalna) | ✅ **110 tabel**, 58 migracji zastosowanych, 30 artykułów, 22 kategorie, 4 użytkowników, 1 komentarz | 2026-07-28 |
@@ -117,7 +126,7 @@ VAPID, KV/R2 w chmurze), przepięcia wyszukiwarki i RAG z mocków na D1 oraz rea
 
 ---
 
-## 4️⃣ API — **65%**
+## 4️⃣ API — **75%** (zaktualizowano: było 65%; tabela „tras martwych” poniżej jest historyczna — pomiar 2026-07-28: version/metrics/media/galleries/videos/newsroom-status → 200, vapid-public-key → 200)
 
 ### ✅ Trasy DZIAŁAJĄCE (zmierzone kodami HTTP)
 | Trasa | Kod | Uwagi |
@@ -126,8 +135,8 @@ VAPID, KV/R2 w chmurze), przepięcia wyszukiwarki i RAG z mocków na D1 oraz rea
 | `GET /api/v1/articles` | 200 | **czyta z D1**, koperta `{ok,data}` |
 | `GET /api/v1/categories` | 200 | z D1 |
 | `GET /api/v1/pogoda` | 200 | realne dane Open-Meteo |
-| `GET /api/search?q=` | 200 | ⚠️ działa, ale **na mocku** (patrz §7) |
-| `GET /api/search/autocomplete` | 200 | ⚠️ mock |
+| `GET /api/search?q=` | 200 | ✅ **FTS5/D1** (przepięte — patrz §7) |
+| `GET /api/search/autocomplete` | 200 | ✅ FTS5/D1 |
 | `GET /api/v1/podcast/feed.xml` | 200 | RSS podcastu |
 | `POST /api/v1/auth/login` | 401 przy złych danych, poprawna koperta błędu | pełny auth działa |
 | `GET /api/v1/newsletter/subscribers` | **401 bez logowania** | ✅ luka wycieku e-maili załatana (wcześniej 200!) |
@@ -194,14 +203,19 @@ social-login bez skonfigurowanych kluczy OAuth (martwy w praktyce).
 
 ---
 
-## 7️⃣ WYSZUKIWARKA — **45%**
+## 7️⃣ WYSZUKIWARKA — **75%** (zaktualizowano: było 45%)
 
 ### ✅ Co jest
 - UI `/szukaj` + modal + autouzupełnianie — działa (200)
 - Infrastruktura FTS5 w D1: 7 indeksów pełnotekstowych, polska normalizacja, stemmer, synonimy, podświetlanie, sugestie pisowni, analityka wyszukiwań — **kod i tabele istnieją**
 
-### ❌ Kluczowa wada (zmierzona)
-**Trasa `/api/search` czyta ze statycznej tablicy `data-articles.ts`, NIE z D1/FTS.**
+### ✅ NAPRAWIONE (pomiar 2026-07-28): `/api/search` czyta z FTS5/D1
+Dowód: `GET /api/search?q=Kujawianka` zwraca wpisy z indeksu `articles_szukaj`
+(snippet z `<mark>`), autocomplete nie zwraca już tytułów spoza bazy.
+Pozostało: analityka fraz bez wyników w panelu, strojenie rankingu.
+
+### ❌ Historyczna wada (już nieaktualna)
+**Trasa `/api/search` czytała ze statycznej tablicy `data-articles.ts`, NIE z D1/FTS.**
 Dowód: autocomplete zwraca tytuł, którego nie ma w bazie D1; import w
 `src/routes/search/index.ts:6` wskazuje mock. Cała warstwa FTS jest zbudowana,
 ale **niepodłączona do publicznego endpointu**. To największy pojedynczy rozjazd
@@ -262,18 +276,18 @@ ale **niepodłączona do publicznego endpointu**. To największy pojedynczy rozj
 
 ---
 
-## 1️⃣1️⃣ POWIADOMIENIA — **45%**
+## 1️⃣1️⃣ POWIADOMIENIA — **60%** (zaktualizowano: było 45%)
 
 | Kanał | Stan |
 |---|---|
-| **Web Push** | 🟡 implementacja kompletna i przetestowana wektorem RFC; SW zarejestrowany (naprawiony błąd escapowania inline-scriptu); **brak kluczy VAPID → 503**; magazyn subskrypcji w KV z limitem 500 (jawnie ostrzeżone) — do przeniesienia do D1 |
+| **Web Push** | 🟢 implementacja kompletna (wektor RFC); **s8: magazyn subskrypcji w D1** (tabele 0036 + migracja 0059, UNIQUE endpoint = deduplikacja niemożliwa w KV, bez limitu 500); klucze VAPID dev skonfigurowane → `vapid-public-key` 200; na produkcji wymagane własne klucze |
 | **Newsletter** | 🟡 zapis subskrybentów + zgody w D1, double opt-in w kodzie; **wysyłka = mock (503)**; naprawiono kłamliwe „wysłano" |
 | **E-mail transakcyjny** (weryfikacja konta, reset hasła, magic-link) | ❌ ta sama blokada — brak dostawcy; trasy działają, ale list nie wychodzi |
 | **Breaking-news ticker** | ✅ na stronie (dane demo) |
 
 ---
 
-## 1️⃣2️⃣ TESTY I JAKOŚĆ — **60%**
+## 1️⃣2️⃣ TESTY I JAKOŚĆ — **72%** (zaktualizowano: było 60%)
 
 ### ✅ Co jest (zmierzone)
 - **168 testów / 29 plików — 100% zaliczonych**: jednostkowe (walidatory, moderacja, prywatność, SEO, push-krypto, stronicowanie KV), integracyjne z atrapą D1 (auth, artykuły, komentarze+moderacja, newsletter — 9 przypadków po przepisaniu, push), kontraktowe (etykiety kategorii, adresy artykułów)
@@ -283,14 +297,14 @@ ale **niepodłączona do publicznego endpointu**. To największy pojedynczy rozj
 - Playwright skonfigurowany (smoke e2e)
 
 ### ❌ Czego brakuje (40%)
-- **134 błędy typów** (cel: 0; zapadka pilnuje tylko braku regresu)
+- ~~134 błędy typów~~ → **0 błędów** (zapadka ustawiona na 0 — każdy nowy błąd blokuje CI)
 - Pokrycie: brak testów dla ~80% modułów `lib/` (media, backup, monitoring, r2)
 - E2E: 1 plik smoke — brak scenariuszy krytycznych (publikacja artykułu end-to-end, moderacja, logowanie z 2FA)
 - Brak testów wydajnościowych i dostępności (axe)
 
 ---
 
-## 1️⃣3️⃣ CI/CD — **15%**
+## 1️⃣3️⃣ CI/CD — **35%** (zaktualizowano: było 15%)
 
 ### ✅ Co jest
 - `.github/`: dependabot, CODEOWNERS, szablony PR/issue
@@ -298,7 +312,7 @@ ale **niepodłączona do publicznego endpointu**. To największy pojedynczy rozj
 - Konfiguracje `wrangler-staging.jsonc` / `wrangler-prod.jsonc`
 
 ### ❌ Czego brakuje (85%)
-- **Katalog `.github/workflows/` NIE ISTNIEJE** — zero automatyzacji: brak buildu na PR, brak testów na push, brak automatycznego deploya
+- ~~Katalog `.github/workflows/` NIE ISTNIEJE~~ → **`ci.yml` istnieje** (build + typy + testy); nadal brak automatycznego deploya
 - Brak środowiska staging w chmurze
 - Repo GitHub podpięte (`walerys1003/IzbicaKujawskaNews`), ale bez potwierdzenia aktualności push
 
