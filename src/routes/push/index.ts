@@ -32,20 +32,19 @@
      KV jest replikowane do wszystkich lokalizacji brzegowych, D1 ma jeden
      region zapisu i replikę czytającą.
 
-  ZNANE OGRANICZENIE, ŚWIADOMIE PRZYJĘTE
-  --------------------------------------
-  listByPrefix() w src/lib/runtime-kv.ts ma `limit: 500` i NIE obsługuje
-  kursora — sprawdzone w kodzie, nie założone. Powyżej 500 subskrybentów
-  wysyłka po cichu pominie nadwyżkę i nikt tego nie zauważy, bo `delivered`
-  będzie zgodne z liczbą PODJĘTYCH prób. Portal gminy o ~2,8 tys.
-  subskrybentach newslettera realnie ten próg przekroczy.
+  OGRANICZENIE LIMITU 500 — USUNIĘTE
+  ----------------------------------
+  Do 2026-07-28 listByPrefix() wykonywał jedno wywołanie `list({ limit: 500 })`
+  bez obsługi kursora i po cichu odrzucał nadwyżkę. Przy 2 847 subskrybentach
+  wysyłka objęłaby 500 osób, a panel pokazałby „dostarczono 500/500" jako
+  pełny sukces. Funkcja obsługuje teraz pełne stronicowanie (dowód przez
+  mutację w tests/unit/lib/runtime-kv-stronicowanie.test.ts: na starej
+  implementacji test pada z „expected 1200, got 500").
 
-  Dlatego trasa /send-broadcast raportuje `attempted` obok `delivered`
-  i ostrzega, gdy lista dobiła do limitu (patrz OSTRZEZENIE_LIMIT_KV).
-  Stronicowanie listByPrefix jest osobnym zadaniem — wymaga zmiany
-  sygnatury używanej przez inne moduły (newsletter, analytics), więc nie
-  wchodzi w zakres I8. Do tego czasu limit jest widoczny w odpowiedzi API,
-  a nie ukryty.
+  Sygnał `listaUcieta` zostaje jako zabezpieczenie: pochodzi teraz z pola
+  `ucieta` zwracanego przez listByPrefixZeStanem, więc raportuje FAKTYCZNĄ
+  niekompletność (np. kursor bez postępu po stronie dostawcy), a nie domysł
+  oparty na porównaniu z magiczną liczbą.
 
   Tabele D1 z migracji 0036 pozostają nieużywane. NIE usuwam ich migracją
   wycofującą, bo to nie jest bezpieczne bez wglądu w stan produkcji —
@@ -57,15 +56,10 @@ import type { Context } from 'hono'
 import type { AppEnv, Bindings } from '../../types/env'
 import { requireAuth } from '../auth/middleware/require-auth'
 import type { AuthJwtPayload } from '../auth/helpers/password-utils'
-import { deleteJson, getJson, listByPrefix, putJson, upsertCollectionItem } from '../../lib/runtime-kv'
+import { deleteJson, getJson, listByPrefix, listByPrefixZeStanem, putJson, upsertCollectionItem } from '../../lib/runtime-kv'
 import { kluczeVapidZeSrodowiska, wyslijPowiadomienie, type PowodNiepowodzenia } from '../../lib/push/webpush'
 
-/*
-  Limit odpowiada `limit: 500` w listByPrefix (src/lib/runtime-kv.ts).
-  Trzymam go tutaj jako stałą, żeby ostrzeżenie w API nie rozjechało się
-  z faktycznym zachowaniem warstwy KV przy zmianie tamtej wartości.
-*/
-const LIMIT_LISTY_KV = 500
+
 
 /** Wynik wysyłki do jednego subskrybenta — z jego identyfikatorem. */
 interface WynikSubskrybenta {
@@ -172,6 +166,22 @@ const ensureAdmin = (c: Context<AppEnv>) => {
   return null
 }
 
+/**
+ * Lista subskrybentów wraz z informacją o kompletności.
+ *
+ * Wysyłka powiadomień to jedno z tych miejsc, gdzie niekompletna lista ma
+ * bezpośrednie konsekwencje: pominięty odbiorca nie dostaje wiadomości,
+ * a raport i tak wygląda na poprawny. Dlatego tu czytam `ucieta`, zamiast
+ * używać uproszczonego listByPrefix.
+ */
+const listSubscribersZeStanem = async (env: Bindings) => {
+  const wynik = await listByPrefixZeStanem<PushSubscriptionRecord>(env, 'NOTIFICATIONS_KV', 'push:subscriber:')
+  return {
+    subskrybenci: wynik.items.map((item) => item.value).sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
+    ucieta: wynik.ucieta,
+  }
+}
+
 const listSubscribers = async (env: Bindings) => (await listByPrefix<PushSubscriptionRecord>(env, 'NOTIFICATIONS_KV', 'push:subscriber:'))
   .map((item) => item.value)
   .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
@@ -232,23 +242,21 @@ const matchRecipient = (subscriber: PushSubscriptionRecord, message: Pick<PushMe
  * i dlatego pola `opened`/`clicked` są zliczane osobno, ze zdarzeń z SW.
  */
 const sendMessage = async (env: Bindings, message: PushMessageRecord) => {
-  const subscribers = await listSubscribers(env)
+  const { subskrybenci: subscribers, ucieta: listaUcieta } = await listSubscribersZeStanem(env)
   const recipients = subscribers.filter((subscriber) => matchRecipient(subscriber, message))
 
   /*
-    Wykrycie ucięcia listy przez limit KV. Gdy listSubscribers zwróci
-    dokładnie LIMIT_LISTY_KV pozycji, jest praktycznie pewne, że dalsze
-    subskrypcje istnieją, ale nie zostały pobrane — listByPrefix nie
-    obsługuje kursora. Bez tego ostrzeżenia panel pokazałby „dostarczono
-    500/500" i wyglądałoby to na pełny sukces, gdy 2 300 osób nie dostało
-    nic. Zgłaszam to jawnie, zamiast udawać, że problem nie istnieje.
+    `ucieta` pochodzi teraz z warstwy KV i oznacza faktyczną niekompletność
+    listy (np. dostawca zwrócił kursor bez postępu), a nie domysł oparty na
+    porównaniu liczby wyników z magiczną stałą. Po wdrożeniu stronicowania
+    ten warunek nie powinien wystąpić — zostawiam go, bo cicha utrata
+    odbiorców jest groźniejsza niż nadmiarowy log.
   */
-  const listaUcieta = subscribers.length >= LIMIT_LISTY_KV
   if (listaUcieta) {
     console.error(
-      `[push] OSTRZEZENIE_LIMIT_KV: pobrano ${subscribers.length} subskrypcji, ` +
-        `czyli dokładnie limit listByPrefix. Subskrypcje powyżej tego progu NIE ` +
-        `otrzymają wiadomości ${message.id}. Wymagane stronicowanie listByPrefix.`,
+      `[push] OSTRZEZENIE_LIMIT_KV: warstwa KV zgłosiła niekompletną listę ` +
+        `(pobrano ${subscribers.length} subskrypcji). Część odbiorców NIE otrzyma ` +
+        `wiadomości ${message.id}.`,
     )
   }
 

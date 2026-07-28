@@ -40,7 +40,21 @@ export const compactRecord = <T extends Record<string, unknown>>(record: T): Par
   return Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined)) as Partial<T>
 }
 
-export const escapeLike = (value: string): string => value.replace(/[\%_]/g, (m) => '\' + m)
+/*
+  Escapowanie znaków specjalnych w klauzuli LIKE.
+
+  Poprzedni zapis `'\' + m` był BŁĘDEM SKŁADNI: odwrotny ukośnik escapował
+  apostrof zamykający, więc literał nigdy się nie kończył. Plik nie kompilował
+  się w ogóle. Nie wyszło to na jaw, bo (a) projekt nie miał zainstalowanego
+  TypeScriptu, więc `tsc --noEmit` nie było czym uruchomić, (b) `vite build`
+  nie sprawdza typów, a (c) cały katalog src/db/models/ jest martwym kodem —
+  żaden moduł aplikacji go nie importuje, więc nie wchodzi do bundla.
+
+  W SQLite domyślnym znakiem escape w LIKE nie jest ukośnik — trzeba go
+  wskazać jawnie: `... LIKE ? ESCAPE '\'`. Wywołujący musi o tym pamiętać,
+  inaczej podwójny ukośnik trafi do wyniku dosłownie.
+*/
+export const escapeLike = (value: string): string => value.replace(/[\\%_]/g, (znak) => `\\${znak}`)
 
 export const buildWhere = (
   filters: Record<string, unknown>,

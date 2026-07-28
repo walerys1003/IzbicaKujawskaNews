@@ -1,4 +1,33 @@
 {
+  /*
+    Konfiguracja TypeScriptu dla portalu izbica24.pl.
+
+    STAN ZASTANY (zmierzony 2026-07-28)
+    -----------------------------------
+    Projekt jest napisany w TypeScripcie i ma ten plik, ale w zależnościach
+    NIE BYŁO pakietu `typescript` — polecenia `tsc --noEmit` nie było czym
+    uruchomić. `vite build` typów nie sprawdza (transpiluje, nie weryfikuje),
+    a `npm run lint` sprawdzał wyłącznie istnienie kilku plików i sam był
+    zepsuty (wywalał się na .github/workflows/ci.yml usuniętym w 8aeca3b).
+
+    Efekt: przez cały czas trwania projektu NIC nie sprawdzało typów.
+    Pierwsze uruchomienie kompilatora wykryło BŁĄD SKŁADNI w
+    src/db/models/_shared.ts — plik nie kompilował się w ogóle. Nie ujawniło
+    się to, bo katalog src/db/models/ jest martwym kodem (żaden moduł
+    aplikacji go nie importuje, więc nie wchodzi do bundla).
+
+    DEKLARACJE ŚRODOWISKA
+    ---------------------
+    Kod z src/ działa w Cloudflare Workers, a nie w Node — dlatego
+    `@cloudflare/workers-types`. Pliki w scripts/ i tests/ działają w Node,
+    dlatego dodatkowo `node`. Bez tych deklaracji kompilator zgłaszał 789
+    błędów typu „Cannot find name 'console'", które nie były wadami kodu,
+    tylko brakiem informacji o środowisku uruchomieniowym.
+
+    Wersja workers-types jest podyktowana wymaganiem wrangler 4.86
+    (peerOptional ^4.20260426.1). Wcześniejszy pin na 4.20250705.0
+    powodował konflikt ERESOLVE i blokował instalację.
+  */
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -6,11 +35,17 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "lib": [
-      "ESNext"
-    ],
-    "types": ["vite/client"],
+    "esModuleInterop": true,
+    /* DOM jest potrzebny, bo kod Workers używa Fetch API, URL, TextEncoder
+       i Response — te typy mieszkają w bibliotece DOM, nie w ESNext. */
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "@cloudflare/workers-types", "node"],
     "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
+    "jsxImportSource": "hono/jsx",
+    /* noEmit: ten plik służy WYŁĄCZNIE do sprawdzania typów. Kod wynikowy
+       buduje vite, który ma własną konfigurację. */
+    "noEmit": true
   },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "scripts/**/*.ts"],
+  "exclude": ["node_modules", "dist", ".wrangler"]
 }
