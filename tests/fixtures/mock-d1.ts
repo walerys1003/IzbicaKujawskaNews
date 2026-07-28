@@ -143,6 +143,161 @@ const WIERSZ_SESJI = {
   revoked_at: null as string | null,
 }
 
+/**
+ * Komentarze — kolumny wg migracji 0002 (`comments`), 0017 (`deleted_at`)
+ * i 0049 (`moderated_by`, `moderated_at`, `moderation_reason`, `edited_by`,
+ * `edited_at`, `spam_score`, `spam_reasons_json`, `profanity_hits`,
+ * `report_count`).
+ *
+ * Atrapa musiała je poznać, bo reguła `if (sql.includes('from comments'))
+ * return []` sprawiała, że KAŻDY komentarz był „nieznaleziony”: kolejka
+ * moderacji zwracała pustą listę, a `POST /:id/moderate` — 404. Test napisany
+ * na takiej atrapie mógł sprawdzić wyłącznie ścieżki odmowy (401/403/404)
+ * i nigdy nie dotknąłby zapisu `moderated_by`, czyli dokładnie tego defektu,
+ * który naprawiliśmy w poprzednim kroku.
+ */
+const WIERSZ_KOMENTARZA = {
+  id: 501,
+  article_id: 1,
+  user_id: null as number | null,
+  author_name: 'Marek Nowak',
+  author_email: 'marek@example.com',
+  content: 'Dobrze, że remont się skończył przed terminem.',
+  status: 'pending',
+  parent_id: null as number | null,
+  created_at: TERAZ,
+  updated_at: TERAZ,
+  ip_hash: 'skrot-ip-marka',
+  deleted_at: null as string | null,
+  moderated_by: null as number | null,
+  moderated_at: null as string | null,
+  moderation_reason: null as string | null,
+  edited_by: null as number | null,
+  edited_at: null as string | null,
+  spam_score: 0,
+  spam_reasons_json: null as string | null,
+  profanity_hits: 0,
+  report_count: 0,
+}
+
+const DRUGI_KOMENTARZ = {
+  ...WIERSZ_KOMENTARZA,
+  id: 502,
+  author_name: 'Katarzyna Wójcik',
+  author_email: 'katarzyna@example.com',
+  content: 'A kiedy będzie remont ulicy Polnej?',
+  status: 'approved',
+  ip_hash: 'skrot-ip-katarzyny',
+  report_count: 1,
+}
+
+/**
+ * Minimalny interpreter `UPDATE` dla tabeli `comments`.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * DLACZEGO NIE WYSTARCZY `return []`
+ * ══════════════════════════════════════════════════════════════════════════
+ * Wcześniej atrapa przyjmowała każdy UPDATE i nie robiła nic. Skutek: test
+ * mógł stwierdzić tylko, że trasa odpowiedziała 200 — nie mógł stwierdzić,
+ * CO trafiło do bazy. Defekt `moderated_by = NULL` (moderacja bez śladu,
+ * kto ją wykonał) przechodziłby przez taki test bez zająknięcia, bo status
+ * odpowiedzi jest identyczny w obu wersjach kodu.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * GRANICE TEJ IMPLEMENTACJI — świadome i wypisane
+ * ══════════════════════════════════════════════════════════════════════════
+ * To NIE jest silnik SQL. Rozpoznaje wyłącznie trzy postacie przypisania,
+ * których faktycznie używa `src/routes/v1/comments-moderation.ts`:
+ *
+ *   kolumna = ?N                     → wartość parametru
+ *   kolumna = CURRENT_TIMESTAMP      → znacznik czasu
+ *   kolumna = COALESCE(?N, kolumna)  → wartość tylko gdy parametr niepusty
+ *
+ * Konstrukcji `CASE WHEN … END` (`edited_by`, warunkowe zdjęcie `approved`
+ * po trzecim zgłoszeniu) NIE interpretuje — te kolumny pozostają bez zmian.
+ * Test, który chciałby je sprawdzić, MUSI to zrobić na prawdziwym D1
+ * (`wrangler d1 execute --local`), a nie tutaj; inaczej potwierdzi milczenie
+ * atrapy, nie zachowanie aplikacji.
+ */
+const BEZ_ZMIANY = Symbol('bez-zmiany')
+
+const zastosujUpdateKomentarzy = (
+  sql: string,
+  params: unknown[],
+  komentarze: Array<Record<string, unknown>>,
+): void => {
+  const czesc = /^update comments set (.+?) where (.+)$/.exec(sql)
+  if (!czesc) return
+  const [, setPart, wherePart] = czesc
+
+  const param = (n: number): unknown => params[n - 1]
+
+  // Które wiersze — `where id = ?N` albo `where id in (?a, ?b, …)`.
+  const cele = new Set<number>()
+  const poId = /\bid = \?(\d+)/.exec(wherePart)
+  const poLiscie = /\bid in \(([^)]*)\)/.exec(wherePart)
+  if (poId) {
+    const wartosc = Number(param(Number(poId[1])))
+    if (Number.isFinite(wartosc)) cele.add(wartosc)
+  } else if (poLiscie) {
+    for (const znak of poLiscie[1].split(',')) {
+      const n = /\?(\d+)/.exec(znak.trim())
+      if (!n) continue
+      const wartosc = Number(param(Number(n[1])))
+      if (Number.isFinite(wartosc)) cele.add(wartosc)
+    }
+  }
+  if (cele.size === 0) return
+
+  // `deleted_at IS NULL` w klauzuli WHERE — trasa nie moderuje wpisów już
+  // usuniętych, a atrapa musi to honorować, inaczej test „usunięty komentarz
+  // jest nieosiągalny” przechodziłby fałszywie.
+  const tylkoZywe = wherePart.includes('deleted_at is null')
+
+  const zmiany: Array<[string, unknown]> = []
+  for (const fragment of setPart.split(/,(?![^(]*\))/)) {
+    const tekst = fragment.trim()
+    let dopasowanie = /^(\w+) = \?(\d+)$/.exec(tekst)
+    if (dopasowanie) {
+      zmiany.push([dopasowanie[1], param(Number(dopasowanie[2]))])
+      continue
+    }
+    dopasowanie = /^(\w+) = current_timestamp$/.exec(tekst)
+    if (dopasowanie) {
+      zmiany.push([dopasowanie[1], TERAZ])
+      continue
+    }
+    dopasowanie = /^(\w+) = coalesce\(\?(\d+), \w+\)$/.exec(tekst)
+    if (dopasowanie) {
+      const wartosc = param(Number(dopasowanie[2]))
+      zmiany.push([dopasowanie[1], wartosc === null || wartosc === undefined ? BEZ_ZMIANY : wartosc])
+      continue
+    }
+    dopasowanie = /^(\w+) = \1 \+ 1$/.exec(tekst)
+    if (dopasowanie) {
+      zmiany.push([dopasowanie[1], BEZ_ZMIANY])
+      // Inkrementacja liczona per wiersz poniżej — wartość zależy od stanu.
+      zmiany.push([`__inkrementuj:${dopasowanie[1]}`, true])
+      continue
+    }
+    // Nierozpoznana konstrukcja (CASE WHEN …) — świadomie pomijana.
+  }
+
+  for (const wiersz of komentarze) {
+    if (!cele.has(Number(wiersz.id))) continue
+    if (tylkoZywe && wiersz.deleted_at !== null) continue
+    for (const [kolumna, wartosc] of zmiany) {
+      if (kolumna.startsWith('__inkrementuj:')) {
+        const nazwa = kolumna.slice('__inkrementuj:'.length)
+        wiersz[nazwa] = Number(wiersz[nazwa] ?? 0) + 1
+        continue
+      }
+      if (wartosc === BEZ_ZMIANY) continue
+      wiersz[kolumna] = wartosc
+    }
+  }
+}
+
 class MockStatement implements D1PreparedStatementLike {
   private params: unknown[] = []
 
@@ -234,6 +389,12 @@ class MockStatement implements D1PreparedStatementLike {
       this.stan.ostatnieId = id
       return []
     }
+    // UPDATE na komentarzach interpretujemy, bo tylko wtedy test może sprawdzić
+    // CO trafiło do bazy (np. `moderated_by`), a nie jedynie status odpowiedzi.
+    if (sql.startsWith('update comments set')) {
+      zastosujUpdateKomentarzy(sql, this.params, this.stan.komentarze)
+      return []
+    }
     if (sql.startsWith('insert into') || sql.startsWith('update ') || sql.startsWith('delete from')) {
       return []
     }
@@ -248,6 +409,20 @@ class MockStatement implements D1PreparedStatementLike {
     if (sql.includes('count(*) as n') && sql.includes('from articles')) {
       return { n: this.stan.artykuly.length }
     }
+    /**
+     * `GROUP BY` zwraca ZBIÓR wierszy, nie jeden wiersz.
+     *
+     * Wcześniej ta reguła oddawała `{ n: 0 }` także dla zapytań grupujących,
+     * więc kolejka moderacji budowała `Object.fromEntries([[undefined, 0]])`
+     * i odpowiadała `"counts":{"undefined":0}` — klucz `undefined` jako nazwa
+     * statusu. Wygląda to jak defekt trasy, a jest artefaktem atrapy: kod
+     * czyta `r.status`, którego w sztucznym wierszu nie było.
+     *
+     * Rozróżnienie ma znaczenie, bo test napisany pod tamto zachowanie
+     * utrwaliłby oczekiwanie `counts: { undefined: 0 }` i chronił artefakt
+     * zamiast kontraktu.
+     */
+    if (sql.includes('count(*)') && sql.includes('group by')) return []
     if (sql.includes('count(*)')) return { n: 0, 'count(*)': 0 }
 
     // ── artykuły ────────────────────────────────────────────────────────
@@ -294,7 +469,30 @@ class MockStatement implements D1PreparedStatementLike {
     if (sql.includes('from tags') || sql.includes('article_tags')) {
       return [{ article_id: 1, slug: 'inwestycje', name: 'Inwestycje' }]
     }
-    if (sql.includes('from comments')) return []
+    // ── komentarze ──────────────────────────────────────────────────────
+    // Filtrujemy po id / statusie / artykule, bo atrapa zwracająca wszystko
+    // potwierdzałaby istnienie KAŻDEGO komentarza (test „nie znaleziono”
+    // przechodziłby fałszywie), a zwracająca `[]` — żadnego (test nie
+    // dotknąłby ścieżki zapisu `moderated_by`).
+    if (sql.includes('from comments')) {
+      const zywe = this.stan.komentarze.filter((k) => k.deleted_at === null)
+      if (sql.includes('parent_id = ?')) {
+        const rodzic = this.params.find((p) => typeof p === 'number')
+        return zywe.filter((k) => k.parent_id === rodzic)
+      }
+      if (sql.includes('id in (')) {
+        const idki = this.params.filter((p): p is number => typeof p === 'number')
+        return zywe.filter((k) => idki.includes(Number(k.id)))
+      }
+      if (sql.includes('cm.id = ?') || sql.includes('where id = ?')) {
+        const id = this.params.find((p) => typeof p === 'number')
+        return zywe.filter((k) => Number(k.id) === id)
+      }
+      const status = this.params.find(
+        (p): p is string => typeof p === 'string' && ['pending', 'approved', 'rejected', 'spam'].includes(p),
+      )
+      return status ? zywe.filter((k) => k.status === status) : zywe
+    }
     if (sql.includes('from categories')) {
       return [{ id: 1, slug: 'wiadomosci', name: 'Wiadomości' }]
     }
@@ -321,6 +519,15 @@ export class MockD1Database implements D1DatabaseLike {
 
   /** Aktywne sesje. Test może je wyczyścić, by sprawdzić skutek wylogowania. */
   public sesje: Array<Record<string, unknown> & { id: string }> = [{ ...WIERSZ_SESJI }]
+
+  /**
+   * Komentarze. Test czyta je PO żądaniu, by sprawdzić, co trasa zapisała
+   * (np. czy `moderated_by` dostało numeryczny identyfikator moderatora).
+   */
+  public komentarze: Array<Record<string, unknown> & { id: number }> = [
+    { ...WIERSZ_KOMENTARZA },
+    { ...DRUGI_KOMENTARZ },
+  ]
 
   kolejneId(): number {
     return this.nastepneId++
