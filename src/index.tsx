@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import v4Router from './v4/router'
 import v4InfoRoutes from './v4/info-routes'
+import { loadSnapshot } from './v4/content-source'
 import aiRouter from './routes/ai'
 import ragRouter from './routes/rag'
 import newsletterRouter from './routes/newsletter'
@@ -461,20 +462,33 @@ function highlightSnippet(text: string, q: string): string {
 }
 
 // ============ SEO: sitemap, RSS, robots, manifest (PRZED /:cat) ============
-app.get('/sitemap.xml', (c) => {
+/*
+  Mapa witryny i kanał RSS czytają treść z D1 przez `loadSnapshot(c)` — tę samą
+  drogę, którą renderuje się portal. Wcześniej brały ją z tablicy ARTICLES,
+  wskutek czego 20 z 29 adresów w /sitemap.xml zwracało 404 (pomiar
+  2026-07-28); uzasadnienie w nagłówku `src/seo.ts`.
+
+  `publishedOnly` nie jest potrzebne: ARTICLES_SQL w content-source filtruje
+  po statusie `published`, więc szkic nie ma fizycznej możliwości trafić do
+  mapy witryny.
+*/
+app.get('/sitemap.xml', async (c) => {
+  const { articles } = await loadSnapshot(c)
   c.header('Content-Type', 'application/xml; charset=utf-8')
   c.header('Cache-Control', 'public, max-age=3600')
-  return c.body(generateSitemap())
+  return c.body(generateSitemap(articles))
 })
-app.get('/news-sitemap.xml', (c) => {
+app.get('/news-sitemap.xml', async (c) => {
+  const { articles } = await loadSnapshot(c)
   c.header('Content-Type', 'application/xml; charset=utf-8')
   c.header('Cache-Control', 'public, max-age=600')
-  return c.body(generateNewsSitemap())
+  return c.body(generateNewsSitemap(articles))
 })
-app.get('/rss.xml', (c) => {
+app.get('/rss.xml', async (c) => {
+  const { articles } = await loadSnapshot(c)
   c.header('Content-Type', 'application/rss+xml; charset=utf-8')
   c.header('Cache-Control', 'public, max-age=900')
-  return c.body(generateRss())
+  return c.body(generateRss(articles))
 })
 app.get('/robots.txt', (c) => {
   c.header('Content-Type', 'text/plain; charset=utf-8')

@@ -1,12 +1,64 @@
 // SANDBOX C — task C14-C24: SEO module — sitemap, RSS, robots, OG meta, JSON-LD
 import { ARTICLES, CATEGORIES_MAP } from './data-articles'
 import { parseFlexibleDate } from './lib/dates'
+import { CATEGORY_SLUGS } from './v4/taxonomy'
+import type { Article } from './v4/content-types'
+import { articleUrl } from './v4/content-types'
 
 const SITE_URL = 'https://izbica24.pl'
 const SITE_NAME = 'izbica24.pl'
 
+/*
+  ŹRÓDŁO DANYCH MAP WITRYNY — POMIAR Z 2026-07-28
+  ===============================================
+  Sitemapa, news-sitemapa i RSS budowały adresy z tablicy ARTICLES
+  (`src/data-articles.ts`) oraz z kluczy CATEGORIES_MAP, a portal od etapu D4
+  serwuje treść z D1 przez `src/v4/content-source.ts`. Dwa rozłączne zbiory
+  dawały mapę witryny opisującą stronę, która nie istnieje.
+
+  Zmierzone przez odpytanie każdego adresu z /sitemap.xml (29 wpisów):
+    20 × HTTP 404, 9 × HTTP 200  → 69% mapy witryny to martwe odnośniki.
+
+  Dwie niezależne przyczyny, obie widoczne dopiero w pomiarze:
+
+  1. INNE SLUGI. Mock miał `remont-koscielnej-zakonczony`, a w bazie leży
+     `remont-ulicy-koscielnej-zakonczony-przed-terminem`. Wszystkie 12
+     adresów artykułów było zmyślone.
+
+  2. INNY KSZTAŁT ADRESU I INNA TAKSONOMIA. Generator sklejał
+     `/wiadomosci/<slug>` dla KAŻDEGO artykułu, gdy `articleUrl()` buduje
+     `/<kategoria>/<podkategoria?>/<slug>`. Kategorie brał z CATEGORIES_MAP
+     (13 kluczy: sport, zdrowie, edukacja…), a portal ma 11 innych
+     (na-sygnale, ludzie, zycie-codzienne…) w `v4/taxonomy.ts`. Stąd 404 na
+     /sport i /zdrowie oraz brak /na-sygnale i /ludzie w mapie.
+
+  Dlaczego to poważne: mapa witryny i kanał RSS to jedyne dokumenty, które
+  portal sam wysyła robotom Google i czytnikom. 69% martwych odnośników
+  obniża ocenę indeksowania i sprawia, że nowe artykuły z bazy nigdy nie
+  zostają zgłoszone — publikacja nie docierała do wyszukiwarki.
+
+  DLACZEGO PARAMETR, A NIE ODCZYT BAZY TUTAJ
+  Ten moduł jest czystymi funkcjami bez dostępu do `Context`, a trasy w
+  `index.tsx` i tak mają `c`. Migawkę wczytuje `loadSnapshot(c)` — ta sama
+  droga, którą renderuje się portal. Dzięki temu mapa witryny NIE MOŻE się
+  rozjechać ze stroną: oba widoki czytają jedno źródło.
+*/
+
+/**
+ * Data ostatniej modyfikacji wpisu. `updatedAt` bywa pusty (artykuł nigdy nie
+ * redagowany), wtedy liczy się data publikacji. Dopiero gdy brak obu, wchodzi
+ * dzisiejsza data — bo `<lastmod>` z pustą wartością unieważnia cały wpis
+ * w oczach walidatora sitemap.
+ */
+const lastmodOf = (a: Article, dzisiaj: string): string => {
+  const zrodlo = a.updatedAt || a.publishedAtISO || a.publishedAt
+  if (!zrodlo) return dzisiaj
+  const data = parseFlexibleDate(zrodlo)
+  return Number.isNaN(data.getTime()) ? dzisiaj : data.toISOString().slice(0, 10)
+}
+
 // ============ C14: sitemap.xml ============
-export const generateSitemap = (): string => {
+export const generateSitemap = (articles: readonly Article[] = []): string => {
   const today = new Date().toISOString().slice(0, 10)
   const urls: string[] = []
 
@@ -16,14 +68,16 @@ export const generateSitemap = (): string => {
   urls.push(`<url><loc>${SITE_URL}/wiedza</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>`)
   urls.push(`<url><loc>${SITE_URL}/szukaj</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>`)
 
-  // Categories
-  for (const slug of Object.keys(CATEGORIES_MAP)) {
+  /* Kategorie z taksonomii v4 — to ona wyznacza trasy, które router obsługuje.
+     Wcześniej brane z CATEGORIES_MAP, co dawało 8 adresów kończących się 404. */
+  for (const slug of CATEGORY_SLUGS) {
     urls.push(`<url><loc>${SITE_URL}/${slug}</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>`)
   }
 
-  // Articles
-  for (const a of ARTICLES) {
-    urls.push(`<url><loc>${SITE_URL}/wiadomosci/${a.slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`)
+  /* Artykuły z D1. `articleUrl` to ta sama funkcja, której używają karty na
+     stronie — adres w mapie jest więc dokładnie tym, w który klika czytelnik. */
+  for (const a of articles) {
+    urls.push(`<url><loc>${SITE_URL}${articleUrl(a)}</loc><lastmod>${lastmodOf(a, today)}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`)
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -34,17 +88,24 @@ ${urls.join('\n')}
 }
 
 // ============ C15: Google News sitemap ============
-export const generateNewsSitemap = (): string => {
+export const generateNewsSitemap = (articles: readonly Article[] = []): string => {
   const items: string[] = []
   const now = new Date()
   const cutoff = now.getTime() - 48 * 60 * 60 * 1000  // last 48h only (Google News spec)
 
-  for (const a of ARTICLES) {
+  for (const a of articles) {
+    /* `cutoff` był policzony, ale NIGDY nie użyty — pętla wypisywała cały
+       zbiór. Google News przyjmuje wyłącznie materiały z ostatnich 48 godzin
+       i odrzuca sitemapy zawierające starsze, więc martwa zmienna oznaczała
+       kanał odrzucany w całości. */
+    const opublikowano = parseFlexibleDate(a.publishedAtISO || a.publishedAt)
+    if (Number.isNaN(opublikowano.getTime()) || opublikowano.getTime() < cutoff) continue
+
     items.push(`<url>
-  <loc>${SITE_URL}/wiadomosci/${a.slug}</loc>
+  <loc>${SITE_URL}${articleUrl(a)}</loc>
   <news:news>
     <news:publication><news:name>${SITE_NAME}</news:name><news:language>pl</news:language></news:publication>
-    <news:publication_date>${new Date().toISOString()}</news:publication_date>
+    <news:publication_date>${opublikowano.toISOString()}</news:publication_date>
     <news:title>${escapeXml(a.title)}</news:title>
   </news:news>
 </url>`)
@@ -58,18 +119,31 @@ ${items.join('\n')}
 }
 
 // ============ C16: RSS feed (Atom-compatible) ============
-export const generateRss = (): string => {
-  const items = ARTICLES.slice(0, 20).map(a => `
+export const generateRss = (articles: readonly Article[] = []): string => {
+  const items = articles.slice(0, 20).map(a => {
+    const link = `${SITE_URL}${articleUrl(a)}`
+    /* `new Date(a.publishedAt)` na formacie D1 „2026-07-28 07:34:49" daje
+       Invalid Date, a `.toUTCString()` z niego to napis „Invalid Date"
+       wstawiany w <pubDate> — czytniki RSS odrzucają taki wpis. Dlatego
+       parseFlexibleDate, ta sama funkcja co w JSON-LD. */
+    const opublikowano = parseFlexibleDate(a.publishedAtISO || a.publishedAt)
+    const pubDate = Number.isNaN(opublikowano.getTime()) ? '' : opublikowano.toUTCString()
+    /* Autor w v4 to obiekt, nie łańcuch znaków — `escapeXml(a.author)` dałoby
+       „[object Object]" w każdym wpisie kanału. */
+    const autor = a.author?.name || 'Redakcja izbica24.pl'
+    const email = a.author?.email || 'redakcja@izbica24.pl'
+    return `
     <item>
       <title>${escapeXml(a.title)}</title>
-      <link>${SITE_URL}/wiadomosci/${a.slug}</link>
-      <guid isPermaLink="true">${SITE_URL}/wiadomosci/${a.slug}</guid>
+      <link>${link}</link>
+      <guid isPermaLink="true">${link}</guid>
       <description>${escapeXml(a.lede)}</description>
-      <author>redakcja@izbica24.pl (${escapeXml(a.author)})</author>
+      <author>${escapeXml(email)} (${escapeXml(autor)})</author>
       <category>${escapeXml(a.category)}</category>
-      <pubDate>${new Date(a.publishedAt).toUTCString()}</pubDate>
-      ${a.heroImage ? `<enclosure url="${a.heroImage}" type="image/jpeg" length="0"/>` : ''}
-    </item>`).join('')
+      ${pubDate ? `<pubDate>${pubDate}</pubDate>` : ''}
+      ${a.heroImage ? `<enclosure url="${escapeXml(a.heroImage)}" type="image/jpeg" length="0"/>` : ''}
+    </item>`
+  }).join('')
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
@@ -250,10 +324,18 @@ export const buildCanonicalUrl = (path: string): string => {
   return normalizedPath === '/' ? `${SITE_URL}/` : `${SITE_URL}${normalizedPath.replace(/\/$/, '')}`
 }
 
-export const generateArticleSitemapEntries = (): string[] => {
-  const today = new Date().toISOString().slice(0, 10)
-  return ARTICLES.map((a) => `<url><loc>${buildCanonicalUrl(`/wiadomosci/${a.slug}`)}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>`)
-}
+/*
+  USUNIĘTE: generateArticleSitemapEntries()
+  ----------------------------------------
+  Funkcja budowała wpisy sitemapy z tablicy ARTICLES pod adresem
+  `/wiadomosci/<slug>`. Nie wywoływał jej żaden kod produkcyjny — jedynym
+  odbiorcą był `tests/unit/seo/sitemap-articles.test.ts`. Test sprawdzał, czy
+  liczba wpisów równa się `ARTICLES.length`, czyli porównywał mock z samym
+  sobą; przechodził na zielono również wtedy, gdy wszystkie 12 adresów
+  artykułów w prawdziwej sitemapie zwracało 404. Utrzymywanie drugiego,
+  martwego generatora obok `generateSitemap` gwarantowało rozjazd między
+  tym, co testowane, a tym, co portal wysyła robotom.
+*/
 
 // ════════════════════════════════════════════════════════════════════════
 // F5 — DANE STRUKTURALNE DLA PORTALU v4
