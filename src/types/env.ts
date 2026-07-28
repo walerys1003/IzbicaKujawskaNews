@@ -105,7 +105,19 @@ export interface Bindings {
   // AI secrets (Sandbox 5)
   OPENAI_API_KEY?: string
   ANTHROPIC_API_KEY?: string
+  // ── Web Push (I8) ────────────────────────────────────────────────────
+  // Klucz publiczny trafia do przeglądarki przy subskrypcji.
   VAPID_PUBLIC_KEY?: string
+  /**
+   * Klucz prywatny VAPID (skalar P-256, base64url) — SEKRET.
+   * Nie był wcześniej zadeklarowany, więc warstwa wysyłania nie miała czym
+   * podpisać powiadomień; `sendMessage` zapisywał `status:'sent'` bez żadnego
+   * żądania HTTP. Ustawiać wyłącznie przez `wrangler secret put`, nigdy
+   * w wrangler.jsonc (plik idzie do repozytorium).
+   */
+  VAPID_PRIVATE_KEY?: string
+  /** Kontakt administratora w tokenie VAPID: `mailto:` lub `https:` (RFC 8292). */
+  VAPID_SUBJECT?: string
 
   // FAZA 3 / AI1 — dostawca modelu jest konfiguracja, nie decyzja w kodzie.
   // Adres bazowy MUSI byc zmienna: klucz do uslugi zgodnej z API Anthropic,

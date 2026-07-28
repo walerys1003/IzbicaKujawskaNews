@@ -4,6 +4,17 @@ import type { AppEnv, Bindings } from '../../types/env'
 import { requireAuth } from '../auth/middleware/require-auth'
 import type { AuthJwtPayload } from '../auth/helpers/password-utils'
 import { deleteJson, getJson, listByPrefix, putJson, upsertCollectionItem } from '../../lib/runtime-kv'
+import { kluczeVapidZeSrodowiska, wyslijPowiadomienie, type PowodNiepowodzenia } from '../../lib/push/webpush'
+
+/** Wynik wysyłki do jednego subskrybenta — z jego identyfikatorem. */
+interface WynikSubskrybenta {
+  subscriberId: string
+  dostarczone: boolean
+  status?: number
+  doUsuniecia: boolean
+  powod?: PowodNiepowodzenia
+  komunikat?: string
+}
 
 export interface PushSubscriptionRecord {
   id: string
@@ -38,12 +49,30 @@ export interface PushMessageRecord {
   category?: string
   scheduledFor?: string
   sentAt?: string
-  status: 'queued' | 'sent' | 'cancelled'
+  /**
+   * I8 — doszedł stan 'failed'. Wcześniej istniały tylko 'queued' | 'sent' |
+   * 'cancelled', więc nieudana wysyłka NIE MIAŁA JAK zostać zapisana i
+   * kończyła się jako 'sent'. Brak stanu w typie był tu pierwotną przyczyną
+   * fałszywego raportu, nie sama funkcja wysyłająca.
+   */
+  status: 'queued' | 'sent' | 'cancelled' | 'failed'
+  /** Liczba POTWIERDZEŃ od dostawcy (2xx), nie liczba adresatów. */
   delivered: number
   opened: number
   clicked: number
   createdAt: string
   createdBy?: string
+  /** Liczba subskrybentów, do których podjęto próbę wysyłki. */
+  attempted?: number
+  /** Liczba nieudanych wysyłek. */
+  failed?: number
+  /** Liczba subskrypcji usuniętych jako nieważne (404/410). */
+  removedSubscribers?: number
+  /** Zestawienie powodów niepowodzeń: powód → liczba wystąpień. */
+  failureReasons?: Record<string, number>
+  /** Powód całkowitego niepowodzenia (np. brak konfiguracji VAPID). */
+  failureReason?: string
+  failureDetail?: string
 }
 
 const route = new Hono<AppEnv>()
@@ -99,13 +128,133 @@ const matchRecipient = (subscriber: PushSubscriptionRecord, message: Pick<PushMe
   return false
 }
 
+/**
+ * I8 — REALNA WYSYŁKA WEB PUSH
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * CO BYŁO TU WCZEŚNIEJ
+ * ══════════════════════════════════════════════════════════════════════════
+ *     const delivered = recipients.length
+ *     const saved = { ...message, delivered, sentAt: ..., status: 'sent' }
+ *
+ * Funkcja LICZYŁA subskrybentów i zapisywała `status:'sent'`, `delivered:N`
+ * — nie wykonując ANI JEDNEGO żądania HTTP. Redaktor widział w panelu
+ * „dostarczono 12”, a dwanaście osób nie dostawało nic. Przy powiadomieniu
+ * `breaking` (ostrzeżenie dla mieszkańców) taki komunikat jest gorszy niż
+ * brak powiadomień — wyklucza reakcję, bo redakcja uważa sprawę za zamkniętą.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * CO ROBI TERAZ
+ * ══════════════════════════════════════════════════════════════════════════
+ * Dla każdego dopasowanego subskrybenta wykonuje prawdziwe żądanie do serwera
+ * push (RFC 8291 + 8292, patrz src/lib/push/webpush.ts). `delivered` to liczba
+ * odpowiedzi 2xx OD DOSTAWCY, a nie liczba adresatów na liście.
+ *
+ * TRZY REGUŁY, KTÓRE MUSZĄ TU OBOWIĄZYWAĆ:
+ *
+ *   1. Brak kluczy VAPID → `status:'failed'`, `delivered:0` i jawny powód.
+ *      NIE 'sent'. Środowisko bez sekretów nie może udawać, że wysłało.
+ *   2. `delivered` liczy wyłącznie potwierdzenia dostawcy. Odmowa (401),
+ *      limit (429) czy awaria sieci są zapisywane jako niepowodzenia.
+ *   3. Subskrypcje odrzucone kodem 404/410 są USUWANE. Bez tego lista
+ *      martwych wpisów rośnie w nieskończoność, a każda kolejna wysyłka
+ *      marnuje na nie żądanie i zaniża statystyki.
+ *
+ * Uwaga o zasięgu: „dostarczone” oznacza „przyjęte przez serwer push”, nie
+ * „wyświetlone użytkownikowi”. Tego drugiego nadawca nie może wiedzieć —
+ * i dlatego pola `opened`/`clicked` są zliczane osobno, ze zdarzeń z SW.
+ */
 const sendMessage = async (env: Bindings, message: PushMessageRecord) => {
   const subscribers = await listSubscribers(env)
   const recipients = subscribers.filter((subscriber) => matchRecipient(subscriber, message))
-  const delivered = recipients.length
-  const saved = { ...message, delivered, sentAt: new Date().toISOString(), status: 'sent' as const }
+
+  const kluczeVapid = kluczeVapidZeSrodowiska(env)
+
+  // ── Brak konfiguracji: zapisujemy porażkę, nie sukces ─────────────────
+  if (!kluczeVapid) {
+    const saved: PushMessageRecord = {
+      ...message,
+      delivered: 0,
+      status: 'failed',
+      sentAt: new Date().toISOString(),
+      failureReason: 'brak_konfiguracji_vapid',
+      failureDetail: 'Brak VAPID_PUBLIC_KEY lub VAPID_PRIVATE_KEY — powiadomienia nie zostały wysłane.',
+      attempted: recipients.length,
+    }
+    await putJson(env, 'NOTIFICATIONS_KV', messageKey(message.id), saved)
+    console.error('[push] Wysyłka przerwana: brak kluczy VAPID w środowisku.')
+    return { saved, recipients, wyniki: [] as WynikSubskrybenta[] }
+  }
+
+  const tresc = JSON.stringify({
+    title: message.title,
+    body: message.body,
+    url: message.url || '/',
+    messageId: message.id,
+  })
+
+  // Wysyłka równoległa, ale w partiach — Workers ma limit jednoczesnych
+  // połączeń wychodzących (6 na żądanie w planie darmowym), a `Promise.all`
+  // po tysiącu subskrybentów kończyłby się odrzuceniem części połączeń,
+  // raportowanym potem jako awaria sieci.
+  const ROZMIAR_PARTII = 5
+  const wyniki: WynikSubskrybenta[] = []
+
+  for (let i = 0; i < recipients.length; i += ROZMIAR_PARTII) {
+    const partia = recipients.slice(i, i + ROZMIAR_PARTII)
+    const wynikiPartii = await Promise.all(
+      partia.map(async (subscriber) => {
+        const wynik = await wyslijPowiadomienie(
+          { endpoint: subscriber.endpoint, keys: subscriber.keys },
+          tresc,
+          kluczeVapid,
+          { pilnosc: message.kind === 'breaking' ? 'high' : 'normal' },
+        )
+        return { subscriberId: subscriber.id, ...wynik }
+      }),
+    )
+    wyniki.push(...wynikiPartii)
+  }
+
+  // ── Usunięcie trwale nieważnych subskrypcji ───────────────────────────
+  const doUsuniecia = wyniki.filter((w) => w.doUsuniecia).map((w) => w.subscriberId)
+  for (const id of doUsuniecia) {
+    await deleteJson(env, 'NOTIFICATIONS_KV', subscriberKey(id))
+  }
+
+  const delivered = wyniki.filter((w) => w.dostarczone).length
+  const nieudane = wyniki.length - delivered
+
+  // Zestawienie powodów niepowodzeń — redakcja musi wiedzieć, CZY to jej
+  // problem (zły klucz, za duża treść) czy dostawcy (limit, awaria).
+  const powody = wyniki
+    .filter((w) => !w.dostarczone)
+    .reduce<Record<string, number>>((acc, w) => {
+      const powod = w.powod ?? 'nieznany'
+      acc[powod] = (acc[powod] ?? 0) + 1
+      return acc
+    }, {})
+
+  const saved: PushMessageRecord = {
+    ...message,
+    delivered,
+    attempted: recipients.length,
+    failed: nieudane,
+    removedSubscribers: doUsuniecia.length,
+    failureReasons: Object.keys(powody).length ? powody : undefined,
+    sentAt: new Date().toISOString(),
+    // 'sent' tylko wtedy, gdy cokolwiek faktycznie doszło. Zero dostarczeń
+    // przy niepustej liście adresatów to porażka, nie wysłana wiadomość.
+    status: delivered > 0 ? 'sent' : recipients.length === 0 ? 'sent' : 'failed',
+  }
+
   await putJson(env, 'NOTIFICATIONS_KV', messageKey(message.id), saved)
-  return { saved, recipients }
+
+  if (nieudane > 0) {
+    console.warn(`[push] ${message.id}: dostarczono ${delivered}/${recipients.length}, powody:`, powody)
+  }
+
+  return { saved, recipients, wyniki }
 }
 
 export const processScheduledPushMessages = async (env: Bindings) => {
@@ -260,9 +409,53 @@ route.post('/send-test', async (c) => {
     createdBy: auth?.sub,
   }
 
-  const saved = { ...message, delivered: 1, sentAt: new Date().toISOString(), status: 'sent' as const }
+  // I8 — wcześniej stało tu `delivered: 1` NA SZTYWNO, bez żadnego żądania.
+  // Test powiadomień był więc bezużyteczny: zawsze „udawał się”, także gdy
+  // klucze VAPID były błędne lub subskrypcja martwa. To trasa, na której
+  // redakcja sprawdza konfigurację — fałszywy sukces właśnie tutaj kosztuje
+  // najwięcej, bo utwierdza w przekonaniu, że wysyłka działa.
+  const kluczeVapid = kluczeVapidZeSrodowiska(c.env)
+  if (!kluczeVapid) {
+    return c.json({
+      error: 'push_not_configured',
+      message: 'Brak VAPID_PUBLIC_KEY lub VAPID_PRIVATE_KEY — nie można wysłać powiadomienia testowego.',
+    }, 503)
+  }
+
+  const wynik = await wyslijPowiadomienie(
+    { endpoint: subscriber.endpoint, keys: subscriber.keys },
+    JSON.stringify({ title: message.title, body: message.body, url: message.url || '/', messageId: message.id }),
+    kluczeVapid,
+  )
+
+  if (wynik.doUsuniecia) {
+    await deleteJson(c.env, 'NOTIFICATIONS_KV', subscriberKey(subscriber.id))
+  }
+
+  const saved: PushMessageRecord = {
+    ...message,
+    delivered: wynik.dostarczone ? 1 : 0,
+    attempted: 1,
+    failed: wynik.dostarczone ? 0 : 1,
+    removedSubscribers: wynik.doUsuniecia ? 1 : 0,
+    sentAt: new Date().toISOString(),
+    status: wynik.dostarczone ? 'sent' : 'failed',
+    failureReason: wynik.dostarczone ? undefined : wynik.powod,
+    failureDetail: wynik.dostarczone ? undefined : wynik.komunikat,
+  }
   await putJson(c.env, 'NOTIFICATIONS_KV', messageKey(saved.id), saved)
-  return c.json({ ok: true, message: saved, recipient: subscriber.id })
+
+  // Kod HTTP odzwierciedla rzeczywisty wynik — 200 przy niepowodzeniu kazałby
+  // panelowi pokazać sukces niezależnie od treści odpowiedzi.
+  return c.json(
+    {
+      ok: wynik.dostarczone,
+      message: saved,
+      recipient: subscriber.id,
+      dostawca: { status: wynik.status, powod: wynik.powod, komunikat: wynik.komunikat },
+    },
+    wynik.dostarczone ? 200 : 502,
+  )
 })
 
 route.get('/subscribers', async (c) => {
