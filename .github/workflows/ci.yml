@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalacja zależności
+        run: npm ci
+
+      - name: Kontrola typów (zapadka — patrz scripts/ci-lint.mjs)
+        run: npm run lint
+
+      - name: Testy jednostkowe i integracyjne
+        run: npx vitest run
+
+      - name: Build produkcyjny
+        run: npm run build
+
+      - name: Dowód, że worker powstał
+        run: test -s dist/_worker.js && du -h dist/_worker.js
+
+  deploy:
+    # Automatyczny deploy na Cloudflare Pages po zielonym main.
+    # Wymaga sekretów repo: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
+    # Krok jest pomijany (nie failuje), dopóki sekrety nie zostaną dodane.
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Deploy na Cloudflare Pages
+        if: ${{ vars.CF_PAGES_PROJECT != '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler pages deploy dist --project-name "${{ vars.CF_PAGES_PROJECT }}" --branch main
+      - name: Informacja gdy deploy pominięty
+        if: ${{ vars.CF_PAGES_PROJECT == '' }}
+        run: echo "Deploy pominięty — ustaw zmienną repo CF_PAGES_PROJECT oraz sekrety CLOUDFLARE_API_TOKEN i CLOUDFLARE_ACCOUNT_ID."
