@@ -412,7 +412,7 @@ route.get('/usage', requireAuth, requirePermission('ai:use'), async (c) => {
 
   try {
     const [daily, byUser, byAction] = await Promise.all([
-      c.env.DB.prepare(
+      dbGuard.prepare(
         `SELECT date(created_at) AS dzien,
                 SUM(input_tokens) AS wejscie,
                 SUM(output_tokens) AS wyjscie,
@@ -422,14 +422,14 @@ route.get('/usage', requireAuth, requirePermission('ai:use'), async (c) => {
           WHERE created_at >= date('now', '-30 days')
           GROUP BY date(created_at) ORDER BY dzien DESC`,
       ).all(),
-      c.env.DB.prepare(
+      dbGuard.prepare(
         `SELECT g.user_id, u.name, u.email,
                 SUM(g.input_tokens + g.output_tokens) AS tokeny, COUNT(*) AS wywolan
            FROM ai_generations g LEFT JOIN users u ON u.id = g.user_id
           WHERE g.created_at >= date('now', 'start of month')
           GROUP BY g.user_id ORDER BY tokeny DESC LIMIT 20`,
       ).all(),
-      c.env.DB.prepare(
+      dbGuard.prepare(
         `SELECT action, COUNT(*) AS wywolan, SUM(input_tokens + output_tokens) AS tokeny
            FROM ai_generations
           WHERE created_at >= date('now', 'start of month')

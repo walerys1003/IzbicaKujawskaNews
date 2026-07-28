@@ -113,8 +113,26 @@ const sniffSvg = (bytes: ArrayBuffer): { ok: boolean; reason?: string } | null =
   return { ok: true }
 }
 
+/**
+ * Kod odrzucenia MUSI należeć do katalogu błędów API.
+ *
+ * Pole było typu `string`, a `media-v2.ts` przekazuje je wprost do koperty
+ * odpowiedzi (`fail(c, error.code, …)`) w trzech miejscach. Typ `string`
+ * oznaczał, że literówka albo nowy kod dorzucony tutaj bez wpisu w katalogu
+ * przeszłyby kompilację i trafiły do klienta jako `error.code`, którego nie
+ * ma w dokumentacji wystawianej pod `GET /api/v1/errors` — a `statusForCode`
+ * nie znalazłoby dla niego statusu.
+ *
+ * Cztery kody rzucane w tym pliku (`forbidden_file_type`, `unsafe_svg`,
+ * `unrecognized_file_type`, `file_too_large`) w katalogu SĄ, więc zawężenie
+ * typu nie wymaga zmiany żadnego wywołania — od teraz jednak dodanie piątego
+ * bez wpisu w `errors.ts` jest błędem kompilacji, a nie niespodzianką
+ * w produkcji. `import type` nie tworzy zależności w czasie wykonania.
+ */
+import type { ErrorCode } from '../http/errors'
+
 export class MediaRejected extends Error {
-  constructor(public readonly code: string, public readonly detail?: string) {
+  constructor(public readonly code: ErrorCode, public readonly detail?: string) {
     super(code)
     this.name = 'MediaRejected'
   }

@@ -38,6 +38,7 @@
  */
 
 import { Hono } from 'hono'
+import type { Context } from 'hono'
 import type { AppEnv } from '../../types/env'
 import { fail, created } from '../../lib/http/envelope'
 import { sanitizeHtml, stripHtml } from '../../lib/security/sanitize-html'
@@ -67,7 +68,27 @@ interface CommentBody {
   website?: string
 }
 
-const handleSubmit = async (c: Parameters<Parameters<typeof route.post>[1]>[0], slugFromPath?: string) => {
+/**
+ * Typ kontekstu wypisany jawnie.
+ *
+ * Wcześniej było tu `Parameters<Parameters<typeof route.post>[1]>[0]` —
+ * próba wyciągnięcia typu uchwytu z metody `route.post`. `Hono.post` jest
+ * jednak PRZECIĄŻONA (osobne sygnatury dla `post(path, handler)`,
+ * `post(handler)`, `post(path, ...middleware, handler)`), a `Parameters<T>`
+ * na typie przeciążonym bierze wyłącznie OSTATNIĄ sygnaturę. Wynikiem było
+ * `never`, więc `c.env` i `c.req` „nie istniały” (6 błędów TS2339/TS2344/
+ * TS2493) i całe ciało funkcji — walidacja, ocena spamu, zapis — było poza
+ * kontrolą typów.
+ *
+ * Skutkiem ubocznym były dwa `handleSubmit(c as never)` w miejscach
+ * wywołania: `never` nie przyjmuje niczego innego. `as never` wyciszało błąd,
+ * który mówił prawdę o zepsutym typie, i przy okazji wyłączało sprawdzenie,
+ * czy przekazywany kontekst pasuje do uchwytu.
+ *
+ * `Context<AppEnv>` to ten sam typ, którego Hono używa dla uchwytów tras —
+ * bez sztuczek na typach i bez `never`.
+ */
+const handleSubmit = async (c: Context<AppEnv>, slugFromPath?: string) => {
   const db = c.env?.DB
   if (!db) return fail(c, 'database_unavailable')
 
@@ -200,10 +221,10 @@ const handleSubmit = async (c: Parameters<Parameters<typeof route.post>[1]>[0], 
  * siteverify — sam limit chroniłby wtedy tylko bazę, nie nasz ruch.
  */
 route.post('/articles/:slug/comments', commentRateLimit, turnstileGuard({ action: 'comment' }), (c) =>
-  handleSubmit(c as never, c.req.param('slug')),
+  handleSubmit(c, c.req.param('slug')),
 )
 
 /** Alias przyjmujący slug w ciele żądania — zachowany dla starszych klientów. */
-route.post('/comments', commentRateLimit, turnstileGuard({ action: 'comment' }), (c) => handleSubmit(c as never))
+route.post('/comments', commentRateLimit, turnstileGuard({ action: 'comment' }), (c) => handleSubmit(c))
 
 export default route

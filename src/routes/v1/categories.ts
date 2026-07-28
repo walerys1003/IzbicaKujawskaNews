@@ -67,7 +67,7 @@ route.get('/', async (c) => {
   const dbGuard = requireDb(c)
   if (dbGuard instanceof Response) return dbGuard
 
-  const rows = await c.env.DB.prepare(`${SELECT_TREE} ORDER BY c.order_index ASC, c.name ASC`).all<CategoryRow>()
+  const rows = await dbGuard.prepare(`${SELECT_TREE} ORDER BY c.order_index ASC, c.name ASC`).all<CategoryRow>()
   const all = rows.results ?? []
 
   const roots = all.filter((r) => r.parent_id === null)
@@ -87,12 +87,12 @@ route.get('/:slug', async (c) => {
   if (dbGuard instanceof Response) return dbGuard
 
   const slug = c.req.param('slug')
-  const row = await c.env.DB.prepare(`${SELECT_TREE} WHERE c.slug = ? LIMIT 1`).bind(slug).first<CategoryRow>()
+  const row = await dbGuard.prepare(`${SELECT_TREE} WHERE c.slug = ? LIMIT 1`).bind(slug).first<CategoryRow>()
   if (!row) return fail(c, 'not_found', `Nie ma dzialu o adresie „${slug}”.`)
 
   const [children, articles] = await Promise.all([
-    c.env.DB.prepare(`${SELECT_TREE} WHERE c.parent_id = ? ORDER BY c.order_index ASC`).bind(row.id).all<CategoryRow>(),
-    c.env.DB.prepare(
+    dbGuard.prepare(`${SELECT_TREE} WHERE c.parent_id = ? ORDER BY c.order_index ASC`).bind(row.id).all<CategoryRow>(),
+    dbGuard.prepare(
       `SELECT a.id, a.slug, a.title, a.lead, a.hero_image_r2_key, a.hero_alt,
               a.published_at, a.reading_minutes, a.view_count, a.subcategory_slug,
               u.name AS author_name
