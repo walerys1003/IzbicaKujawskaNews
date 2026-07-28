@@ -41,7 +41,7 @@
     "@hono/vite-dev-server": "^0.25.2",
     "@playwright/test": "^1.60.0",
     "@types/node": "^22.20.1",
-    "@vitest/coverage-v8": "^4.1.7",
+    "@vitest/coverage-v8": "^4.1.10",
     "typescript": "^5.9.3",
     "vite": "^6.3.5",
     "vitest": "^4.1.7",
