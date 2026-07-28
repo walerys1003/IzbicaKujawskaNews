@@ -8,23 +8,28 @@
    ========================================================================== */
 
 /* ============ 1. MEGA-PANEL NAWIGACJI ============ */
-.nav-item.has-mega { position: relative; }
+/* NAPRAWA „panel pod spodem / uciety":
+   BYLO: .nav-item.has-mega{position:relative} — containing block panelu byl
+   WEWNATRZ .nav-inner{overflow-x:auto}, wiec overflow przycinal panel, a
+   sekcje strony z transform (.reveal) malowaly sie nad nim.
+   JEST: nav-item pozostaje statyczny; containing block panelu to .nav-bar
+   (position:relative + z-index:150 w izbica-v4.css). Element absolutny,
+   ktorego containing block lezy POZA elementem z overflow, nie podlega
+   jego przycieciu — panel wychodzi ponad tresc strony. */
+.nav-item.has-mega { position: static; }
 .nav-item .nav-item-link { color: inherit; }
 
 .mega-panel{
-  position:absolute; top:100%; left:0;
+  position:absolute; top:100%; left:50%;
   width:min(1100px, calc(100vw - 32px));
   background:#fff; border-top:3px solid var(--cat);
-  box-shadow:var(--sh-3);
-  opacity:0; visibility:hidden; transform:translateY(-8px);
+  box-shadow:0 18px 48px rgba(0,0,0,.28);
+  opacity:0; visibility:hidden; transform:translate(-50%,-8px);
   transition:opacity var(--t-mid), transform var(--t-mid) var(--ease), visibility var(--t-mid);
   z-index:600;
 }
 .nav-item.has-mega:hover .mega-panel,
-.nav-item.has-mega.is-open .mega-panel{ opacity:1; visibility:visible; transform:translateY(0); }
-
-/* Panel przy prawej krawędzi nie wychodzi za ekran */
-.nav-item.has-mega:nth-last-child(-n+4) .mega-panel{ left:auto; right:0; }
+.nav-item.has-mega.is-open .mega-panel{ opacity:1; visibility:visible; transform:translate(-50%,0); }
 
 .mega-inner{ display:grid; grid-template-columns:264px 1fr; min-height:340px; }
 
@@ -409,8 +414,7 @@
   .nav-bar{ display:none; }
   .nav-bar.is-open{ display:block; }
   .nav-inner{ flex-direction:column; height:auto; align-items:stretch; overflow:visible; padding-bottom:10px; }
-  .nav-item{ border-right:none; border-bottom:1px solid var(--rule); padding:12px 0; height:auto; }
-  .nav-item::after{ display:none; }
+  .nav-item{ border-bottom:1px solid var(--nav-border); padding:12px 14px; height:auto; }
   .mega-panel{ position:static; width:100%; opacity:1; visibility:visible; transform:none; box-shadow:none; border-top:2px solid var(--cat); display:none; }
   .nav-item.is-open .mega-panel{ display:block; }
   .mega-inner{ grid-template-columns:1fr; min-height:0; }
