@@ -208,7 +208,7 @@ const HeroSection = () => {
             <a href={`/wiadomosci/${main.slug}`} class="v3-hero-main-img">
               <div class={`v3-img-placeholder v3-ph-news v3-ph-news-${main.category === 'inwestycje' ? 'samorzad' : main.category}`}></div>
               <span class="v3-hero-main-cat v3-chip-cat" style={`background: ${catColor(main.category)}`}>
-                {CATEGORIES_MAP[main.category]?.label || main.category}
+                {CATEGORIES_MAP[main.category]?.title || main.category}
               </span>
             </a>
             <div class="v3-hero-main-content">
@@ -238,7 +238,7 @@ const HeroSection = () => {
                 </div>
                 <div class="v3-hero-card-content">
                   <span class="v3-hero-card-cat" style={`color: ${catColor(a.category)}`}>
-                    {CATEGORIES_MAP[a.category]?.label || a.category}
+                    {CATEGORIES_MAP[a.category]?.title || a.category}
                   </span>
                   <h3 class="v3-hero-card-title">{a.title}</h3>
                   <span class="v3-hero-card-time">{a.readingMinutes} min · {a.publishedAt}</span>
@@ -333,7 +333,7 @@ const TopStories = () => {
               <a href={`/wiadomosci/${s.slug}`} class="v3-story-card-img">
                 <div class={`v3-img-placeholder v3-ph-news ${phClass(s.category)}`}></div>
                 <span class="v3-story-card-cat-floating v3-chip-cat" style={`background: ${catColor(s.category)}`}>
-                  {CATEGORIES_MAP[s.category]?.label || s.category}
+                  {CATEGORIES_MAP[s.category]?.title || s.category}
                 </span>
               </a>
               <h3 class="v3-story-card-title">
@@ -432,7 +432,7 @@ const MagazineGrid = () => {
                 <div class="v3-img-placeholder v3-ph-news v3-ph-news-history"></div>
               </div>
               <span class="v3-mag-item-cat" style={`color: ${catColor(a.category)}`}>
-                {CATEGORIES_MAP[a.category]?.label || a.category}
+                {CATEGORIES_MAP[a.category]?.title || a.category}
               </span>
               <h3 class="v3-mag-item-title">{a.title}</h3>
             </a>
@@ -465,7 +465,7 @@ const MainLayout = () => {
                   <a href={`/wiadomosci/${a.slug}`} class="v3-story-card-img">
                     <div class="v3-img-placeholder v3-ph-news"></div>
                   </a>
-                  <span class="v3-story-card-cat" style={`color: ${catColor(a.category)}`}>{CATEGORIES_MAP[a.category]?.label}</span>
+                  <span class="v3-story-card-cat" style={`color: ${catColor(a.category)}`}>{CATEGORIES_MAP[a.category]?.title}</span>
                   <h3 class="v3-story-card-title">
                     <a href={`/wiadomosci/${a.slug}`}>{a.title}</a>
                   </h3>
@@ -490,7 +490,7 @@ const MainLayout = () => {
                   <a href={`/wiadomosci/${a.slug}`} class="v3-story-card-img">
                     <div class="v3-img-placeholder v3-ph-news v3-ph-news-samorzad"></div>
                   </a>
-                  <span class="v3-story-card-cat" style={`color: ${catColor(a.category)}`}>{CATEGORIES_MAP[a.category]?.label}</span>
+                  <span class="v3-story-card-cat" style={`color: ${catColor(a.category)}`}>{CATEGORIES_MAP[a.category]?.title}</span>
                   <h3 class="v3-story-card-title">
                     <a href={`/wiadomosci/${a.slug}`}>{a.title}</a>
                   </h3>
@@ -529,7 +529,7 @@ const MainLayout = () => {
                       <h4 class="v3-top-list-title">
                         <a href={`/wiadomosci/${a.slug}`}>{a.title}</a>
                       </h4>
-                      <div class="v3-top-list-meta">{a.readingMinutes} min · {CATEGORIES_MAP[a.category]?.label}</div>
+                      <div class="v3-top-list-meta">{a.readingMinutes} min · {CATEGORIES_MAP[a.category]?.title}</div>
                     </div>
                   </div>
                 ))}

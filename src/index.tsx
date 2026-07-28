@@ -47,9 +47,6 @@ import { securityHeaders } from './middleware/security-headers'
 import { corsMiddleware } from './middleware/cors'
 import { jsonBodyLimit } from './middleware/body-limit'
 import { renderCookieConsentBanner, gdprRouter } from './middleware/cookie-consent'
-import { RodoPage } from './components/public/RodoPage'
-import { FaqPage } from './components/public/FaqPage'
-import { CookiePolicyPage } from './components/public/CookiePolicyPage'
 import { TagPage } from './components/public/TagPage'
 import {
   generateSitemap, generateNewsSitemap, generateRss, generateRobots,
@@ -151,9 +148,27 @@ app.route('/', dlaPrasyRoute)
 app.route('/', dostepnoscRoute)
 // SA4: GDPR/RODO public pages
 import { renderPublicShell } from './routes/public/shared'
-app.get('/rodo', (c) => renderPublicShell(c, <RodoPage />, 'RODO — izbica24.pl'))
-app.get('/polityka-cookies', (c) => renderPublicShell(c, <CookiePolicyPage />, 'Polityka Cookies — izbica24.pl'))
-app.get('/faq', (c) => renderPublicShell(c, <FaqPage />, 'FAQ — izbica24.pl'))
+/*
+  USUNIĘTE TRASY /rodo, /polityka-cookies, /faq (pomiar 2026-07-28)
+  ----------------------------------------------------------------
+  Te trzy `app.get` były MARTWYM KODEM. `app.route('/', v4InfoRoutes)`
+  stoi w linii 115 i rejestruje własne handlery dla tych samych ścieżek,
+  a Hono wybiera handler zarejestrowany PIERWSZY — więc RodoPage,
+  CookiePolicyPage i FaqPage nigdy się nie renderowały.
+
+  Dowód przez pomiar odpowiedzi HTTP, nie przez czytanie kodu:
+    GET /rodo → <h2>Administrator danych</h2>   (treść z v4/info-routes.tsx)
+    RodoPage  → <h1>Klauzula informacyjna RODO</h1>  — 0 trafień w HTML
+  Analogicznie /faq: renderuje się lista pytań z info-routes, a nie
+  <h1>Najczęściej zadawane pytania</h1> z FaqPage.
+
+  Kompilator sygnalizował to jako 3 błędy TS2322 („children nie istnieje
+  w PublicPageLayout"), bo komponenty przekazywały children do layoutu,
+  który przyjmuje sections/lead/breadcrumbs. Błąd typu był PRAWDZIWY —
+  te komponenty nie mogłyby się poprawnie wyrenderować, gdyby trasa
+  kiedykolwiek do nich dotarła. Kasowanie martwych tras usuwa 3 błędy
+  i jedno źródło złudzenia, że strony prawne pochodzą z tych plików.
+*/
 // SA8: Additional public pages — placeholder routes
 import { SimpleInfoPage } from './components/public/SimpleInfoPage'
 app.get('/pomoc', (c) => renderPublicShell(c, <SimpleInfoPage

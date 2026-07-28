@@ -1319,7 +1319,7 @@ export const Top10Module = () => (
       <ol class="v3-top10-grid">
         {TOP10_TYDZIEN.map((t, i) => {
           const catColor = CATEGORIES_MAP[t.cat]?.color || '#8b1d2a'
-          const catLabel = CATEGORIES_MAP[t.cat]?.label || t.cat
+          const catLabel = CATEGORIES_MAP[t.cat]?.title || t.cat
           return (
             <li class="v3-top10-card" style={`--rank-color: ${catColor}`}>
               <a class="v3-top10-card-link" href={`/wiadomosci/${t.slug}`}>
