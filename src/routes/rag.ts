@@ -1,3 +1,28 @@
+/**
+ * RAG — 19 tras nad archiwum portalu.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * NAPRAWA KRYTYCZNEJ LUKI Z AUDYTU 27.07.2026
+ * ══════════════════════════════════════════════════════════════════════════
+ *
+ * Cały router był otwarty. Konsekwencje wykraczały poza koszt tokenów:
+ *
+ *   • `POST /ingest/article` i `/ingest/bulk` — obcy mógł WSTRZYKNĄĆ dowolny
+ *     dokument do indeksu, na którym opierają się odpowiedzi `/ask`
+ *     i `/fact-check`. To zatrucie źródła, nie tylko rachunek.
+ *   • `DELETE /document/:slug` — obcy mógł USUWAĆ dokumenty z indeksu.
+ *   • `POST /reindex` — jedno żądanie przeliczające zanurzenia CAŁEGO archiwum;
+ *     w pętli to najdroższy pojedynczy punkt w całym API.
+ *
+ * PODZIAŁ UPRAWNIEŃ — dlaczego dwa poziomy, a nie jeden
+ * ──────────────────────────────────────────────────
+ * Odczyt (`/search`, `/ask`, `/similar`, `/stats`) wymaga `ai:use` — ma go
+ * autor, redaktor i administrator.
+ * Zmiana indeksu (`/ingest/*`, `/document/:slug`, `/reindex`) wymaga
+ * `ai:configure` — tylko administrator. Autor nie powinien móc przebudować
+ * bazy wiedzy, na której opiera się weryfikacja faktów innych redaktorów.
+ */
+
 import { Hono } from 'hono'
 import { validator } from 'hono/validator'
 import { ARTICLES } from '../data-articles'
@@ -5,6 +30,11 @@ import { callTextModelOrNull } from '../ai/client'
 import { createEmbeddings } from '../ai/rag/embedder'
 import { RagVectorStore, chunkText, cosineSimilarity, mergeContext } from '../ai/rag/vector-store'
 import type { AppBindings } from '../types/cloudflare'
+import { requireAuth } from '../middleware/require-auth'
+import { requirePermission, getAuth } from '../middleware/require-permission'
+import { jsonBodyLimit, articleBodyLimit } from '../middleware/body-limit'
+import { aiRateLimit, rateLimit } from '../middleware/rate-limit'
+import { recordAiUsage, checkAiBudget, estimateTokens } from '../lib/ai/usage'
 
 type AppEnv = { Bindings: AppBindings }
 
@@ -18,6 +48,22 @@ type IngestPayload = {
 }
 
 const ragRouter = new Hono<AppEnv>()
+
+/**
+ * Wspólny próg dla całego routera: zalogowanie + prawo do modeli + limit
+ * częstości. Nakładamy go raz na `*`, a nie osobno na 19 tras — nowa trasa
+ * dodana w przyszłości jest wtedy zabezpieczona domyślnie. Poprzedni stan
+ * (żadnej ochrony) powstał dokładnie dlatego, że każda trasa miała
+ * pamiętać o sobie sama.
+ */
+ragRouter.use('*', requireAuth, requirePermission('ai:use'), aiRateLimit)
+
+/**
+ * Przebudowa indeksu jest o dwa rzędy wielkości droższa od pojedynczego
+ * zapytania (zanurzenia dla całego archiwum), więc ma własny, ostry limit:
+ * 2 na godzinę. `aiRateLimit` (10/min) byłby tu bez znaczenia.
+ */
+const reindexRateLimit = rateLimit({ name: 'rag-reindex', limit: 2, windowMs: 3_600_000, perUser: true })
 
 const asObject = (value: unknown): JsonRecord | null =>
   typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as JsonRecord) : null
@@ -99,6 +145,68 @@ const heuristicAnswer = (question: string, matches: Array<{ slug: string; title:
 const getStore = (c: { env: AppBindings }) => new RagVectorStore(c.env)
 
 /**
+ * Opakowanie wywołania modelu tekstowego zapisujące zużycie (AI10)
+ * i sprawdzające dzienny limit.
+ *
+ * `callTextModelOrNull` zwraca sam tekst, bez liczników tokenów, więc
+ * szacujemy je z długości — patrz uzasadnienie w `estimateTokens`.
+ * Zwraca `null` również przy wyczerpanym limicie; wołant ma wtedy gotowy
+ * wynik zastępczy wyliczony z danych, więc redaktor dostaje odpowiedź
+ * opartą na archiwum zamiast błędu.
+ */
+const modelTekstowyZRejestrem = async (
+  c: { env: AppBindings; get: (key: never) => unknown },
+  akcja: string,
+  prompt: string,
+  systemPrompt: string,
+  maxTokens = 700,
+): Promise<string | null> => {
+  const ctx = c as never
+  const budget = await checkAiBudget(ctx)
+  if (!budget.allowed) {
+    console.warn(`[rag] ${akcja}: dzienny limit tokenow wyczerpany (${budget.used}/${budget.limit}) — uzyto wyniku zastepczego.`)
+    return null
+  }
+
+  const auth = getAuth(c)
+  const uid = auth?.sub ? Number(auth.sub) || null : null
+  const env = c.env as unknown as { AI_DEFAULT_MODEL?: string; AI_DEFAULT_PROVIDER?: string }
+  const started = Date.now()
+
+  try {
+    const text = await callTextModelOrNull(c.env, prompt, systemPrompt, maxTokens)
+    // `null` = brak skonfigurowanego dostawcy: model nie został wywołany,
+    // więc nie ma czego zapisywać. Zapis z zerami sugerowałby wywołanie.
+    if (text === null) return null
+
+    await recordAiUsage(ctx, {
+      userId: uid,
+      provider: env.AI_DEFAULT_PROVIDER || 'domyslny',
+      model: env.AI_DEFAULT_MODEL || 'domyslny',
+      action: `rag:${akcja}`,
+      inputTokens: estimateTokens(`${systemPrompt}\n${prompt}`),
+      outputTokens: estimateTokens(text),
+      ms: Date.now() - started,
+      ok: true,
+    })
+    return text
+  } catch (error) {
+    await recordAiUsage(ctx, {
+      userId: uid,
+      provider: env.AI_DEFAULT_PROVIDER || 'domyslny',
+      model: env.AI_DEFAULT_MODEL || 'domyslny',
+      action: `rag:${akcja}`,
+      inputTokens: estimateTokens(`${systemPrompt}\n${prompt}`),
+      outputTokens: 0,
+      ms: Date.now() - started,
+      ok: false,
+      error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+    })
+    throw error
+  }
+}
+
+/**
  * FAZA 3 / AI7 — straz jakosci wektorow.
  *
  * `createEmbeddings()` przy braku modelu zanurzen zwraca wektory policzone
@@ -133,7 +241,7 @@ const ingestSingle = async (bindings: AppBindings, payload: IngestPayload) => {
   return { slug: payload.slug, title: payload.title, category: payload.category, chunks: chunks.length, provider: embeddingResult.provider }
 }
 
-ragRouter.post('/ingest/article', jsonValidator, async (c) => {
+ragRouter.post('/ingest/article', requirePermission('ai:configure'), articleBodyLimit, jsonValidator, async (c) => {
   try {
     const body = c.req.valid('json')
     const payload: IngestPayload = {
@@ -149,8 +257,14 @@ ragRouter.post('/ingest/article', jsonValidator, async (c) => {
   }
 })
 
-ragRouter.post('/ingest/bulk', validator('json', (value, c) => {
+ragRouter.post('/ingest/bulk', requirePermission('ai:configure'), articleBodyLimit, validator('json', (value, c) => {
   if (!Array.isArray(value)) return c.json({ error: 'body_must_be_array' }, 400)
+  // Górny limit partii: bez niego jedno żądanie z tysiącem dokumentów
+  // przekracza limit czasu CPU Workera i kończy się indeksem w połowie
+  // zapisanym — najgorszy możliwy stan bazy wiedzy.
+  if (value.length > 50) {
+    return c.json({ error: 'batch_too_large', detail: 'Maksymalnie 50 dokumentow w jednym zadaniu.', received: value.length }, 400)
+  }
   return value as JsonRecord[]
 }), async (c) => {
   try {
@@ -168,13 +282,13 @@ ragRouter.post('/ingest/bulk', validator('json', (value, c) => {
   }
 })
 
-ragRouter.delete('/document/:slug', paramSlugValidator, async (c) => {
+ragRouter.delete('/document/:slug', requirePermission('ai:configure'), paramSlugValidator, async (c) => {
   const { slug } = c.req.valid('param')
   const result = await getStore(c).deleteDocument(slug)
   return c.json(result)
 })
 
-ragRouter.post('/search', jsonValidator, async (c) => {
+ragRouter.post('/search', jsonBodyLimit, jsonValidator, async (c) => {
   try {
     const body = c.req.valid('json')
     const query = ensureString(body, 'query')
@@ -191,7 +305,7 @@ ragRouter.post('/search', jsonValidator, async (c) => {
   }
 })
 
-ragRouter.post('/ask', jsonValidator, async (c) => {
+ragRouter.post('/ask', jsonBodyLimit, jsonValidator, async (c) => {
   try {
     const body = c.req.valid('json')
     const question = ensureString(body, 'question')
@@ -202,7 +316,7 @@ ragRouter.post('/ask', jsonValidator, async (c) => {
     const matches = await getStore(c).search(embedding.vectors[0], topK)
     const citations = buildCitationList(matches)
     const context = mergeContext(matches)
-    const aiText = await callTextModelOrNull(c.env, `Pytanie: ${question}\n\nKontekst:\n${context}\n\nOdpowiedz po polsku w 3-5 zdaniach i odwołaj się wyłącznie do kontekstu.`, 'Jesteś asystentem RAG portalu lokalnego.')
+    const aiText = await modelTekstowyZRejestrem(c, 'ask', `Pytanie: ${question}\n\nKontekst:\n${context}\n\nOdpowiedz po polsku w 3-5 zdaniach i odwołaj się wyłącznie do kontekstu.`, 'Jesteś asystentem RAG portalu lokalnego.')
     const answer = aiText || heuristicAnswer(question, matches).answer
     return c.json({ ok: true, question, answer, citations })
   } catch (error) {
@@ -220,12 +334,12 @@ ragRouter.get('/similar/:slug', paramSlugValidator, async (c) => {
   return c.json({ ok: true, slug, items: similar })
 })
 
-ragRouter.post('/summarize-cluster', jsonValidator, async (c) => {
+ragRouter.post('/summarize-cluster', jsonBodyLimit, jsonValidator, async (c) => {
   try {
     const slugs = ensureStringArray(c.req.valid('json'), 'slugs')
     const docs = await getStore(c).getDocuments(slugs)
     const context = docs.map(doc => `${doc.title}\n${doc.content}`).join('\n\n')
-    const aiText = await callTextModelOrNull(c.env, `Streszcz wspólny klaster tematów na podstawie dokumentów:\n\n${context}`, 'Tworzysz jeden spójny summary w języku polskim.')
+    const aiText = await modelTekstowyZRejestrem(c, 'summarize-cluster', `Streszcz wspólny klaster tematów na podstawie dokumentów:\n\n${context}`, 'Tworzysz jeden spójny summary w języku polskim.')
     return c.json({ ok: true, slugs, summary: aiText || `Klaster obejmuje ${docs.length} materiałów dotyczących: ${docs.map(doc => doc.title).join('; ')}.` })
   } catch (error) {
     return c.json({ error: 'summarize_cluster_failed', detail: error instanceof Error ? error.message : 'unknown' }, 400)
@@ -244,7 +358,7 @@ ragRouter.post('/timeline/:topic', validator('param', (value, c) => {
   return c.json({ ok: true, topic, items })
 })
 
-ragRouter.post('/compare', jsonValidator, async (c) => {
+ragRouter.post('/compare', jsonBodyLimit, jsonValidator, async (c) => {
   try {
     const body = c.req.valid('json')
     const leftSlug = ensureString(body, 'leftSlug')
@@ -253,7 +367,7 @@ ragRouter.post('/compare', jsonValidator, async (c) => {
     if (docs.length < 2) return c.json({ error: 'documents_not_found' }, 404)
     const [left, right] = docs
     const prompt = `Porównaj dwa artykuły.\nA: ${left.title}\n${left.content}\n\nB: ${right.title}\n${right.content}\n\nWypisz podobieństwa i różnice.`
-    const aiText = await callTextModelOrNull(c.env, prompt, 'Tworzysz krótkie porównanie w punktach po polsku.')
+    const aiText = await modelTekstowyZRejestrem(c, 'compare', prompt, 'Tworzysz krótkie porównanie w punktach po polsku.')
     return c.json({
       ok: true,
       left: { slug: left.slug, title: left.title },
@@ -265,7 +379,7 @@ ragRouter.post('/compare', jsonValidator, async (c) => {
   }
 })
 
-ragRouter.post('/translate-context', jsonValidator, async (c) => {
+ragRouter.post('/translate-context', articleBodyLimit, jsonValidator, async (c) => {
   try {
     const body = c.req.valid('json')
     const text = ensureString(body, 'text')
@@ -275,7 +389,7 @@ ragRouter.post('/translate-context', jsonValidator, async (c) => {
     if (brak) return c.json({ error: brak.blad, detail: brak.szczegol }, 503)
     const matches = await getStore(c).search(embedding.vectors[0], 4)
     const context = mergeContext(matches)
-    const aiText = await callTextModelOrNull(c.env, `Przetłumacz tekst na ${targetLanguage}, zachowując lokalne nazwy.\n\nTekst:\n${text}\n\nKontekst RAG:\n${context}`, 'Tłumaczysz tekst z użyciem kontekstu lokalnego.')
+    const aiText = await modelTekstowyZRejestrem(c, 'translate-context', `Przetłumacz tekst na ${targetLanguage}, zachowując lokalne nazwy.\n\nTekst:\n${text}\n\nKontekst RAG:\n${context}`, 'Tłumaczysz tekst z użyciem kontekstu lokalnego.')
     return c.json({ ok: true, targetLanguage, translation: aiText || text, citations: buildCitationList(matches) })
   } catch (error) {
     return c.json({ error: 'translate_context_failed', detail: error instanceof Error ? error.message : 'unknown' }, 400)
@@ -287,7 +401,7 @@ ragRouter.get('/topics', async (c) => {
   return c.json({ ok: true, items: topics.map(topic => ({ category: topic.category, count: topic.count, sampleTitles: String(topic.titles || '').split(' • ').slice(0, 3) })) })
 })
 
-ragRouter.post('/qa-archive', jsonValidator, async (c) => {
+ragRouter.post('/qa-archive', jsonBodyLimit, jsonValidator, async (c) => {
   try {
     const body = c.req.valid('json')
     const question = ensureString(body, 'question')
@@ -310,7 +424,7 @@ ragRouter.post('/recommend/:userId', userIdParamValidator, async (c) => {
   return c.json({ ok: true, userId, strategy: 'category-rotation-fallback', items })
 })
 
-ragRouter.post('/auto-categorize', jsonValidator, async (c) => {
+ragRouter.post('/auto-categorize', articleBodyLimit, jsonValidator, async (c) => {
   try {
     const body = c.req.valid('json')
     const title = ensureString(body, 'title')
@@ -326,7 +440,7 @@ ragRouter.post('/auto-categorize', jsonValidator, async (c) => {
   }
 })
 
-ragRouter.post('/find-duplicates', jsonValidator, async (c) => {
+ragRouter.post('/find-duplicates', jsonBodyLimit, jsonValidator, async (c) => {
   try {
     const body = c.req.valid('json')
     const slug = typeof body.slug === 'string' ? body.slug : ''
@@ -354,7 +468,7 @@ ragRouter.post('/find-duplicates', jsonValidator, async (c) => {
   }
 })
 
-ragRouter.post('/expand-stub', jsonValidator, async (c) => {
+ragRouter.post('/expand-stub', articleBodyLimit, jsonValidator, async (c) => {
   try {
     const body = c.req.valid('json')
     const draft = ensureString(body, 'draft')
@@ -364,14 +478,14 @@ ragRouter.post('/expand-stub', jsonValidator, async (c) => {
     if (brak) return c.json({ error: brak.blad, detail: brak.szczegol }, 503)
     const matches = await getStore(c).search(embedding.vectors[0], topK)
     const context = mergeContext(matches)
-    const aiText = await callTextModelOrNull(c.env, `Rozwiń krótki szkic artykułu o brakujące szczegóły, korzystając wyłącznie z kontekstu.\n\nSzkic:\n${draft}\n\nKontekst:\n${context}`, 'Piszesz uporządkowany, rzeczowy szkic artykułu po polsku.')
+    const aiText = await modelTekstowyZRejestrem(c, 'expand-stub', `Rozwiń krótki szkic artykułu o brakujące szczegóły, korzystając wyłącznie z kontekstu.\n\nSzkic:\n${draft}\n\nKontekst:\n${context}`, 'Piszesz uporządkowany, rzeczowy szkic artykułu po polsku.')
     return c.json({ ok: true, expanded: aiText || `${draft}\n\nUzupełnienie kontekstowe: ${matches.map(match => match.content).join(' ')}`, citations: buildCitationList(matches) })
   } catch (error) {
     return c.json({ error: 'expand_stub_failed', detail: error instanceof Error ? error.message : 'unknown' }, 400)
   }
 })
 
-ragRouter.post('/fact-check', jsonValidator, async (c) => {
+ragRouter.post('/fact-check', articleBodyLimit, jsonValidator, async (c) => {
   try {
     const body = c.req.valid('json')
     const statement = ensureString(body, 'statement')
@@ -380,7 +494,7 @@ ragRouter.post('/fact-check', jsonValidator, async (c) => {
     const brak = wymagajZnaczeniowych(embedding)
     if (brak) return c.json({ error: brak.blad, detail: brak.szczegol }, 503)
     const matches = await getStore(c).search(embedding.vectors[0], topK)
-    const answer = await callTextModelOrNull(c.env, `Oceń twierdzenie na bazie kontekstu RAG.\n\nTwierdzenie: ${statement}\n\nKontekst:\n${mergeContext(matches)}`, 'Jesteś fact-checkerem lokalnego archiwum.')
+    const answer = await modelTekstowyZRejestrem(c, 'fact-check', `Oceń twierdzenie na bazie kontekstu RAG.\n\nTwierdzenie: ${statement}\n\nKontekst:\n${mergeContext(matches)}`, 'Jesteś fact-checkerem lokalnego archiwum.')
     return c.json({ ok: true, statement, verdict: answer || 'Wymaga dodatkowej weryfikacji redakcyjnej.', citations: buildCitationList(matches) })
   } catch (error) {
     return c.json({ error: 'rag_fact_check_failed', detail: error instanceof Error ? error.message : 'unknown' }, 400)
@@ -389,7 +503,7 @@ ragRouter.post('/fact-check', jsonValidator, async (c) => {
 
 ragRouter.get('/stats', async (c) => c.json({ ok: true, ...(await getStore(c).stats()) }))
 
-ragRouter.post('/reindex', async (c) => {
+ragRouter.post('/reindex', requirePermission('ai:configure'), reindexRateLimit, async (c) => {
   try {
     const items = ARTICLES.map(article => ({
       slug: article.slug,
@@ -406,7 +520,7 @@ ragRouter.post('/reindex', async (c) => {
 })
 
 ragRouter.get('/health', async (c) => {
-  const dbCheck = await c.env.DB.prepare('SELECT 1 as ok').first<{ ok: number }>().catch(() => null)
+  const dbCheck = await c.env.DB?.prepare('SELECT 1 as ok').first<{ ok: number }>().catch(() => null)
   const embeddingProvider = (await createEmbeddings(c.env, ['izbica health probe'])).provider
   return c.json({
     ok: Boolean(dbCheck?.ok),
@@ -421,3 +535,4 @@ ragRouter.get('/health', async (c) => {
 })
 
 export default ragRouter
+export { ragRouter }
