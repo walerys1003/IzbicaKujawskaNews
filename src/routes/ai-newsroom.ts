@@ -100,7 +100,7 @@ app.post(
       return fail(c, 'validation_error', 'Tresc zadania musi byc obiektem JSON.')
     }
 
-    const auth = getAuth(c as never)
+    const auth = getAuth(c)
     const uid = auth?.sub ? Number(auth.sub) || null : null
     const started = Date.now()
     const handler = newsroomActions[action as NewsroomActionName]

@@ -14,6 +14,6 @@ export const requestLoggerMiddleware = createMiddleware<AppEnv>(async (c, next) 
     path: c.req.path,
     status: c.res.status,
     durationMs,
-    requestId: c.get('requestId' as never),
+    requestId: c.get('requestId'),
   })
 })

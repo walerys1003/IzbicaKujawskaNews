@@ -18,7 +18,7 @@ import { stripHtml } from '../../lib/security/sanitize-html'
 const route = new Hono<AppEnv>()
 
 route.get('/profile', requireAuth, async (c) => {
-  const auth = getAuth(c as never)
+  const auth = getAuth(c)
   if (!auth) return fail(c, 'unauthorized')
 
   const user = await getUserById(c.env, auth.sub)
@@ -66,7 +66,7 @@ route.put(
     return { name, bio, avatar }
   }),
   async (c) => {
-    const auth = getAuth(c as never)
+    const auth = getAuth(c)
     if (!auth) return fail(c, 'unauthorized')
     if (!c.env?.DB) return fail(c, 'database_unavailable')
 

@@ -18,7 +18,7 @@ import { getSession, listSessions, revokeSession } from '../../lib/auth/store'
 const route = new Hono<AppEnv>()
 
 route.get('/sessions', requireAuth, async (c) => {
-  const auth = getAuth(c as never)
+  const auth = getAuth(c)
   if (!auth) return fail(c, 'unauthorized')
 
   const sessions = await listSessions(c.env, Number(auth.sub))
@@ -41,7 +41,7 @@ route.get('/sessions', requireAuth, async (c) => {
 })
 
 route.delete('/sessions/:id', requireAuth, async (c) => {
-  const auth = getAuth(c as never)
+  const auth = getAuth(c)
   if (!auth) return fail(c, 'unauthorized')
 
   const sessionId = c.req.param('id')

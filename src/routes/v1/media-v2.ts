@@ -226,7 +226,7 @@ route.post('/', requireAuth, requirePermission('media:upload'), async (c) => {
       body: payload,
       customMetadata: {
         contentHash: hash,
-        uploaderId: String(getAuth(c as never)?.sub ?? 'nieznany'),
+        uploaderId: String(getAuth(c)?.sub ?? 'nieznany'),
         exifStripped: meta.hasExif ? '1' : '0',
       },
     })
@@ -280,7 +280,7 @@ route.post('/', requireAuth, requirePermission('media:upload'), async (c) => {
       num(body.focalX),
       num(body.focalY),
       num(body.durationSeconds),
-      String(getAuth(c as never)?.sub ?? ''),
+      String(getAuth(c)?.sub ?? ''),
       nowIso(),
     )
     .run()
@@ -368,7 +368,7 @@ route.post('/multipart/create', requireAuth, requirePermission('media:upload'), 
       mime,
       totalSize,
       kind,
-      String(getAuth(c as never)?.sub ?? ''),
+      String(getAuth(c)?.sub ?? ''),
       nowIso(),
       expiresAt,
     )

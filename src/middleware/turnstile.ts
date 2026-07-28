@@ -8,7 +8,7 @@
  */
 
 import { createMiddleware } from 'hono/factory'
-import type { AppEnv } from '../types/env'
+import type { AppEnv, Bindings } from '../types/env'
 import { fail } from '../lib/http/envelope'
 import { verifyTurnstile, extractTurnstileToken, isTestingSecret } from '../lib/security/turnstile'
 
@@ -23,7 +23,17 @@ export interface TurnstileGuardOptions {
   allowWhenUnconfigured?: boolean
 }
 
-const isProduction = (env: Record<string, unknown>) => {
+/**
+ * Etap wdrozenia. Przyjmuje `Bindings`, nie `Record<string, unknown>`.
+ *
+ * Poprzednio parametr byl luznym rekordem, a wywolania rzutowaly
+ * `c.env as unknown as Record<string, unknown>`. Podwojne rzutowanie przez
+ * `unknown` przechodzi zawsze — wiec literowka w nazwie klucza
+ * (`env.ENVIRONMET`) kompilowalaby sie bez sladu i dawala `undefined`,
+ * czyli „to nie produkcja”. A od tej jednej wartosci zalezy, czy brak
+ * sekretu Turnstile przepuszcza zadania (rozwoj) czy je odrzuca (produkcja).
+ */
+const isProduction = (env: Bindings) => {
   const stage = String(env.ENVIRONMENT ?? env.NODE_ENV ?? '').toLowerCase()
   return stage === 'production' || stage === 'prod'
 }
@@ -37,8 +47,8 @@ const isProduction = (env: Record<string, unknown>) => {
  */
 export const turnstileGuard = (options: TurnstileGuardOptions = {}) =>
   createMiddleware<AppEnv>(async (c, next) => {
-    const secret = (c.env as Record<string, unknown>).TURNSTILE_SECRET_KEY as string | undefined
-    const production = isProduction(c.env as unknown as Record<string, unknown>)
+    const secret = c.env.TURNSTILE_SECRET_KEY
+    const production = isProduction(c.env)
 
     const allowWhenUnconfigured = options.allowWhenUnconfigured ?? !production
 
@@ -72,7 +82,7 @@ export const turnstileGuard = (options: TurnstileGuardOptions = {}) =>
       allowWhenUnconfigured,
     })
 
-    c.set('turnstile' as never, outcome as never)
+    c.set('turnstile', outcome)
 
     if (!outcome.ok) {
       const komunikaty: Record<string, string> = {
@@ -92,7 +102,7 @@ export const turnstileGuard = (options: TurnstileGuardOptions = {}) =>
 /** Wariant miekki: nie blokuje, tylko zapisuje wynik do kontekstu. */
 export const turnstileObserve = () =>
   createMiddleware<AppEnv>(async (c, next) => {
-    const secret = (c.env as Record<string, unknown>).TURNSTILE_SECRET_KEY as string | undefined
+    const secret = c.env.TURNSTILE_SECRET_KEY
     let source: Record<string, unknown> | null = null
     try {
       if ((c.req.header('content-type') ?? '').includes('application/json')) {
@@ -107,6 +117,6 @@ export const turnstileObserve = () =>
       remoteIp: c.req.header('cf-connecting-ip') ?? null,
       allowWhenUnconfigured: true,
     })
-    c.set('turnstile' as never, outcome as never)
+    c.set('turnstile', outcome)
     await next()
   })

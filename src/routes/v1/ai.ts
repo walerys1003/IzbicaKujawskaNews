@@ -239,7 +239,7 @@ route.post('/complete', requireAuth, requirePermission('ai:use'), aiRateLimit, j
   }
 
   const started = Date.now()
-  const auth = getAuth(c as never)
+  const auth = getAuth(c)
   const uid = auth?.sub ? Number(auth.sub) || null : null
 
   try {
@@ -307,7 +307,7 @@ route.post('/stream', requireAuth, requirePermission('ai:use'), aiRateLimit, jso
     return fail(c, 'rate_limited', `Dzienny limit ${budget.limit} tokenow zostal wyczerpany.`, budget)
   }
 
-  const auth = getAuth(c as never)
+  const auth = getAuth(c)
   const uid = auth?.sub ? Number(auth.sub) || null : null
   const started = Date.now()
   const encoder = new TextEncoder()

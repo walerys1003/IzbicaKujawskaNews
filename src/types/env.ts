@@ -151,6 +151,19 @@ export interface Bindings {
   CORS_ALLOWED_ORIGINS?: string
   /** 'production' | 'development' — wplywa na dopuszczalne zrodla CORS. */
   ENVIRONMENT?: string
+  /**
+   * Zapasowy wskaznik etapu, czytany przez `isProduction` w
+   * `src/middleware/turnstile.ts` jako `env.ENVIRONMENT ?? env.NODE_ENV`.
+   *
+   * Zmierzone: tej zmiennej nie ma ani w `wrangler.jsonc`, ani w `.dev.vars`,
+   * wiec dzisiaj ten fallback nigdy sie nie uruchamia. NIE usuwam go jednak,
+   * bo zmienne srodowiskowe Pages mozna ustawic takze w panelu Cloudflare,
+   * poza repozytorium — usuniecie zmienialoby zachowanie produkcji na
+   * podstawie tego, czego nie widac w kodzie. Deklaracja zamiast usuniecia
+   * pozwala odczytac wartosc bez rzutowania `c.env as Record<string, unknown>`,
+   * ktore wylaczalo kontrole nazwy obu kluczy naraz.
+   */
+  NODE_ENV?: string
 
   // AI secrets (Sandbox 5)
   OPENAI_API_KEY?: string
@@ -183,6 +196,19 @@ export interface Bindings {
   AI_DEFAULT_MODEL?: string
   /** Sol do skrotu adresu IP w rejestrze zdarzen (RODO). */
   IP_HASH_SALT?: string
+
+  /**
+   * Sekret Turnstile (Cloudflare, ochrona formularzy przed botami).
+   *
+   * Nie bylo tego klucza w `Bindings`, wiec `src/middleware/turnstile.ts`
+   * czytal go przez rzutowanie `(c.env as Record<string, unknown>)`. Takie
+   * obejscie dziala, ale wylacza kontrole nazwy: literowka
+   * `TURNSTILE_SECRET` zamiast `TURNSTILE_SECRET_KEY` dawalaby `undefined`,
+   * czyli tryb „brak sekretu”. A ten tryb w produkcji ODRZUCA zadania
+   * (fail-closed), wiec literowka objawilaby sie jako niedzialajace
+   * formularze na zywym portalu, bez zadnego bledu w kodzie.
+   */
+  TURNSTILE_SECRET_KEY?: string
 
   // FAZA 4 / I12 — analityka.
   /**
@@ -243,6 +269,75 @@ export interface Bindings {
   R2_EXPORTS_CSV?: R2BucketLike
 }
 
-// AppEnv is the Hono context wrapper: { Bindings: Bindings }
+/**
+ * Zmienne kontekstu ustawiane przez oprogramowanie posrednie.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * NAPRAWIANY PROBLEM — 6 bledow TS2769 i 12 rzutowan `as never`
+ * ══════════════════════════════════════════════════════════════════════════
+ * `AppEnv` deklarowalo wylacznie `Bindings`. Hono wnioskuje wtedy, ze zaden
+ * klucz kontekstu nie istnieje, wiec `c.set('auth', …)` i `c.get('auth')`
+ * nie pasowaly do zadnej sygnatury (TS2769). Obejsciem bylo rzutowanie
+ * klucza na `never` w 12 miejscach:
+ *
+ *     c.set('auth' as never, payload as never)
+ *     c.get('auth' as never) as AuthContext | undefined
+ *
+ * Kazde takie rzutowanie wylacza kontrole calkowicie: literowka w nazwie
+ * klucza (`c.get('atuh' as never)`) kompilowala sie bez zastrzezen i dawala
+ * `undefined` w czasie wykonania. Przy `auth` znaczy to „uzytkownik
+ * niezalogowany" — czyli cichy 401 albo, w kodzie ktory tego nie sprawdza,
+ * pominiecie kontroli uprawnien. Deklaracja ponizej zamienia te literowke
+ * w blad kompilacji.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ * ROZBIEZNOSC TYPU ROLI — OPISANA, NIE UKRYTA
+ * ══════════════════════════════════════════════════════════════════════════
+ * `auth` jest czytane w projekcie pod DWOMA roznymi typami:
+ *
+ *   • `AuthContext` z `src/middleware/require-permission.ts` — pole `role`
+ *     typu `Role` z `src/lib/auth/roles.ts` (6 rol, zrodlo prawdy, zgodne
+ *     z ograniczeniem CHECK w bazie po migracji 0047),
+ *   • `AuthJwtPayload` z `src/routes/auth/helpers/password-utils.ts` — pole
+ *     `role` typu `UserRole`, czyli STARY zestaw
+ *     ('reader' | 'commenter' | 'author' | 'editor' | 'admin'), ktory nie
+ *     zawiera 'moderator' ani 'viewer', a zawiera nazwy usuniete migracja.
+ *
+ * Nie scalam tych typow w tej zmianie i nie udaje, ze problem nie istnieje:
+ * ujednolicenie dotyka uwierzytelniania, wiec wymaga osobnej weryfikacji
+ * pomiarowej. Dlatego `role` jest tu zadeklarowane jako `string` — typ
+ * NAJSZERSZY z obu, dzieki czemu deklaracja nie klamie o zadnym z wolantow
+ * i nie wymusza zmian w kodzie, ktorego jeszcze nie zmierzylem. Zwezenie do
+ * `Role` nalezy do zadania „scalenie dwoch warstw uwierzytelniania”.
+ */
+export interface AppVariables {
+  /**
+   * Tozsamosc z tokenu dostepu. Ustawiane przez oba warianty `requireAuth`.
+   * `sub` jest NAPISEM — tak wystawia go `src/lib/auth/store.ts`
+   * (`sub: String(user.id)`); kod, ktory potrzebuje liczby, musi go
+   * przekonwertowac (patrz `moderatorId` w trasie moderacji komentarzy —
+   * zalozenie, ze `auth` ma numeryczne `userId`, bylo tam zywym defektem).
+   */
+  auth: {
+    sub: string
+    email: string
+    role: string
+    sessionId: string
+    exp?: number
+    iat?: number
+  }
+  /** Identyfikator sesji z `user_sessions` — pozwala uniewaznic token. */
+  sessionId: string
+  /** Pelny rekord uzytkownika z bazy — ustawia go tylko `requireAuthUser`. */
+  authUser: unknown
+  /** Wynik weryfikacji Turnstile (`TurnstileOutcome`). */
+  turnstile: unknown
+  /** Sesja panelu redakcyjnego (`PanelSession` z lib/auth/panel-session). */
+  panel: unknown
+  /** Identyfikator zadania — trafia do koperty odpowiedzi i do logow. */
+  requestId: string
+}
+
+// AppEnv is the Hono context wrapper: { Bindings, Variables }
 // Use with: new Hono<AppEnv>()
-export type AppEnv = { Bindings: Bindings }
+export type AppEnv = { Bindings: Bindings; Variables: AppVariables }

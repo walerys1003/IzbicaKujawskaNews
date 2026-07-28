@@ -18,7 +18,7 @@ import { revokeAllUserSessions, revokeSession } from '../../lib/auth/store'
 const route = new Hono<AppEnv>()
 
 route.post('/logout', requireAuth, async (c) => {
-  const auth = getAuth(c as never)
+  const auth = getAuth(c)
   if (!auth) return fail(c, 'unauthorized')
 
   await revokeSession(c.env, auth.sessionId)
@@ -30,7 +30,7 @@ route.post('/logout', requireAuth, async (c) => {
  * przejecie konta — pojedyncze wylogowanie nie usuwa sesji atakujacego.
  */
 route.post('/logout-all', requireAuth, async (c) => {
-  const auth = getAuth(c as never)
+  const auth = getAuth(c)
   if (!auth) return fail(c, 'unauthorized')
 
   const keepCurrent = c.req.query('keepCurrent') === '1'

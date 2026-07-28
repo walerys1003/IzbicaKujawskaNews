@@ -13,6 +13,7 @@
  */
 
 import { createMiddleware } from 'hono/factory'
+import type { Context } from 'hono'
 import type { AppEnv } from '../types/env'
 import { fail } from '../lib/http/envelope'
 import { hasPermission, hasAnyPermission, toRole, type Permission, type Role } from '../lib/auth/roles'
@@ -31,12 +32,29 @@ export interface AuthContext {
   sessionId: string
 }
 
-/** Odczyt tozsamosci ustawionej przez requireAuth. */
-export const getAuth = (c: { get: (key: never) => unknown }): AuthContext | undefined =>
-  c.get('auth' as never) as AuthContext | undefined
+/**
+ * Odczyt tozsamosci ustawionej przez requireAuth.
+ *
+ * Sygnatura byla `c: { get: (key: never) => unknown }`. Parametr typu `never`
+ * nie przyjmuje ZADNEJ wartosci, wiec kazde wywolanie musialo obejsc typ:
+ * zmierzone 27 wystapien `getAuth(c)` w 16 plikach. Zrodlem byl brak
+ * deklaracji `Variables` w `AppEnv` — teraz `AppVariables` istnieje, wiec
+ * kontekst mozna przyjac wprost.
+ *
+ * To nie tylko sprzatanie: `c as never` uciszalo takze pomylke, w ktorej ktos
+ * podal tu obiekt nie bedacy kontekstem Hono. Po zmianie taki blad jest
+ * wychwytywany przy kompilacji.
+ *
+ * Zwracany typ zostaje `AuthContext | undefined` z jawnym rzutowaniem roli:
+ * `AppVariables.auth.role` jest celowo `string` (najszersza wspolna postac
+ * `Role` i `UserRole`), dopoki rozjazd dwoch zestawow rol nie zostanie
+ * scalony. `getRole` ponizej normalizuje wartosc przez `toRole`.
+ */
+export const getAuth = (c: Context<AppEnv>): AuthContext | undefined =>
+  c.get('auth') as AuthContext | undefined
 
 /** Rola zalogowanego uzytkownika, znormalizowana do modelu 6 rol. */
-export const getRole = (c: { get: (key: never) => unknown }): Role | undefined => {
+export const getRole = (c: Context<AppEnv>): Role | undefined => {
   const auth = getAuth(c)
   return auth?.role ? toRole(auth.role) : undefined
 }
@@ -48,7 +66,7 @@ export const getRole = (c: { get: (key: never) => unknown }): Role | undefined =
  */
 export const requirePermission = (permission: Permission) =>
   createMiddleware<AppEnv>(async (c, next) => {
-    const auth = getAuth(c as never)
+    const auth = getAuth(c)
     if (!auth?.sub) {
       return fail(c, 'unauthorized', 'Wymagane zalogowanie.')
     }
@@ -68,7 +86,7 @@ export const requirePermission = (permission: Permission) =>
 /** Wymaga co najmniej jednego z podanych uprawnien. */
 export const requireAnyPermission = (permissions: Permission[]) =>
   createMiddleware<AppEnv>(async (c, next) => {
-    const auth = getAuth(c as never)
+    const auth = getAuth(c)
     if (!auth?.sub) return fail(c, 'unauthorized', 'Wymagane zalogowanie.')
 
     const role = toRole(auth.role)
@@ -99,7 +117,7 @@ export const requireOwnershipOr = (
   resolveOwnerId: (c: never) => Promise<string | number | null>,
 ) =>
   createMiddleware<AppEnv>(async (c, next) => {
-    const auth = getAuth(c as never)
+    const auth = getAuth(c)
     if (!auth?.sub) return fail(c, 'unauthorized', 'Wymagane zalogowanie.')
 
     const role = toRole(auth.role)

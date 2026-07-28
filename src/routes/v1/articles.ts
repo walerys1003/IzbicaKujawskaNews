@@ -61,7 +61,7 @@ const route = new Hono<AppEnv>()
 // ─────────────────────────────────────────────────────────────────────────────
 
 const userId = (c: never): number => {
-  const auth = getAuth(c as never)
+  const auth = getAuth(c)
   return auth?.sub ? Number(auth.sub) || 0 : 0
 }
 

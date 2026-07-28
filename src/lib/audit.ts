@@ -104,7 +104,7 @@ export const audit = async (c: Context, entry: AuditEntry): Promise<void> => {
   if (!db) return
 
   try {
-    const auth = getAuth(c as never)
+    const auth = getAuth(c)
     // Sol z IP_HASH_SALT, awaryjnie z JWT_SECRET. Poprzednio bylo tu
     // `?? 'izbica24-audit'` — sol zapisana w kodzie, czyli brak soli:
     // majac skrot i te stala mozna odtworzyc adres slownikiem (IPv4 to

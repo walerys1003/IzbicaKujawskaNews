@@ -23,17 +23,34 @@ const route = new Hono<AppEnv>()
  * ale prefiks nie mowi jednoznacznie o bindingu — zasob moze byc przeniesiony.
  * Sprawdzamy zatem bucket sugerowany przez prefiks, potem pozostale.
  */
-const KOLEJNOSC: Array<keyof AppEnv['Bindings']> = [
+/**
+ * Nazwy wiazan R2 zadeklarowanych w `Bindings`.
+ *
+ * Poprzednio lista `KOLEJNOSC` byla zamknieta przez `as never`, a odczyt szedl
+ * przez `(c.env as Record<string, unknown>)[nazwa]`. Oba zabiegi razem
+ * wylaczaly kontrole nazw wiazan: literowka `R2_PODCAST_AUDIOO` kompilowalaby
+ * sie bez sladu, a jej skutkiem byloby ciche pominiecie bucketa w petli —
+ * czyli 404 na plikach, ktore w R2 sa. Blad bez komunikatu, w trasie
+ * serwujacej wszystkie zdjecia i wideo portalu.
+ *
+ * `Extract<..., 'R2_${string}'>` bierze nazwy wprost z `Bindings`, wiec
+ * literowka jest teraz bledem kompilacji, a `satisfies` pilnuje tego bez
+ * poszerzania typu do `string[]`.
+ */
+type NazwaBucketaMediow = Extract<keyof AppEnv['Bindings'], `R2_${string}`>
+
+const KOLEJNOSC = [
   'R2_ARTICLES_IMAGES',
   'R2_ARTICLES_VIDEOS',
   'R2_PODCAST_AUDIO',
   'R2_USER_UPLOADS',
-] as never
+] as const satisfies readonly NazwaBucketaMediow[]
 
-const bindingDlaPrefiksu = (key: string): Array<keyof AppEnv['Bindings']> => {
-  if (key.startsWith('media/images/')) return ['R2_ARTICLES_IMAGES', ...KOLEJNOSC.filter((b) => b !== 'R2_ARTICLES_IMAGES')] as never
-  if (key.startsWith('media/videos/')) return ['R2_ARTICLES_VIDEOS', ...KOLEJNOSC.filter((b) => b !== 'R2_ARTICLES_VIDEOS')] as never
-  if (key.startsWith('media/audio/')) return ['R2_PODCAST_AUDIO', ...KOLEJNOSC.filter((b) => b !== 'R2_PODCAST_AUDIO')] as never
+const bindingDlaPrefiksu = (key: string): readonly NazwaBucketaMediow[] => {
+  const najpierw = (b: NazwaBucketaMediow): NazwaBucketaMediow[] => [b, ...KOLEJNOSC.filter((x) => x !== b)]
+  if (key.startsWith('media/images/')) return najpierw('R2_ARTICLES_IMAGES')
+  if (key.startsWith('media/videos/')) return najpierw('R2_ARTICLES_VIDEOS')
+  if (key.startsWith('media/audio/')) return najpierw('R2_PODCAST_AUDIO')
   return KOLEJNOSC
 }
 
@@ -119,7 +136,7 @@ route.get('/media/*', async (c) => {
   const ifNoneMatch = c.req.header('if-none-match')
 
   for (const bindingName of bindingDlaPrefiksu(key)) {
-    const bucket = (c.env as Record<string, unknown>)[bindingName as string] as R2BucketRuntime | undefined
+    const bucket = c.env[bindingName] as R2BucketRuntime | undefined
     if (!bucket || typeof bucket.get !== 'function') continue
 
     // ETag sprawdzany przez head() przed pobraniem ciala — przy trafieniu
@@ -197,7 +214,7 @@ route.get('/media/*', async (c) => {
 
   // Brak zasobu w zadnym bucketcie. Komunikat mowi, co sprawdzic — 404 bez
   // tresci zmusza do zgadywania, czy problem jest w kluczu, czy w konfiguracji.
-  const skonfigurowane = KOLEJNOSC.filter((b) => !!(c.env as Record<string, unknown>)[b as string])
+  const skonfigurowane = KOLEJNOSC.filter((b) => !!c.env[b])
   return c.json(
     {
       error: 'media_not_found',
@@ -218,7 +235,7 @@ route.on('HEAD', '/media/*', async (c) => {
   if (!key || key.includes('..')) return new Response(null, { status: 400 })
 
   for (const bindingName of bindingDlaPrefiksu(key)) {
-    const bucket = (c.env as Record<string, unknown>)[bindingName as string] as R2BucketRuntime | undefined
+    const bucket = c.env[bindingName] as R2BucketRuntime | undefined
     if (!bucket || typeof bucket.head !== 'function') continue
     const meta = await bucket.head(key).catch(() => null)
     if (!meta) continue

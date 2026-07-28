@@ -4,7 +4,7 @@ import { resolveTraceContext } from '../monitoring/tracing'
 
 export const requestIdMiddleware = createMiddleware<AppEnv>(async (c, next) => {
   const trace = resolveTraceContext(c.req.raw.headers)
-  c.set('requestId', trace.requestId as never)
+  c.set('requestId', trace.requestId)
   await next()
   c.header('x-request-id', trace.requestId)
 })

@@ -50,8 +50,8 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
     return fail(c, 'unauthorized', 'Sesja zostala zakonczona. Zaloguj sie ponownie.')
   }
 
-  c.set('auth' as never, { ...payload, role: toRole(payload.role) } as never)
-  c.set('sessionId' as never, payload.sessionId as never)
+  c.set('auth', { ...payload, role: toRole(payload.role) })
+  c.set('sessionId', payload.sessionId)
 
   await next()
 })
@@ -79,9 +79,9 @@ export const requireAuthWithUser = createMiddleware<AppEnv>(async (c, next) => {
   if (!user) return fail(c, 'unauthorized', 'Konto nie istnieje lub zostalo usuniete.')
 
   // Rola z BAZY, nie z tokenu — odebranie uprawnien dziala natychmiast.
-  c.set('auth' as never, { ...payload, role: user.role } as never)
-  c.set('authUser' as never, user as never)
-  c.set('sessionId' as never, payload.sessionId as never)
+  c.set('auth', { ...payload, role: user.role })
+  c.set('authUser', user)
+  c.set('sessionId', payload.sessionId)
 
   await next()
 })
@@ -98,8 +98,8 @@ export const optionalAuth = createMiddleware<AppEnv>(async (c, next) => {
     if (payload) {
       const session = await getSession(c.env, payload.sessionId)
       if (session) {
-        c.set('auth' as never, { ...payload, role: toRole(payload.role) } as never)
-        c.set('sessionId' as never, payload.sessionId as never)
+        c.set('auth', { ...payload, role: toRole(payload.role) })
+        c.set('sessionId', payload.sessionId)
       }
     }
   }

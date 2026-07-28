@@ -53,7 +53,7 @@ export interface ErrorEnvelope {
 
 /** Odczyt identyfikatora żądania ustawionego przez `requestIdMiddleware`. */
 export const getRequestId = (c: Context): string => {
-  const fromContext = c.get('requestId' as never) as string | undefined
+  const fromContext = c.get('requestId')
   if (fromContext) return fromContext
   const fromHeader = c.req.header('x-request-id')
   if (fromHeader) return fromHeader

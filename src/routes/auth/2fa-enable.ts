@@ -26,7 +26,7 @@ import { generateTotpSecret, otpauthUrl } from '../../lib/auth/totp'
 const route = new Hono<AppEnv>()
 
 route.post('/2fa/enable', requireAuth, async (c) => {
-  const auth = getAuth(c as never)
+  const auth = getAuth(c)
   if (!auth) return fail(c, 'unauthorized')
   if (!c.env?.DB) return fail(c, 'database_unavailable')
 

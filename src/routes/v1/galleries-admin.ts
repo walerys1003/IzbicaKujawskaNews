@@ -132,7 +132,7 @@ route.post('/', requireAuth, requirePermission('media:upload'), async (c) => {
       str(body.categorySlug, 60),
       str(body.eventDate, 30),
       str(body.photographer, 200),
-      Number.parseInt(String(getAuth(c as never)?.sub ?? '0'), 10) || null,
+      Number.parseInt(String(getAuth(c)?.sub ?? '0'), 10) || null,
       nowIso(),
     )
     .run()

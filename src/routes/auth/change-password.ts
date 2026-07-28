@@ -50,7 +50,7 @@ route.post(
     return { oldPassword, newPassword }
   }),
   async (c) => {
-    const auth = getAuth(c as never)
+    const auth = getAuth(c)
     if (!auth) return fail(c, 'unauthorized')
     if (!c.env?.DB) return fail(c, 'database_unavailable')
 

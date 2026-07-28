@@ -104,7 +104,7 @@ aiRouter.post(
     )
   }
 
-  const auth = getAuth(c as never)
+  const auth = getAuth(c)
   const uid = auth?.sub ? Number(auth.sub) || null : null
   const started = Date.now()
   const model = overrideModel || prompt.model

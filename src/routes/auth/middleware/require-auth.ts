@@ -4,6 +4,22 @@ import type { AppEnv } from '../../../types/env'
 import type { AuthJwtPayload } from '../helpers/password-utils'
 
 /**
+ * Sprawdza, czy tresc tokenu ma pola, na ktorych opieraja sie trasy.
+ *
+ * `sub`, `email` i `sessionId` musza byc niepustymi napisami — `sub` bo na nim
+ * opiera sie „kto to jest”, `sessionId` bo to jedyny uchwyt do uniewaznienia
+ * sesji. `role` jest sprawdzana tylko jako napis: rozjazd dwoch zestawow rol
+ * (`UserRole` — 5 wartosci, `Role` — 6) jest osobnym, niezalatwionym zadaniem
+ * i nie udaje, ze go tu rozstrzygam.
+ */
+const jestTrescaTokenu = (wartosc: unknown): wartosc is AuthJwtPayload => {
+  if (!wartosc || typeof wartosc !== 'object') return false
+  const p = wartosc as Record<string, unknown>
+  const napis = (v: unknown) => typeof v === 'string' && v.length > 0
+  return napis(p.sub) && napis(p.email) && napis(p.sessionId) && typeof p.role === 'string'
+}
+
+/**
  * I8 — NAPRAWA DEFEKTU: KAŻDY POPRAWNY TOKEN BYŁ ODRZUCANY
  *
  * ══════════════════════════════════════════════════════════════════════════
@@ -66,8 +82,20 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
     // Jawna wartość jest też zabezpieczeniem samym w sobie: pośrednik
     // przyjmuje wyłącznie HS256 i nie da się go nakłonić do zaakceptowania
     // tokenu z podmienionym nagłówkiem `alg` (np. `none`).
-    const payload = (await verify(token, c.env.JWT_SECRET, 'HS256')) as AuthJwtPayload
-    c.set('auth', payload as never)
+    // `verify` zwraca `JWTPayload` (indeks `[key: string]: unknown`), a nie
+    // nasz `AuthJwtPayload`. Rzutowanie proste bylo bledem TS2352 („typy nie
+    // pokrywaja sie dostatecznie”), a `payload as never` przy `c.set` obchodzil
+    // brakujaca deklaracje `Variables` w `AppEnv` — oba juz nie sa potrzebne.
+    //
+    // Zamiast rzutowac na slepo SPRAWDZAMY kształt. To nie kosmetyka typow:
+    // podpis tokenu gwarantuje tylko, ze tresci nie podmienil obcy, NIE ze
+    // zawiera pola, ktorych oczekujemy. Token bez `sub` (np. wystawiony przez
+    // inna sciezke logowania na tym samym sekrecie) przechodzil dotad jako
+    // poprawny, a `auth.sub` bylo `undefined` — czyli trasa dzialala „w imieniu
+    // nikogo”. Teraz taki token dostaje 401.
+    const payload: unknown = await verify(token, c.env.JWT_SECRET, 'HS256')
+    if (!jestTrescaTokenu(payload)) return c.json({ error: 'invalid_token' }, 401)
+    c.set('auth', payload)
     await next()
   } catch {
     return c.json({ error: 'invalid_token' }, 401)

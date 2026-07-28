@@ -19,7 +19,7 @@ import { API_SCOPES, createApiKey, isApiScope, listApiKeys, revokeApiKey, type A
 const route = new Hono<AppEnv>()
 
 route.get('/api-keys', requireAuth, requirePermission('article:create'), async (c) => {
-  const auth = getAuth(c as never)
+  const auth = getAuth(c)
   if (!auth) return fail(c, 'unauthorized')
 
   const items = await listApiKeys(c.env, Number(auth.sub))
@@ -70,7 +70,7 @@ route.post(
     return { name, scopes: scopes.length ? scopes : (['incoming:write'] as ApiScope[]), expiresInDays }
   }),
   async (c) => {
-    const auth = getAuth(c as never)
+    const auth = getAuth(c)
     if (!auth) return fail(c, 'unauthorized')
     if (!c.env?.DB) return fail(c, 'database_unavailable')
 
@@ -100,7 +100,7 @@ route.post(
  * odrzuca — RFC 9110 nie definiuje znaczenia ciala w DELETE.
  */
 route.delete('/api-keys/:id', requireAuth, requirePermission('article:create'), async (c) => {
-  const auth = getAuth(c as never)
+  const auth = getAuth(c)
   if (!auth) return fail(c, 'unauthorized')
 
   const revoked = await revokeApiKey(c.env, Number(auth.sub), c.req.param('id'))

@@ -43,6 +43,7 @@
  */
 
 import { createMiddleware } from 'hono/factory'
+import type { Context } from 'hono'
 import type { AppEnv } from '../types/env'
 import { noteRateLimitDecision } from '../monitoring/rate-limit-monitor'
 import { rateLimitedRequestsTotal } from '../monitoring/metrics'
@@ -76,10 +77,21 @@ const memoryHit = (key: string, windowMs: number, now: number): number[] => {
   return stamps
 }
 
-/** Identyfikator klienta: IP lub — gdy perUser i jest sesja — id użytkownika. */
-const resolveClientId = (c: Parameters<Parameters<typeof createMiddleware>[0]>[0], perUser: boolean) => {
+/**
+ * Identyfikator klienta: IP lub — gdy perUser i jest sesja — id użytkownika.
+ *
+ * Parametr `c` był wcześniej typowany przez
+ * `Parameters<Parameters<typeof createMiddleware>[0]>[0]`. `createMiddleware`
+ * jest funkcją Z PRZECIĄŻENIAMI, a `Parameters<T>` na takim typie bierze
+ * WYŁĄCZNIE ostatnią sygnaturę — wynikiem było `never`. Skutek: `c.get('auth')`
+ * i `auth.sub` operowały na `never`, więc kontrola typów w całej funkcji nie
+ * obowiązywała. Ten sam wzorzec był wcześniej defektem w
+ * `src/routes/v1/comments.ts` (cała funkcja `handleSubmit` poza kontrolą).
+ * Jawny `Context<AppEnv>` przywraca sprawdzanie.
+ */
+const resolveClientId = (c: Context<AppEnv>, perUser: boolean) => {
   if (perUser) {
-    const auth = c.get('auth' as never) as { sub?: string } | undefined
+    const auth = c.get('auth')
     if (auth?.sub) return `u:${auth.sub}`
   }
   const ip =
