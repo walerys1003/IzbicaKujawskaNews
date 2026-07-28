@@ -73,8 +73,63 @@ const blobToVector = (value: unknown): number[] => {
 export class RagVectorStore {
   constructor(private readonly bindings: AppBindings) {}
 
-  async upsertDocumentEmbeddings(document: RagDocumentInput, chunks: string[], embeddings: number[][]) {
+  /**
+   * Dostep do bazy przez JEDEN straznik.
+   *
+   * ══════════════════════════════════════════════════════════════════════════
+   * DLACZEGO GETTER, A NIE 16 RZUTOWAN `DB!`
+   * ══════════════════════════════════════════════════════════════════════════
+   * `AppBindings.DB` jest opcjonalne (`DB?: D1Database`) — i slusznie, bo
+   * komentarz przy tej deklaracji mowi wprost: „routes that access bindings
+   * still need to handle the undefined case”. Ta klasa uzywala `DB` w 16
+   * miejscach i NIE obslugiwala tego przypadku ani razu. Kazde uzycie bylo
+   * osobnym zgloszeniem tsc (TS18048 / TS2532).
+   *
+   * Naprawa przez dopisanie `!` w 16 miejscach uciszylaby kompilator i nic
+   * poza tym: przy braku bazy dostalibysmy `TypeError: Cannot read properties
+   * of undefined (reading 'prepare')` — komunikat, ktory nie mowi ani co jest
+   * niedostepne, ani ze chodzi o konfiguracje wdrozenia. Zamiast tego jeden
+   * getter zamienia 16 slepych punktow w jeden jawny warunek i czytelny blad.
+   *
+   * ══════════════════════════════════════════════════════════════════════════
+   * CZY TO BYL ZYWY DEFEKT — POMIAR, NIE DOMYSL
+   * ══════════════════════════════════════════════════════════════════════════
+   * NIE. Zmierzone: wszystkie trasy `/api/rag/*`, ktore siegaja do tej klasy,
+   * stoja za `requirePermission`, a uwierzytelnianie samo wymaga bazy
+   * (sprawdza sesje w `user_sessions`). Bez `DB` zadanie konczy sie wczesniej:
+   * zmierzone 503 `service_unavailable` „Uwierzytelnianie nie jest
+   * skonfigurowane.”, a z baza `GET /api/rag/stats` → 200. Sciezka „brak DB
+   * wewnatrz klasy” nie jest wiec dzis osiagalna przez HTTP.
+   *
+   * Nie nazywam tego zatem naprawa awarii. To usuniecie 16 miejsc, w ktorych
+   * kompilator nie mial zadnej kontroli, i zamiana przyszlej awarii
+   * niezrozumialej na zrozumiala — gdyby kiedys ktos zamontowal ten router
+   * bez uwierzytelniania albo wywolal klase z zadania cyklicznego.
+   *
+   * ══════════════════════════════════════════════════════════════════════════
+   * TYP ZWRACANY — DLACZEGO `NonNullable<AppBindings['DB']>`, A NIE `D1Database`
+   * ══════════════════════════════════════════════════════════════════════════
+   * W projekcie istnieja DWA typy o nazwie `D1Database`: wlasna deklaracja
+   * w `src/types/cloudflare.ts:15` (uzywana przez `AppBindings`) oraz globalna
+   * z `@cloudflare/workers-types`. Pierwsza wersja tego gettera deklarowala
+   * `D1Database`, co rozwiazywalo sie do TEJ GLOBALNEJ — i tsc slusznie
+   * zaprotestowal (TS2739: brak `withSession`, `dump`). Wiazanie typu wprost
+   * ze zrodlem prawdy (`AppBindings['DB']`) usuwa te dwuznacznosc: jesli
+   * ktos zmieni deklaracje wiazania, getter podazy za nia automatycznie.
+   */
+  private get db(): NonNullable<AppBindings['DB']> {
     const db = this.bindings.DB
+    if (!db) {
+      throw new Error(
+        'RagVectorStore: brak wiazania D1 (DB). Baza wektorowa nie moze dzialac bez bazy danych — ' +
+          'sprawdz konfiguracje `d1_databases` w wrangler.jsonc dla tego srodowiska.',
+      )
+    }
+    return db
+  }
+
+  async upsertDocumentEmbeddings(document: RagDocumentInput, chunks: string[], embeddings: number[][]) {
+    const db = this.db
     await db.prepare(
       `INSERT INTO rag_documents (slug, title, category, content, source, chunk_count, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -121,9 +176,9 @@ export class RagVectorStore {
   }
 
   async deleteDocument(slug: string) {
-    const rows = await this.bindings.DB.prepare('SELECT id FROM embeddings WHERE slug = ?').bind(slug).all<{ id: string }>()
-    await this.bindings.DB.prepare('DELETE FROM embeddings WHERE slug = ?').bind(slug).run()
-    await this.bindings.DB.prepare('DELETE FROM rag_documents WHERE slug = ?').bind(slug).run()
+    const rows = await this.db.prepare('SELECT id FROM embeddings WHERE slug = ?').bind(slug).all<{ id: string }>()
+    await this.db.prepare('DELETE FROM embeddings WHERE slug = ?').bind(slug).run()
+    await this.db.prepare('DELETE FROM rag_documents WHERE slug = ?').bind(slug).run()
     if (this.bindings.VECTORIZE_INDEX && rows.results.length) {
       await this.bindings.VECTORIZE_INDEX.deleteByIds(rows.results.map(row => row.id))
     }
@@ -152,8 +207,8 @@ export class RagVectorStore {
       ? 'SELECT id, slug, title, category, chunk_index, content_chunk, embedding FROM embeddings WHERE category = ?'
       : 'SELECT id, slug, title, category, chunk_index, content_chunk, embedding FROM embeddings'
     const rows = filterCategory
-      ? await this.bindings.DB.prepare(query).bind(filterCategory).all<Record<string, unknown>>()
-      : await this.bindings.DB.prepare(query).all<Record<string, unknown>>()
+      ? await this.db.prepare(query).bind(filterCategory).all<Record<string, unknown>>()
+      : await this.db.prepare(query).all<Record<string, unknown>>()
 
     return rows.results
       .map(row => ({
@@ -170,18 +225,18 @@ export class RagVectorStore {
   }
 
   async getDocument(slug: string) {
-    return this.bindings.DB.prepare('SELECT slug, title, category, content, source, chunk_count, updated_at FROM rag_documents WHERE slug = ?').bind(slug).first<Record<string, unknown>>()
+    return this.db.prepare('SELECT slug, title, category, content, source, chunk_count, updated_at FROM rag_documents WHERE slug = ?').bind(slug).first<Record<string, unknown>>()
   }
 
   async getDocuments(slugs: string[]) {
     if (!slugs.length) return []
     const placeholders = slugs.map(() => '?').join(', ')
-    const result = await this.bindings.DB.prepare(`SELECT slug, title, category, content, source, chunk_count, updated_at FROM rag_documents WHERE slug IN (${placeholders})`).bind(...slugs).all<Record<string, unknown>>()
+    const result = await this.db.prepare(`SELECT slug, title, category, content, source, chunk_count, updated_at FROM rag_documents WHERE slug IN (${placeholders})`).bind(...slugs).all<Record<string, unknown>>()
     return result.results
   }
 
   async getChunksBySlug(slug: string) {
-    const result = await this.bindings.DB.prepare('SELECT id, slug, title, category, chunk_index, content_chunk, embedding FROM embeddings WHERE slug = ? ORDER BY chunk_index ASC').bind(slug).all<Record<string, unknown>>()
+    const result = await this.db.prepare('SELECT id, slug, title, category, chunk_index, content_chunk, embedding FROM embeddings WHERE slug = ? ORDER BY chunk_index ASC').bind(slug).all<Record<string, unknown>>()
     return result.results.map(row => ({
       id: String(row.id),
       slug: String(row.slug),
@@ -194,9 +249,9 @@ export class RagVectorStore {
   }
 
   async stats() {
-    const documents = await this.bindings.DB.prepare('SELECT COUNT(*) as count FROM rag_documents').first<{ count: number }>()
-    const chunks = await this.bindings.DB.prepare('SELECT COUNT(*) as count FROM embeddings').first<{ count: number }>()
-    const categories = await this.bindings.DB.prepare('SELECT category, COUNT(*) as count FROM rag_documents GROUP BY category ORDER BY count DESC').all<{ category: string; count: number }>()
+    const documents = await this.db.prepare('SELECT COUNT(*) as count FROM rag_documents').first<{ count: number }>()
+    const chunks = await this.db.prepare('SELECT COUNT(*) as count FROM embeddings').first<{ count: number }>()
+    const categories = await this.db.prepare('SELECT category, COUNT(*) as count FROM rag_documents GROUP BY category ORDER BY count DESC').all<{ category: string; count: number }>()
     return {
       documents: Number(documents?.count || 0),
       chunks: Number(chunks?.count || 0),
@@ -206,7 +261,7 @@ export class RagVectorStore {
   }
 
   async listTopics(limit = 10) {
-    const result = await this.bindings.DB.prepare(
+    const result = await this.db.prepare(
       `SELECT category, COUNT(*) as count, GROUP_CONCAT(title, ' • ') as titles
        FROM rag_documents
        GROUP BY category
