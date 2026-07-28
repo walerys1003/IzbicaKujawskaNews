@@ -61,8 +61,28 @@
 ## Architektura danych
 - **Model treści**: `Article` z blokami `ContentBlock` (union dyskryminowany) — obsługa tekstu, zdjęć, galerii, wideo, audio, embedów, plików, tabel i ramek informacyjnych
 - **Typy materiałów**: artykuł, galeria, wideo, audio/podcast, relacja live, przegląd mediów, ogłoszenie, wydarzenie, infografika
-- **Obecne źródło**: moduły TypeScript (`src/v4/content-db.ts`) — SSR bez zapytań do bazy
 - **Docelowo**: Cloudflare D1 (treść, relacje), KV (cache, konfiguracja — 15 namespace'ów gotowych), R2 (media)
+
+### Źródło treści — stan zmierzony 2026-07-28
+
+Wcześniejsza wersja tego pliku podawała, że treść pochodzi z modułów TypeScript
+„bez zapytań do bazy". To już nie jest prawda i było źródłem błędnych wniosków
+(m.in. pozycja 1 w `TODO-590-AUDYT.md`). Stan faktyczny, ustalony przez odpytanie
+tras i bazy, a nie przez czytanie kodu:
+
+| Obszar | Źródło | Dowód |
+|---|---|---|
+| Strony portalu v4 (`/`, kategorie, artykuły) | ✅ **D1** | `src/v4/content-source.ts` → `loadSnapshot(c)`, 2 zapytania na żądanie |
+| `GET /api/v1/articles`, `/articles/:slug` | ✅ **D1** | odpowiedź zgodna z `SELECT` z tabeli `articles` (30 wierszy `published`) |
+| `/sitemap.xml`, `/news-sitemap.xml`, `/rss.xml` | ✅ **D1** | 45/45 adresów sitemapy = HTTP 200, 20/20 odnośników RSS = 200 |
+| JSON-LD na stronie artykułu | ✅ **D1** | 3 bloki `application/ld+json` (`NewsArticle`, `BreadcrumbList`, `NewsMediaOrganization`) |
+| `/api/search/*` (autocomplete, podpowiedzi, autorzy, tagi) | ❌ **mock** | zwraca tytuł z `data-articles.ts` („…— droga oddana mieszkańcom"), którego w D1 nie ma |
+| `/api/rag/*` (3 miejsca) | ❌ **mock** | `ARTICLES` w `src/routes/rag.ts` |
+| Widoki archiwalne `/v3`, `/v2` | ❌ **mock** | świadomie — to zamrożone porównanie szat graficznych |
+| `buildArticleJsonLd` (stara wersja) | ⚠️ martwy kod | wołany wyłącznie przez test; portal używa `buildNewsArticleJsonLd` |
+
+**Do zrobienia**: przeniesienie `/api/search/*` i `/api/rag/*` na D1 (tabele FTS
+`articles_fts` już istnieją — migracje 0005, 0034, 0048, 0054, 0056).
 
 ## Uruchomienie lokalne
 ```bash
@@ -75,5 +95,6 @@ curl http://localhost:3000
 - **Platforma**: Cloudflare Pages
 - **Status**: 🟡 gotowe do wdrożenia (weryfikacja lokalna zakończona)
 - **Stack**: Hono + TypeScript + JSX SSR + CSS 1:1 z mockupu
-- **Weryfikacja**: build ✅ (`dist/_worker.js` 629 kB) · 0 błędów konsoli przeglądarki · wszystkie trasy 200
-- **Ostatnia aktualizacja**: 2026-07-27
+- **Weryfikacja**: build ✅ (`dist/_worker.js` 977 kB) · 155 testów ✅ · 45/45 adresów sitemapy = 200
+- **Kontrola typów**: `npm run lint` — 136 błędów, próg zapadkowy (może iść tylko w dół)
+- **Ostatnia aktualizacja**: 2026-07-28
