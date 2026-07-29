@@ -152,13 +152,24 @@ export const CategoryPageV4: FC<{
         </div>
       </header>
 
-      {/* Pasek podkategorii */}
+      {/* Pasek podkategorii — identyczny dla każdej kategorii.
+          Licznik artykułów siedzi w środku belki (przy nazwie podkategorii),
+          zgodnie z briefem: „liczniki artykułów" dla każdej belki.
+          Styl nie zmienia się względem oryginału (CSS `.subcat-bar a .pill` jest
+          nowy, ale jego warstwy wizualne są zgodne z resztą portalu — ink, 4 px
+          gap, uppercase, font:700 10.5px var(--display), dokładnie jak
+          `.st-count` z kafli podkategorii, żeby wyglądały jak jedna rodzina
+          typograficzna). */}
       <nav class="subcat-bar reveal" style={`--c:${cat.colorVar}`} aria-label="Podkategorie">
         <a href={cat.path} class="active">
           Wszystkie
+          <span class="pill">{total}</span>
         </a>
         {cat.subcategories.map((s) => (
-          <a href={s.path}>{s.title}</a>
+          <a href={s.path}>
+            {s.title}
+            <span class="pill">{counts[s.slug] || 0}</span>
+          </a>
         ))}
       </nav>
 
@@ -226,9 +237,21 @@ export const SubcategoryPageV4: FC<{
   /** Liczniki dla 3. poziomu (jeśli istnieje) */
   childCounts?: Record<string, number>
   childCovers?: Record<string, string | undefined>
-}> = ({ cat, sub, articles, total, page, childCounts = {}, childCovers = {} }) => {
+  /**
+   * Liczniki dla rodzeństwa — pozostałych podkategorii tej samej kategorii.
+   * Potrzebne do wyświetlenia liczby artykułów na każdej belce (zgodnie
+   * z wymaganiem briefu „liczniki artykułów"). Router dostarcza mapę
+   * dla wszystkich podkategorii tej kategorii, komponent sumuje tylko
+   * potrzebne do wyświetlenia.
+   */
+  siblingCounts?: Record<string, number>
+}> = ({ cat, sub, articles, total, page, childCounts = {}, childCovers = {}, siblingCounts = {} }) => {
   const lead = page === 1 ? articles[0] : undefined
   const rest = page === 1 ? articles.slice(1) : articles
+  // W SubcategoryPageV4 licznik na belce dotyczy artykułów każdej podkategorii
+  // — więc używamy siblingCounts (liczniki z routera dla wszystkich podkategorii
+  // tej kategorii), a nie childCounts (tylko ewentualny 3. poziom).
+  const counts = siblingCounts
 
   return (
     <div class="page">
@@ -253,12 +276,18 @@ export const SubcategoryPageV4: FC<{
         </div>
       </header>
 
-      {/* Rodzeństwo — inne podkategorie tej kategorii */}
+      {/* Rodzeństwo — inne podkategorie tej kategorii (identyczna belka jak
+          w CategoryPageV4, aktywna wskazuje bieżącą podkategorię). Liczniki
+          są wliczone — ta sama warstwa typograficzna co na górze kategorii. */}
       <nav class="subcat-bar reveal" style={`--c:${cat.colorVar}`} aria-label="Podkategorie">
-        <a href={cat.path}>Wszystkie</a>
+        <a href={cat.path}>
+          Wszystkie
+          <span class="pill">{cat.subcategories.reduce((acc, s) => acc + (counts[s.slug] || 0), 0)}</span>
+        </a>
         {cat.subcategories.map((s) => (
           <a href={s.path} class={s.slug === sub.slug ? 'active' : undefined}>
             {s.title}
+            <span class="pill">{counts[s.slug] || 0}</span>
           </a>
         ))}
       </nav>
@@ -340,10 +369,14 @@ export const ThirdLevelPageV4: FC<{
     </header>
 
     <nav class="subcat-bar reveal" style={`--c:${cat.colorVar}`} aria-label="Podsekcje">
-      <a href={sub.path}>Wszystkie z „{sub.title}”</a>
+      <a href={sub.path}>
+        Wszystkie z „{sub.title}”
+        <span class="pill">{(sub.children ?? []).reduce((acc, c) => acc + childCount(c.slug), 0)}</span>
+      </a>
       {(sub.children ?? []).map((c) => (
         <a href={c.path} class={c.slug === child.slug ? 'active' : undefined}>
           {c.title}
+          <span class="pill">{childCount(c.slug)}</span>
         </a>
       ))}
     </nav>

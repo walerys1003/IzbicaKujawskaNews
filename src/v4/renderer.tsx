@@ -9,7 +9,7 @@ import { jsxRenderer, useRequestContext } from 'hono/jsx-renderer'
 import { ZgodaCookies } from './components/ZgodaCookies'
 import { buildCanonicalUrl, buildOrganizationJsonLd } from '../seo'
 
-export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, canonical, jsonLd }) => {
+export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, canonical, jsonLd, headLinks }) => {
   /**
    * Token analityki czytamy z kontekstu żądania, nie z propsów.
    *
@@ -84,6 +84,17 @@ export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, 
         <meta name="twitter:card" content="summary_large_image" />
         <meta property="og:url" content={adresKanoniczny} />
         <link rel="canonical" href={adresKanoniczny} />
+        {/*
+          Paginacja — link rel="next"/"prev". Wskazują odpowiedź Google na
+          kolejne/poprzednie strony serii (page=2, page=3, …). Trasowany
+          renderer dostaje `headLinks` z routera; tutaj tylko mapujemy je
+          na tagi. Pusta tablica oznacza „brak paginacji" — nic nie renderujemy.
+        */}
+        {Array.isArray(headLinks) && headLinks.length > 0
+          ? (headLinks as Array<{ rel: string; href: string }>).map((l) => (
+              <link key={`${l.rel}-${l.href}`} rel={l.rel} href={l.href} />
+            ))
+          : null}
 
         {/* Fonty — literalnie jak w szacie */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

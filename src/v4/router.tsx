@@ -487,6 +487,29 @@ function renderArticle(c: any, a: NonNullable<ReturnType<typeof findArticleV4>>)
 // ══════════════════════════════════ TAKSONOMIA — 3 POZIOMY + ARTYKUŁY
 // Rejestrujemy trasy jawnie dla każdej kategorii, aby uniknąć kolizji
 // z trasami statycznymi (/szukaj, /solectwa, /admin, /api…).
+//
+// Wszystkie kategorie i podkategorie przechodzą przez ten sam szablon
+// (CategoryPageV4 / SubcategoryPageV4 / ThirdLevelPageV4). Jedyne, co
+// zależy od konkretnej kategorii, to dane w `taxonomy.ts` (tytuł, kolor,
+// slug, lista podkategorii, ewentualne 3. poziomy). Dzięki temu dodanie
+// kolejnej kategorii nie wymaga zmian w routerze ani komponentach.
+//
+// Stronicowanie (PageRank + canonical + link rel="next"/"prev"):
+//   • renderer liczy canonical z `req.path`, więc domyślnie obcina `?page`
+//   • dodatkowo router ustawia jawnie `canonical: pod.path` przy page>1,
+//     żeby zachowanie było czytelne dla czytającego trasę;
+//   • `prev/next` przekazywane jako `headLinks` do renderera (renderowane
+//     w warstwie meta, bez ruszania Layoutu).
+const headLinks = (page: number, total: number, base: string) => {
+  const pages = Math.ceil(total / PER_PAGE)
+  if (pages <= 1) return null
+  const links: Array<{ rel: string; href: string }> = []
+  const mk = (p: number) => `${base}?page=${p}`
+  if (page > 1) links.push({ rel: 'prev', href: mk(page - 1) })
+  if (page < pages) links.push({ rel: 'next', href: mk(page + 1) })
+  return links
+}
+
 for (const cat of CATEGORIES) {
   // /kategoria
   app.get(cat.path, (c) => {
@@ -499,6 +522,7 @@ for (const cat of CATEGORIES) {
       counts[s.slug] = items.length
       covers[s.slug] = items[0]?.heroImage || all[0]?.heroImage
     }
+    const links = headLinks(page, all.length, cat.path)
     return c.render(
       <Shell activeCategory={cat.slug}>
         <CategoryPageV4
@@ -514,6 +538,14 @@ for (const cat of CATEGORIES) {
         title: `${cat.title} — Izbica24.pl`,
         description: cat.lead,
         ogImage: all[0]?.heroImage,
+        // Strony paginacji kanonizujemy do pierwszej strony; renderer i tak
+        // obcina ?page, ale jawne ustawienie czyta się wprost przy audycie.
+        canonical: page > 1 ? buildCanonicalUrl(cat.path) : undefined,
+        headLinks: links ?? undefined,
+        jsonLd: buildBreadcrumbJsonLd([
+          { nazwa: 'Strona główna', sciezka: '/' },
+          { nazwa: cat.title },
+        ]),
       }
     )
   })
@@ -523,6 +555,7 @@ for (const cat of CATEGORIES) {
     app.get(sub.path, (c) => {
       const page = pageParam(c.req.query('page'))
       const all = bySubcategory(cat.slug, sub.slug)
+      // Liczniki 3. poziomu (jeśli istnieje) — wyświetlane w kaflach
       const childCounts: Record<string, number> = {}
       const childCovers: Record<string, string | undefined> = {}
       for (const ch of sub.children ?? []) {
@@ -530,6 +563,13 @@ for (const cat of CATEGORIES) {
         childCounts[ch.slug] = items.length
         childCovers[ch.slug] = items[0]?.heroImage || all[0]?.heroImage
       }
+      // Liczniki rodzeństwa (pozostałych podkategorii tej samej kategorii) —
+      // trafiają na belkę podkategorii jako „pill" przy każdej belce.
+      const siblingCounts: Record<string, number> = {}
+      for (const s of cat.subcategories) {
+        siblingCounts[s.slug] = bySubcategory(cat.slug, s.slug).length
+      }
+      const links = headLinks(page, all.length, sub.path)
       return c.render(
         <Shell activeCategory={cat.slug}>
           <SubcategoryPageV4
@@ -540,12 +580,20 @@ for (const cat of CATEGORIES) {
             page={page}
             childCounts={childCounts}
             childCovers={childCovers}
+            siblingCounts={siblingCounts}
           />
         </Shell>,
         {
           title: `${sub.title} — ${cat.title} — Izbica24.pl`,
           description: sub.description,
           ogImage: all[0]?.heroImage,
+          canonical: page > 1 ? buildCanonicalUrl(sub.path) : undefined,
+          headLinks: links ?? undefined,
+          jsonLd: buildBreadcrumbJsonLd([
+            { nazwa: 'Strona główna', sciezka: '/' },
+            { nazwa: cat.title, sciezka: cat.path },
+            { nazwa: sub.title },
+          ]),
         }
       )
     })
@@ -555,6 +603,7 @@ for (const cat of CATEGORIES) {
       app.get(ch.path, (c) => {
         const page = pageParam(c.req.query('page'))
         const all = byThirdLevel(cat.slug, sub.slug, ch.slug)
+        const links = headLinks(page, all.length, ch.path)
         return c.render(
           <Shell activeCategory={cat.slug}>
             <ThirdLevelPageV4
@@ -569,6 +618,14 @@ for (const cat of CATEGORIES) {
           {
             title: `${ch.title} — ${sub.title} — Izbica24.pl`,
             description: ch.description,
+            canonical: page > 1 ? buildCanonicalUrl(ch.path) : undefined,
+            headLinks: links ?? undefined,
+            jsonLd: buildBreadcrumbJsonLd([
+              { nazwa: 'Strona główna', sciezka: '/' },
+              { nazwa: cat.title, sciezka: cat.path },
+              { nazwa: sub.title, sciezka: sub.path },
+              { nazwa: ch.title },
+            ]),
           }
         )
       })
