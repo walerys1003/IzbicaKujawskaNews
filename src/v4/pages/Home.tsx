@@ -354,6 +354,17 @@ const KujawiankaSamorzad: FC = () => {
       <div class="split-grid">
         {/* ───────── KUJAWIANKA — 5 klikalnych zakładek ───────── */}
         <article class="kujawianka">
+          <div class="kujawianka-head">
+            <h3 class="kujawianka-title">
+              <span class="kujawianka-bar" style="background:var(--c-kujawianka)"></span>
+              Kujawianka · Klasa Okręgowa
+            </h3>
+            <a href="/kujawianka" class="kujawianka-more">Wszystkie wiadomości →</a>
+          </div>
+          {/* Pasek podkategorii — wzorzec identyczny z Wiadomościami.
+              Tu klik prowadzi na stronę podkategorii (np. /kujawianka/mecze),
+              bo sekcja ma własne panele (k-tabs), a nie karty do filtrowania. */}
+          <SubcatBar catSlug="kujawianka" />
           <div class="k-tabs" role="tablist" data-tabs="kujawianka">
             <button class="k-tab active" data-ktab="aktualnosci" role="tab" aria-selected="true">
               Aktualności <span class="k-tab-count">12</span>
@@ -572,6 +583,16 @@ const KujawiankaSamorzad: FC = () => {
 
         {/* ───────── SAMORZĄD ───────── */}
         <article class="samorzad-card">
+          <div class="samorzad-head">
+            <h3 class="samorzad-title">
+              <span class="samorzad-bar" style="background:var(--c-samorzad)"></span>
+              Samorząd
+            </h3>
+            <a href="/samorzad" class="samorzad-more">Wszystkie wiadomości →</a>
+          </div>
+          {/* Pasek podkategorii — wzorzec identyczny z Wiadomościami.
+              Klik prowadzi na stronę podkategorii (np. /samorzad/rada-miejska). */}
+          <SubcatBar catSlug="samorzad" />
           <div class="samorzad-img">
             <a href={articleUrl(samMain)}>
               <img src={samMain.heroImage} alt="Sesja Rady" loading="lazy" />
@@ -632,18 +653,30 @@ const StatsBar: FC = () => (
 const FeatureWietrzychowice: FC = () => {
   const a = slot('wietrzychowice-nowe-odkrycia-archeologiczne', { category: 'historia', used: slotsUsed() })!
   return (
-    <section class="feature-full reveal">
-      <a href={articleUrl(a)}>
-        <img src={a.heroImage} alt="Wietrzychowice" loading="lazy" />
-        <div class="feature-full-overlay">
-          <div class="feature-full-content">
-            <span class="tag historia">Historia · Polskie piramidy</span>
-            <h2>Wietrzychowice: pod warstwą piasku spała tajemnica sprzed 5 500 lat.</h2>
-            <p>{a.lede}</p>
-            <span class="read-more">Pełna relacja</span>
+    <section class="section reveal">
+      <SectionHeader
+        title="Historia"
+        small="· Dzieje Izbicy, Wietrzychowice, dziedzictwo"
+        colorVar="var(--c-historia)"
+        moreHref="/historia"
+        moreLabel="Wszystkie artykuły"
+      />
+
+      <SubcatBar catSlug="historia" />
+
+      <article class="feature-full">
+        <a href={articleUrl(a)}>
+          <img src={a.heroImage} alt="Wietrzychowice" loading="lazy" />
+          <div class="feature-full-overlay">
+            <div class="feature-full-content">
+              <span class="tag historia">Historia · Polskie piramidy</span>
+              <h2>Wietrzychowice: pod warstwą piasku spała tajemnica sprzed 5 500 lat.</h2>
+              <p>{a.lede}</p>
+              <span class="read-more">Pełna relacja</span>
+            </div>
           </div>
-        </div>
-      </a>
+        </a>
+      </article>
     </section>
   )
 }
@@ -936,17 +969,6 @@ const MultimediaSection: FC = () => {
   // ktory slot() naprawil dla artykulow).
   const gal = findGallery('dni-izbicy-2025') ?? allGalleries()[0]
 
-  const filters = [
-    { key: 'all', label: 'Wszystkie' },
-    { key: 'reportaze', label: 'Reportaże' },
-    { key: 'relacje', label: 'Relacje z wydarzeń' },
-    { key: 'wywiady', label: 'Wywiady wideo' },
-    { key: 'drony', label: 'Drony nad Izbicą' },
-    { key: 'podcast', label: 'Podcast „Głos Izbicy”' },
-    { key: 'galerie', label: 'Galerie zdjęć' },
-    { key: 'infografiki', label: 'Infografiki' },
-  ]
-
   return (
     <section class="section reveal">
       <SectionHeader
@@ -958,14 +980,6 @@ const MultimediaSection: FC = () => {
       />
 
       <SubcatBar catSlug="multimedia" />
-
-      <div class="mm-filters" role="tablist">
-        {filters.map((f, i) => (
-          <button class={`mm-filter${i === 0 ? ' active' : ''}`} data-mm={f.key}>
-            {f.label}
-          </button>
-        ))}
-      </div>
 
       <div class="mm-grid">
         <a class="mm-video-big" href={articleUrl(video)} data-mmtype="reportaze">
