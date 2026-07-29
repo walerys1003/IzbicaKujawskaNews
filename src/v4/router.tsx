@@ -523,6 +523,21 @@ for (const cat of CATEGORIES) {
       covers[s.slug] = items[0]?.heroImage || all[0]?.heroImage
     }
     const links = headLinks(page, all.length, cat.path)
+    const renderProps = {
+      title: `${cat.title} — Izbica24.pl`,
+      description: cat.lead,
+      ogImage: all[0]?.heroImage,
+      canonical: page > 1 ? buildCanonicalUrl(cat.path) : undefined,
+      // headLinks to nasz własny prop (rel="next"/"prev") — typ PropsForRenderer
+      // z hono/jsx-renderer go nie przewiduje. Cały obiekt rzutujemy na any,
+      // bo inaczej TS blokuje dodanie pola. Renderer z kolei odczytuje
+      // headLinks przez `as any` w swojej sygnaturze, więc bezpiecznie.
+      ...(links ? { headLinks: links } : {}),
+      jsonLd: buildBreadcrumbJsonLd([
+        { nazwa: 'Strona główna', sciezka: '/' },
+        { nazwa: cat.title },
+      ]),
+    }
     return c.render(
       <Shell activeCategory={cat.slug}>
         <CategoryPageV4
@@ -534,19 +549,7 @@ for (const cat of CATEGORIES) {
           covers={covers}
         />
       </Shell>,
-      {
-        title: `${cat.title} — Izbica24.pl`,
-        description: cat.lead,
-        ogImage: all[0]?.heroImage,
-        // Strony paginacji kanonizujemy do pierwszej strony; renderer i tak
-        // obcina ?page, ale jawne ustawienie czyta się wprost przy audycie.
-        canonical: page > 1 ? buildCanonicalUrl(cat.path) : undefined,
-        headLinks: links ?? undefined,
-        jsonLd: buildBreadcrumbJsonLd([
-          { nazwa: 'Strona główna', sciezka: '/' },
-          { nazwa: cat.title },
-        ]),
-      }
+      renderProps as any
     )
   })
 
@@ -570,6 +573,18 @@ for (const cat of CATEGORIES) {
         siblingCounts[s.slug] = bySubcategory(cat.slug, s.slug).length
       }
       const links = headLinks(page, all.length, sub.path)
+      const renderProps = {
+        title: `${sub.title} — ${cat.title} — Izbica24.pl`,
+        description: sub.description,
+        ogImage: all[0]?.heroImage,
+        canonical: page > 1 ? buildCanonicalUrl(sub.path) : undefined,
+        ...(links ? { headLinks: links } : {}),
+        jsonLd: buildBreadcrumbJsonLd([
+          { nazwa: 'Strona główna', sciezka: '/' },
+          { nazwa: cat.title, sciezka: cat.path },
+          { nazwa: sub.title },
+        ]),
+      }
       return c.render(
         <Shell activeCategory={cat.slug}>
           <SubcategoryPageV4
@@ -583,18 +598,7 @@ for (const cat of CATEGORIES) {
             siblingCounts={siblingCounts}
           />
         </Shell>,
-        {
-          title: `${sub.title} — ${cat.title} — Izbica24.pl`,
-          description: sub.description,
-          ogImage: all[0]?.heroImage,
-          canonical: page > 1 ? buildCanonicalUrl(sub.path) : undefined,
-          headLinks: links ?? undefined,
-          jsonLd: buildBreadcrumbJsonLd([
-            { nazwa: 'Strona główna', sciezka: '/' },
-            { nazwa: cat.title, sciezka: cat.path },
-            { nazwa: sub.title },
-          ]),
-        }
+        renderProps as any
       )
     })
 
@@ -603,7 +607,24 @@ for (const cat of CATEGORIES) {
       app.get(ch.path, (c) => {
         const page = pageParam(c.req.query('page'))
         const all = byThirdLevel(cat.slug, sub.slug, ch.slug)
+        // Liczniki 3. poziomu dla rodzeństwa (do belki podsekcji).
+        const siblingChildCounts: Record<string, number> = {}
+        for (const sibling of sub.children ?? []) {
+          siblingChildCounts[sibling.slug] = byThirdLevel(cat.slug, sub.slug, sibling.slug).length
+        }
         const links = headLinks(page, all.length, ch.path)
+        const renderProps = {
+          title: `${ch.title} — ${sub.title} — Izbica24.pl`,
+          description: ch.description,
+          canonical: page > 1 ? buildCanonicalUrl(ch.path) : undefined,
+          ...(links ? { headLinks: links } : {}),
+          jsonLd: buildBreadcrumbJsonLd([
+            { nazwa: 'Strona główna', sciezka: '/' },
+            { nazwa: cat.title, sciezka: cat.path },
+            { nazwa: sub.title, sciezka: sub.path },
+            { nazwa: ch.title },
+          ]),
+        }
         return c.render(
           <Shell activeCategory={cat.slug}>
             <ThirdLevelPageV4
@@ -613,20 +634,10 @@ for (const cat of CATEGORIES) {
               articles={slice(all, page)}
               total={all.length}
               page={page}
+              childCounts={siblingChildCounts}
             />
           </Shell>,
-          {
-            title: `${ch.title} — ${sub.title} — Izbica24.pl`,
-            description: ch.description,
-            canonical: page > 1 ? buildCanonicalUrl(ch.path) : undefined,
-            headLinks: links ?? undefined,
-            jsonLd: buildBreadcrumbJsonLd([
-              { nazwa: 'Strona główna', sciezka: '/' },
-              { nazwa: cat.title, sciezka: cat.path },
-              { nazwa: sub.title, sciezka: sub.path },
-              { nazwa: ch.title },
-            ]),
-          }
+          renderProps as any
         )
       })
     }

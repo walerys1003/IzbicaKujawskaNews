@@ -345,7 +345,17 @@ export const ThirdLevelPageV4: FC<{
   articles: Article[]
   total: number
   page: number
-}> = ({ cat, sub, child, articles, total, page }) => (
+  /**
+   * Liczniki materiałów per podsekcja — wyświetlane na belce 3. poziomu
+   * (analogicznie do SubcategoryPageV4). Gdy nie podane, używamy własnego
+   * „Wszystkie" jako sumy `articles.length` (zawsze poprawne dla bieżącej
+   * podsekcji; dla rodzeństwa lepiej dostać mapę z routera, ale wtedy, gdy
+   * jej nie ma, komponent i tak nie wyświetli licznika „0").
+   */
+  childCounts?: Record<string, number>
+}> = ({ cat, sub, child, articles, total, page, childCounts = {} }) => {
+  const childCount = (slug: string) => childCounts[slug] ?? 0
+  return (
   <div class="page">
     <Breadcrumbs
       items={[
@@ -400,7 +410,8 @@ export const ThirdLevelPageV4: FC<{
       )}
     </section>
   </div>
-)
+  )
+}
 
 // ══════════════════════════════════════════ LISTA WYNIKÓW / TAG / SOŁECTWO
 export const ArticleListPage: FC<{

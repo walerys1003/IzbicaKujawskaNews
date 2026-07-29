@@ -9,7 +9,16 @@ import { jsxRenderer, useRequestContext } from 'hono/jsx-renderer'
 import { ZgodaCookies } from './components/ZgodaCookies'
 import { buildCanonicalUrl, buildOrganizationJsonLd } from '../seo'
 
-export const rendererV4 = jsxRenderer(({ children, title, description, ogImage, canonical, jsonLd, headLinks }) => {
+export const rendererV4 = jsxRenderer((p: any) => {
+  const { children, title, description, ogImage, canonical, jsonLd, headLinks } = p as {
+    children?: unknown
+    title?: string
+    description?: string
+    ogImage?: string
+    canonical?: string
+    jsonLd?: unknown
+    headLinks?: Array<{ rel: string; href: string }>
+  }
   /**
    * Token analityki czytamy z kontekstu żądania, nie z propsów.
    *

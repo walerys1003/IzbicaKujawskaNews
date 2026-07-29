@@ -142,6 +142,18 @@
 }
 .subcat-bar a:hover{ background:var(--bg); color:var(--c,var(--red)); }
 .subcat-bar a.active{ background:var(--ink); color:#fff; }
+/* Licznik artykułów w belce podkategorii (brief). Identyczna rodzina
+   typograficzna jak `.st-count` w kaflach podkategorii (ten sam font,
+   ten sam letter-spacing, ten sam uppercase), ale w formie „pill\" —
+   wariant dla kompaktowej belki. Aktywna belka odwraca kolory. */
+.subcat-bar a .pill{
+  display:inline-block; margin-left:8px;
+  font:800 10.5px var(--display); letter-spacing:.06em;
+  padding:2px 7px; border-radius:999px;
+  background:var(--bg); color:var(--c,var(--red));
+}
+.subcat-bar a:hover .pill{ background:#fff; }
+.subcat-bar a.active .pill{ background:rgba(255,255,255,.18); color:#fff; }
 
 /* Kafle podkategorii ze zdjęciem (widok kategorii) */
 .subcat-tiles{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:36px; }
