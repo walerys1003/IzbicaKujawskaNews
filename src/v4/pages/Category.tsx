@@ -8,6 +8,14 @@ import type { Category, SubCategory } from '../taxonomy'
 import { findCategory } from '../taxonomy'
 import { articleUrl, type Article, type ContentType } from '../content-types'
 import { Breadcrumbs, SectionHeader } from '../components/Layout'
+import {
+  KUJAWIANKA_LEAGUE,
+  KUJAWIANKA_LEAGUE_META,
+  KUJAWIANKA_RECENT_MATCHES,
+  KUJAWIANKA_UPCOMING_MATCHES,
+  type LeagueRow,
+  type MatchRow,
+} from '../kujawianka-data'
 
 const PER_PAGE = 12
 
@@ -119,6 +127,119 @@ export const Pager: FC<{ page: number; total: number; base: string; perPage?: nu
 }
 
 // ═══════════════════════════════════════════════ STRONA KATEGORII
+// ============================================================================
+// KUJAWIANKA EXTRAS — tabela ligowa + terminarz spotkań (tylko dla /kujawianka)
+//
+// Dlaczego wydzielone: po usunięciu zakładek k-tabs z landing page, strona
+// kategorii /kujawianka straciła panel z tabelą ligową i terminarzem. Te
+// elementy są specyficzne dla tej kategorii (inne kategorie nie mają ligi),
+// więc zamiast zaśmiecać CategoryPageV4 warunkami if/else dla każdej
+// specjalnej sekcji — wyciągam je do osobnego komponentu renderowanego
+// warunkowo dla cat.slug === 'kujawianka'.
+//
+// Style .k-table-full / .k-matches / .k-match są zaprojektowane na ciemnym
+// tle (pisałem je dla paneli k-panel w Home.tsx, gdzie artykuł miał tło
+// var(--dark)). W nowym layoucie strona /kujawianka jest na jasnym tle,
+// więc poniżej używam wariantu k-tab-* z jaśniejszymi kolorami.
+// ============================================================================
+
+/** Komórka terminarza spotkań — wariant na jasnym tle. */
+const MatchRowV4: FC<{ m: MatchRow }> = ({ m }) => {
+  const scoreClass = m.upcoming
+    ? 'upcoming'
+    : m.outcome === 'win'
+      ? 'win'
+      : m.outcome === 'draw'
+        ? 'draw'
+        : m.outcome === 'loss'
+          ? 'loss'
+          : ''
+  return (
+    <div class={`k-match-v4 ${m.away ? 'away' : ''}`}>
+      <div class="k-match-date-v4">
+        {m.date}
+        <small>{m.month}</small>
+      </div>
+      <div class="k-match-teams-v4">{m.description}</div>
+      <div class={`k-match-score-v4 ${scoreClass}`}>
+        <span>{m.result}</span>
+      </div>
+    </div>
+  )
+}
+
+/** Tabela ligowa + terminarz — ekskluzywne dla kategorii Kujawianki. */
+const KujawiankaExtras: FC = () => {
+  return (
+    <>
+      {/* Tabela ligowa */}
+      <section class="section reveal">
+        <SectionHeader
+          title="Tabela ligowa"
+          small={`· ${KUJAWIANKA_LEAGUE_META.league} · ${KUJAWIANKA_LEAGUE_META.season}`}
+          colorVar="var(--c-kujawianka)"
+        />
+        <div class="k-table-v4">
+          <div class="k-table-meta">
+            Aktualizacja: <strong>{KUJAWIANKA_LEAGUE_META.updated}</strong> · źródło: {KUJAWIANKA_LEAGUE_META.source}
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Drużyna</th>
+                <th>M</th>
+                <th>W</th>
+                <th>R</th>
+                <th>P</th>
+                <th>Br</th>
+                <th>Pkt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {KUJAWIANKA_LEAGUE.map((r: LeagueRow) => (
+                <tr class={r.highlight ? 'hl' : undefined}>
+                  <td>{r.pos}</td>
+                  <td>{r.team}</td>
+                  <td>{r.played}</td>
+                  <td>{r.won}</td>
+                  <td>{r.drawn}</td>
+                  <td>{r.lost}</td>
+                  <td>{r.goals}</td>
+                  <td>
+                    <strong>{r.points}</strong>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Terminarz — ostatnie + nadchodzące */}
+      <section class="section reveal">
+        <SectionHeader
+          title="Terminarz"
+          small="· ostatnie 5 + nadchodzące 3"
+          colorVar="var(--c-kujawianka)"
+        />
+        <div class="k-matches-v4">
+          <h4>Ostatnie spotkania</h4>
+          {KUJAWIANKA_RECENT_MATCHES.map((m) => (
+            <MatchRowV4 m={m} />
+          ))}
+        </div>
+        <div class="k-matches-v4">
+          <h4>Nadchodzące</h4>
+          {KUJAWIANKA_UPCOMING_MATCHES.map((m) => (
+            <MatchRowV4 m={m} />
+          ))}
+        </div>
+      </section>
+    </>
+  )
+}
+
 export const CategoryPageV4: FC<{
   cat: Category
   articles: Article[]
@@ -172,6 +293,10 @@ export const CategoryPageV4: FC<{
           </a>
         ))}
       </nav>
+
+      {/* Specjalne sekcje dla wybranych kategorii (np. tabela ligowa Kujawianki).
+          Dodawane warunkowo — inne kategorie nie mają ligi, terminarza itp. */}
+      {cat.slug === 'kujawianka' ? <KujawiankaExtras /> : null}
 
       {/* Kafle podkategorii ze zdjęciami */}
       <section class="section reveal">

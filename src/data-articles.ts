@@ -239,10 +239,10 @@ export const CATEGORIES_MAP: Record<string, { title: string; description: string
     description: 'Klub piłkarski Kujawianka Izbica Kujawska — wyniki, tabela, kadra, historia.',
     color: '#1e7a4f',
     subcategories: [
-      { slug: 'mecze', title: 'Mecze i wyniki' },
-      { slug: 'tabela', title: 'Tabela' },
+      { slug: 'mecze', title: 'Mecze' },
+      { slug: 'tabela', title: 'Wyniki' },
       { slug: 'kadra', title: 'Kadra' },
-      { slug: 'historia', title: 'Historia klubu' },
+      { slug: 'historia', title: 'Historia' },
     ],
   },
   kultura: {

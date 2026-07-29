@@ -354,35 +354,19 @@ const KujawiankaSamorzad: FC = () => {
       <div class="split-grid">
         {/* ───────── KUJAWIANKA — 5 klikalnych zakładek ───────── */}
         <article class="kujawianka">
-          <div class="kujawianka-head">
-            <h3 class="kujawianka-title">
-              <span class="kujawianka-bar" style="background:var(--c-kujawianka)"></span>
-              Kujawianka · Klasa Okręgowa
-            </h3>
-          </div>
-          {/* Pasek podkategorii — wzorzec identyczny z Wiadomościami.
-              Tu klik prowadzi na stronę podkategorii (np. /kujawianka/mecze),
-              bo sekcja ma własne panele (k-tabs), a nie karty do filtrowania. */}
-          <SubcatBar catSlug="kujawianka" />
-          <div class="k-tabs" role="tablist" data-tabs="kujawianka">
-            <button class="k-tab active" data-ktab="aktualnosci" role="tab" aria-selected="true">
-              Aktualności <span class="k-tab-count">12</span>
-            </button>
-            <button class="k-tab" data-ktab="mecze" role="tab" aria-selected="false">
-              Mecze <span class="k-tab-count">8</span>
-            </button>
-            <button class="k-tab" data-ktab="tabela" role="tab" aria-selected="false">
-              Tabela
-            </button>
-            <button class="k-tab" data-ktab="kadra" role="tab" aria-selected="false">
-              Kadra <span class="k-tab-count">23</span>
-            </button>
-            <button class="k-tab" data-ktab="junior" role="tab" aria-selected="false">
-              Junior <span class="k-tab-count">3</span>
-            </button>
-          </div>
+          <SectionHeader
+            title="Kujawianka · Klasa Okręgowa"
+            small="· Mecze, tabela, terminarz"
+            colorVar="var(--c-kujawianka)"
+            moreHref="/kujawianka"
+            moreLabel="Wszystkie wiadomości"
+          />
 
-          {/* Panel: Aktualności */}
+          {/* Pasek podkategorii — wzorzec identyczny z Wiadomościami.
+              Klik prowadzi na stronę podkategorii (np. /kujawianka/mecze). */}
+          <SubcatBar catSlug="kujawianka" />
+
+          {/* Panel: Aktualności (domyślnie widoczny — po usunięciu k-tabs). */}
           <div class="k-panel active" data-kpanel="aktualnosci">
             <div class="k-img">
               <img src={kMain.heroImage} alt="Kujawianka" loading="lazy" />
@@ -582,15 +566,18 @@ const KujawiankaSamorzad: FC = () => {
 
         {/* ───────── SAMORZĄD ───────── */}
         <article class="samorzad-card">
-          <div class="samorzad-head">
-            <h3 class="samorzad-title">
-              <span class="samorzad-bar" style="background:var(--c-samorzad)"></span>
-              Samorząd
-            </h3>
-          </div>
+          <SectionHeader
+            title="Samorząd"
+            small="· Rada, urząd, budżet, sołectwa"
+            colorVar="var(--c-samorzad)"
+            moreHref="/samorzad"
+            moreLabel="Wszystkie wiadomości"
+          />
+
           {/* Pasek podkategorii — wzorzec identyczny z Wiadomościami.
               Klik prowadzi na stronę podkategorii (np. /samorzad/rada-miejska). */}
           <SubcatBar catSlug="samorzad" />
+
           <div class="samorzad-img">
             <a href={articleUrl(samMain)}>
               <img src={samMain.heroImage} alt="Sesja Rady" loading="lazy" />
