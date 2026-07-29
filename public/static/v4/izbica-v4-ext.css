@@ -155,6 +155,24 @@
 .subcat-bar a:hover .pill{ background:#fff; }
 .subcat-bar a.active .pill{ background:rgba(255,255,255,.18); color:#fff; }
 
+/* Focus-visible dla pasków news-filters (dostępność).
+   Identyczny outline jak w reszcie portalu (var(--ink)). */
+.news-filter:focus-visible{
+  outline:2px solid var(--ink);
+  outline-offset:2px;
+  background:var(--bg);
+  color:var(--ink);
+}
+.news-filter.active:focus-visible{
+  outline:2px solid #fff;
+  outline-offset:-3px;
+  background:var(--ink);
+  color:#fff;
+}
+/* Aktywna belka w news-filters na mobile — podkreślenie zamiast odwracania,
+   bo pełne odwrócenie na małych ekranach może wyglądać niespójnie.
+   Jednak brief nie pozwala zmieniać wyglądu — zostawiam domyślne. */
+
 /* Kafle podkategorii ze zdjęciem (widok kategorii) */
 .subcat-tiles{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:36px; }
 .subcat-tile{ background:#fff; box-shadow:var(--sh-1); overflow:hidden; display:flex; flex-direction:column; transition:transform var(--t-mid) var(--ease), box-shadow var(--t-mid); border-top:3px solid var(--c,var(--red)); }

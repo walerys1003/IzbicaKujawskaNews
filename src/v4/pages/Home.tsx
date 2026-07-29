@@ -62,15 +62,25 @@ const metaOf = (a: Article, opts: { author?: boolean; reading?: boolean; views?:
  * są pasujące karty [data-cat] — inaczej kliknięcie filtrowałoby
  * sekcję do zera i czytelnik widziałby pustkę.
  */
-const SubcatBar: FC<{ catSlug: string }> = ({ catSlug }) => {
+const SubcatBar: FC<{ catSlug: string; activeSlug?: string }> = ({ catSlug, activeSlug = 'all' }) => {
   const cat = findCategory(catSlug)!
   return (
-    <div class="news-filters" role="tablist">
-      <a class="news-filter active" data-filter="all" href={cat.path}>
+    <div class="news-filters" role="tablist" aria-label={`Podkategorie: ${cat.title}`}>
+      <a
+        class={`news-filter${activeSlug === 'all' ? ' active' : ''}`}
+        data-filter="all"
+        href={cat.path}
+        aria-current={activeSlug === 'all' ? 'page' : undefined}
+      >
         Wszystkie
       </a>
       {cat.subcategories.map((s) => (
-        <a class="news-filter" data-filter={s.slug} href={s.path}>
+        <a
+          class={`news-filter${activeSlug === s.slug ? ' active' : ''}`}
+          data-filter={s.slug}
+          href={s.path}
+          aria-current={activeSlug === s.slug ? 'page' : undefined}
+        >
           {s.title}
         </a>
       ))}
@@ -190,6 +200,10 @@ const NaSygnaleSection: FC = () => {
           </h2>
           <a href="/na-sygnale">Wszystkie zdarzenia →</a>
         </div>
+        {/* Pasek podkategorii — wzorzec jak w sekcji Wiadomości.
+            Kliknięcie prowadzi na stronę podkategorii (np. /na-sygnale/wypadki),
+            bo w tej sekcji karty nie są filtrowane w miejscu. */}
+        <SubcatBar catSlug="na-sygnale" />
 
         <div class="sygnale-grid-big">
           {big.map((a) => (
@@ -656,6 +670,7 @@ const KulturaSection: FC = () => {
         moreHref="/kultura"
         moreLabel="Wszystkie wydarzenia"
       />
+      <SubcatBar catSlug="kultura" />
 
       <article class="feature-full reveal" style="aspect-ratio:21/8;margin-bottom:20px">
         <a href={articleUrl(dni)}>
@@ -709,6 +724,7 @@ const LudzieSection: FC = () => {
         moreHref="/ludzie"
         moreLabel="Wszystkie sylwetki"
       />
+      <SubcatBar catSlug="ludzie" />
       <div class="cards-3">
         {people.map((p) => (
           <article class="portrait-card">
@@ -748,6 +764,7 @@ const PrzegladMediow: FC = () => {
         moreHref="/przeglad-mediow"
         moreLabel="Wszystkie publikacje"
       />
+      <SubcatBar catSlug="przeglad-mediow" />
 
       <div class="media-grid-big">
         {big.map((a) => (
@@ -816,6 +833,7 @@ const ZycieCodzienne: FC = () => {
         moreHref="/zycie-codzienne"
         moreLabel="Wszystkie poradniki"
       />
+      <SubcatBar catSlug="zycie-codzienne" />
       <div class="zycie-grid">
         {items.map((a) => (
           <a class="zycie-card" href={articleUrl(a)}>
@@ -938,6 +956,8 @@ const MultimediaSection: FC = () => {
         moreHref="/multimedia"
         moreLabel="Wszystkie nagrania"
       />
+
+      <SubcatBar catSlug="multimedia" />
 
       <div class="mm-filters" role="tablist">
         {filters.map((f, i) => (
