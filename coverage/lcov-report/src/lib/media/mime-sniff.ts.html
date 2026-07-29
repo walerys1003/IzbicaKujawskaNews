@@ -1,0 +1,667 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for src/lib/media/mime-sniff.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">src/lib/media</a> mime-sniff.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">20.33% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>12/59</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/31</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">22.22% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>2/9</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">22.72% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>10/44</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a>
+<a name='L158'></a><a href='#L158'>158</a>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a>
+<a name='L164'></a><a href='#L164'>164</a>
+<a name='L165'></a><a href='#L165'>165</a>
+<a name='L166'></a><a href='#L166'>166</a>
+<a name='L167'></a><a href='#L167'>167</a>
+<a name='L168'></a><a href='#L168'>168</a>
+<a name='L169'></a><a href='#L169'>169</a>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a>
+<a name='L181'></a><a href='#L181'>181</a>
+<a name='L182'></a><a href='#L182'>182</a>
+<a name='L183'></a><a href='#L183'>183</a>
+<a name='L184'></a><a href='#L184'>184</a>
+<a name='L185'></a><a href='#L185'>185</a>
+<a name='L186'></a><a href='#L186'>186</a>
+<a name='L187'></a><a href='#L187'>187</a>
+<a name='L188'></a><a href='#L188'>188</a>
+<a name='L189'></a><a href='#L189'>189</a>
+<a name='L190'></a><a href='#L190'>190</a>
+<a name='L191'></a><a href='#L191'>191</a>
+<a name='L192'></a><a href='#L192'>192</a>
+<a name='L193'></a><a href='#L193'>193</a>
+<a name='L194'></a><a href='#L194'>194</a>
+<a name='L195'></a><a href='#L195'>195</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">966x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * Rozpoznawanie typu pliku po zawartosci, nie po naglowku Content-Type.
+ *
+ * Powod: Content-Type w multipart pochodzi od przegladarki, ktora bierze go
+ * z rozszerzenia nazwy pliku. Zmiana `wirus.exe` na `zdjecie.jpg` wystarcza,
+ * zeby przeslac dowolna zawartosc jako obraz. Sygnatura bajtowa jest jedynym
+ * zrodlem, ktorego nadawca nie kontroluje bez faktycznej zmiany danych.
+ *
+ * Brak `file(1)` w Workers — tabela sygnatur jest wpisana recznie.
+ */
+&nbsp;
+export type MediaKind = 'image' | 'video' | 'audio' | 'document'
+&nbsp;
+export interface SniffResult {
+  mime: string
+  kind: MediaKind
+  extension: string
+  /** true, gdy sygnatura zgadza sie z deklaracja nadawcy */
+  declaredMatches: boolean
+  declared: string
+}
+&nbsp;
+interface Signature {
+  mime: string
+  kind: MediaKind
+  extension: string
+  offset: number
+  bytes: number[]
+  /** dodatkowy warunek — np. WEBP wymaga 'WEBP' na offsecie 8 */
+  also?: { offset: number; bytes: number[] }
+}
+&nbsp;
+const ascii = (text: string) =&gt; Array.from(text).map((ch) =&gt; ch.charCodeAt(0))
+&nbsp;
+const SIGNATURES: Signature[] = [
+  // --- obrazy
+  { mime: 'image/jpeg', kind: 'image', extension: 'jpg', offset: 0, bytes: [0xff, 0xd8, 0xff] },
+  { mime: 'image/png', kind: 'image', extension: 'png', offset: 0, bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] },
+  { mime: 'image/gif', kind: 'image', extension: 'gif', offset: 0, bytes: ascii('GIF87a') },
+  { mime: 'image/gif', kind: 'image', extension: 'gif', offset: 0, bytes: ascii('GIF89a') },
+  { mime: 'image/webp', kind: 'image', extension: 'webp', offset: 0, bytes: ascii('RIFF'), also: { offset: 8, bytes: ascii('WEBP') } },
+  { mime: 'image/avif', kind: 'image', extension: 'avif', offset: 4, bytes: ascii('ftypavif') },
+  { mime: 'image/avif', kind: 'image', extension: 'avif', offset: 4, bytes: ascii('ftypavis') },
+  { mime: 'image/heic', kind: 'image', extension: 'heic', offset: 4, bytes: ascii('ftypheic') },
+  { mime: 'image/heic', kind: 'image', extension: 'heic', offset: 4, bytes: ascii('ftypmif1') },
+  { mime: 'image/bmp', kind: 'image', extension: 'bmp', offset: 0, bytes: ascii('BM') },
+  { mime: 'image/tiff', kind: 'image', extension: 'tif', offset: 0, bytes: [0x49, 0x49, 0x2a, 0x00] },
+  { mime: 'image/tiff', kind: 'image', extension: 'tif', offset: 0, bytes: [0x4d, 0x4d, 0x00, 0x2a] },
+  { mime: 'image/x-icon', kind: 'image', extension: 'ico', offset: 0, bytes: [0x00, 0x00, 0x01, 0x00] },
+&nbsp;
+  // --- wideo
+  { mime: 'video/mp4', kind: 'video', extension: 'mp4', offset: 4, bytes: ascii('ftypisom') },
+  { mime: 'video/mp4', kind: 'video', extension: 'mp4', offset: 4, bytes: ascii('ftypmp42') },
+  { mime: 'video/mp4', kind: 'video', extension: 'mp4', offset: 4, bytes: ascii('ftypMSNV') },
+  { mime: 'video/mp4', kind: 'video', extension: 'mp4', offset: 4, bytes: ascii('ftypM4V') },
+  { mime: 'video/quicktime', kind: 'video', extension: 'mov', offset: 4, bytes: ascii('ftypqt') },
+  { mime: 'video/webm', kind: 'video', extension: 'webm', offset: 0, bytes: [0x1a, 0x45, 0xdf, 0xa3] },
+  { mime: 'video/x-msvideo', kind: 'video', extension: 'avi', offset: 0, bytes: ascii('RIFF'), also: { offset: 8, bytes: ascii('AVI ') } },
+  { mime: 'video/mpeg', kind: 'video', extension: 'mpg', offset: 0, bytes: [0x00, 0x00, 0x01, 0xba] },
+&nbsp;
+  // --- audio
+  { mime: 'audio/mpeg', kind: 'audio', extension: 'mp3', offset: 0, bytes: ascii('ID3') },
+  { mime: 'audio/mpeg', kind: 'audio', extension: 'mp3', offset: 0, bytes: [0xff, 0xfb] },
+  { mime: 'audio/mpeg', kind: 'audio', extension: 'mp3', offset: 0, bytes: [0xff, 0xf3] },
+  { mime: 'audio/mpeg', kind: 'audio', extension: 'mp3', offset: 0, bytes: [0xff, 0xf2] },
+  { mime: 'audio/wav', kind: 'audio', extension: 'wav', offset: 0, bytes: ascii('RIFF'), also: { offset: 8, bytes: ascii('WAVE') } },
+  { mime: 'audio/ogg', kind: 'audio', extension: 'ogg', offset: 0, bytes: ascii('OggS') },
+  { mime: 'audio/flac', kind: 'audio', extension: 'flac', offset: 0, bytes: ascii('fLaC') },
+  { mime: 'audio/mp4', kind: 'audio', extension: 'm4a', offset: 4, bytes: ascii('ftypM4A') },
+&nbsp;
+  // --- dokumenty
+  { mime: 'application/pdf', kind: 'document', extension: 'pdf', offset: 0, bytes: ascii('%PDF-') },
+]
+&nbsp;
+/**
+ * Sygnatury odrzucane bezwarunkowo. Plik wykonywalny przeslany jako "zdjecie"
+ * i podany pod publicznym adresem R2 to gotowy kanal dystrybucji zlosliwego
+ * kodu z zaufanej domeny.
+ */
+const FORBIDDEN: Array&lt;{ label: string; offset: number; bytes: number[] }&gt; = [
+  { label: 'windows_executable', offset: 0, bytes: ascii('MZ') },
+  { label: 'elf_executable', offset: 0, bytes: [0x7f, 0x45, 0x4c, 0x46] },
+  { label: 'macho_executable', offset: 0, bytes: [0xcf, 0xfa, 0xed, 0xfe] },
+  { label: 'macho_executable', offset: 0, bytes: [0xce, 0xfa, 0xed, 0xfe] },
+  { label: 'java_class', offset: 0, bytes: [0xca, 0xfe, 0xba, 0xbe] },
+  { label: 'shell_script', offset: 0, bytes: ascii('#!') },
+  { label: 'zip_archive', offset: 0, bytes: [0x50, 0x4b, 0x03, 0x04] },
+  { label: 'rar_archive', offset: 0, bytes: ascii('Rar!') },
+  { label: 'sevenzip_archive', offset: 0, bytes: [0x37, 0x7a, 0xbc, 0xaf] },
+]
+&nbsp;
+const matches = <span class="fstat-no" title="function not covered" >(v</span>iew: Uint8Array, offset: number, bytes: number[]) =&gt; {
+<span class="cstat-no" title="statement not covered" >  if (offset + bytes.length &gt; view.length) <span class="cstat-no" title="statement not covered" >return false</span></span>
+<span class="cstat-no" title="statement not covered" >  for (let i = <span class="cstat-no" title="statement not covered" >0; i</span> &lt; bytes.length; i += 1) {</span>
+<span class="cstat-no" title="statement not covered" >    if (view[offset + i] !== bytes[i]) <span class="cstat-no" title="statement not covered" >return false</span></span>
+  }
+<span class="cstat-no" title="statement not covered" >  return true</span>
+}
+&nbsp;
+/**
+ * SVG nie ma sygnatury binarnej — to tekst. Wymaga osobnej sciezki, a przy tym
+ * jest wektorem XSS (`&lt;script&gt;` wewnatrz SVG wykonuje sie, gdy plik zostanie
+ * otwarty bezposrednio). Dopuszczamy tylko SVG bez skryptow i zdarzen.
+ */
+const sniffSvg = <span class="fstat-no" title="function not covered" >(b</span>ytes: ArrayBuffer): { ok: boolean; reason?: string } | null =&gt; {
+  const head = <span class="cstat-no" title="statement not covered" >new TextDecoder('utf-8', { fatal: false }).decode(bytes.slice(0, 4096)).trim()</span>
+<span class="cstat-no" title="statement not covered" >  if (!/^(&lt;\?xml|&lt;!DOCTYPE svg|&lt;svg)/i.test(head)) <span class="cstat-no" title="statement not covered" >return null</span></span>
+  const whole = <span class="cstat-no" title="statement not covered" >new TextDecoder('utf-8', { fatal: false }).decode(bytes)</span>
+<span class="cstat-no" title="statement not covered" >  if (/&lt;script[\s&gt;]/i.test(whole)) <span class="cstat-no" title="statement not covered" >return { ok: false, reason: 'svg_contains_script' }</span></span>
+<span class="cstat-no" title="statement not covered" >  if (/\son\w+\s*=/i.test(whole)) <span class="cstat-no" title="statement not covered" >return { ok: false, reason: 'svg_contains_event_handler' }</span></span>
+<span class="cstat-no" title="statement not covered" >  if (/&lt;foreignObject[\s&gt;]/i.test(whole)) <span class="cstat-no" title="statement not covered" >return { ok: false, reason: 'svg_contains_foreign_object' }</span></span>
+<span class="cstat-no" title="statement not covered" >  if (/javascript:/i.test(whole)) <span class="cstat-no" title="statement not covered" >return { ok: false, reason: 'svg_contains_javascript_url' }</span></span>
+<span class="cstat-no" title="statement not covered" >  return { ok: true }</span>
+}
+&nbsp;
+/**
+ * Kod odrzucenia MUSI należeć do katalogu błędów API.
+ *
+ * Pole było typu `string`, a `media-v2.ts` przekazuje je wprost do koperty
+ * odpowiedzi (`fail(c, error.code, …)`) w trzech miejscach. Typ `string`
+ * oznaczał, że literówka albo nowy kod dorzucony tutaj bez wpisu w katalogu
+ * przeszłyby kompilację i trafiły do klienta jako `error.code`, którego nie
+ * ma w dokumentacji wystawianej pod `GET /api/v1/errors` — a `statusForCode`
+ * nie znalazłoby dla niego statusu.
+ *
+ * Cztery kody rzucane w tym pliku (`forbidden_file_type`, `unsafe_svg`,
+ * `unrecognized_file_type`, `file_too_large`) w katalogu SĄ, więc zawężenie
+ * typu nie wymaga zmiany żadnego wywołania — od teraz jednak dodanie piątego
+ * bez wpisu w `errors.ts` jest błędem kompilacji, a nie niespodzianką
+ * w produkcji. `import type` nie tworzy zależności w czasie wykonania.
+ */
+import type { ErrorCode } from '../http/errors'
+&nbsp;
+export class MediaRejected extends Error {
+<span class="fstat-no" title="function not covered" >  constructor(public readonly <span class="cstat-no" title="statement not covered" >c</span>ode: ErrorCode, public readonly <span class="cstat-no" title="statement not covered" >d</span>etail?: string) {</span>
+<span class="cstat-no" title="statement not covered" >    super(code)</span>
+<span class="cstat-no" title="statement not covered" >    this.name = 'MediaRejected'</span>
+  }
+}
+&nbsp;
+export const sniffMime = <span class="fstat-no" title="function not covered" >(b</span>ytes: ArrayBuffer, declared = <span class="branch-0 cbranch-no" title="branch not covered" >''): SniffResult =&gt; {</span>
+  const view = <span class="cstat-no" title="statement not covered" >new Uint8Array(bytes.slice(0, 64))</span>
+  const normalizedDeclared = <span class="cstat-no" title="statement not covered" >declared.split(';')[0].trim().toLowerCase()</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  for (const rule of FORBIDDEN) {</span>
+<span class="cstat-no" title="statement not covered" >    if (matches(view, rule.offset, rule.bytes)) {</span>
+<span class="cstat-no" title="statement not covered" >      throw new MediaRejected('forbidden_file_type', rule.label)</span>
+    }
+  }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  for (const sig of SIGNATURES) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!matches(view, sig.offset, sig.bytes)) <span class="cstat-no" title="statement not covered" >continue</span></span>
+<span class="cstat-no" title="statement not covered" >    if (sig.also &amp;&amp; !matches(new Uint8Array(bytes.slice(0, 32)), sig.also.offset, sig.also.bytes)) <span class="cstat-no" title="statement not covered" >continue</span></span>
+<span class="cstat-no" title="statement not covered" >    return {</span>
+      mime: sig.mime,
+      kind: sig.kind,
+      extension: sig.extension,
+      declared: normalizedDeclared,
+      declaredMatches: normalizedDeclared === sig.mime,
+    }
+  }
+&nbsp;
+  const svg = <span class="cstat-no" title="statement not covered" >sniffSvg(bytes)</span>
+<span class="cstat-no" title="statement not covered" >  if (svg) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!svg.ok) <span class="cstat-no" title="statement not covered" >throw new MediaRejected('unsafe_svg', svg.reason)</span></span>
+<span class="cstat-no" title="statement not covered" >    return { mime: 'image/svg+xml', kind: 'image', extension: 'svg', declared: normalizedDeclared, declaredMatches: normalizedDeclared === 'image/svg+xml' }</span>
+  }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  throw new MediaRejected('unrecognized_file_type', normalizedDeclared || 'brak')</span>
+}
+&nbsp;
+/** Limity rozmiaru per rodzaj. Powyzej — sciezka wieloczesciowa. */
+export const SIZE_LIMITS: Record&lt;MediaKind, number&gt; = {
+  image: 25 * 1024 * 1024,
+  video: 2 * 1024 * 1024 * 1024,
+  audio: 500 * 1024 * 1024,
+  document: 50 * 1024 * 1024,
+}
+&nbsp;
+/** Powyzej tego progu pojedyncze zadanie nie przejdzie — trzeba czesci. */
+export const SINGLE_REQUEST_LIMIT = 100 * 1024 * 1024
+&nbsp;
+export const assertSizeAllowed = <span class="fstat-no" title="function not covered" >(k</span>ind: MediaKind, size: number) =&gt; {
+  const limit = <span class="cstat-no" title="statement not covered" >SIZE_LIMITS[kind]</span>
+<span class="cstat-no" title="statement not covered" >  if (size &gt; limit) {</span>
+<span class="cstat-no" title="statement not covered" >    throw new MediaRejected('file_too_large', `${kind}: ${size} &gt; ${limit}`)</span>
+  }
+}
+&nbsp;
+/** SHA-256 bajtow — identycznosc tresci, podstawa dedupe. */
+export const contentHash = <span class="fstat-no" title="function not covered" >async (b</span>ytes: ArrayBuffer): Promise&lt;string&gt; =&gt; {
+  const digest = <span class="cstat-no" title="statement not covered" >await crypto.subtle.digest('SHA-256', bytes)</span>
+<span class="cstat-no" title="statement not covered" >  return Array.from(new Uint8Array(digest)).map(<span class="fstat-no" title="function not covered" >(b</span>) =&gt; <span class="cstat-no" title="statement not covered" >b.toString(16).padStart(2, '0'))</span>.join('')</span>
+}
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-07-29T09:30:21.734Z
+            </div>
+        <script src="../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../sorter.js"></script>
+        <script src="../../../block-navigation.js"></script>
+    </body>
+</html>
+    

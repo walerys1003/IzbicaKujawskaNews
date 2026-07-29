@@ -359,7 +359,6 @@ const KujawiankaSamorzad: FC = () => {
               <span class="kujawianka-bar" style="background:var(--c-kujawianka)"></span>
               Kujawianka · Klasa Okręgowa
             </h3>
-            <a href="/kujawianka" class="kujawianka-more">Wszystkie wiadomości →</a>
           </div>
           {/* Pasek podkategorii — wzorzec identyczny z Wiadomościami.
               Tu klik prowadzi na stronę podkategorii (np. /kujawianka/mecze),
@@ -588,7 +587,6 @@ const KujawiankaSamorzad: FC = () => {
               <span class="samorzad-bar" style="background:var(--c-samorzad)"></span>
               Samorząd
             </h3>
-            <a href="/samorzad" class="samorzad-more">Wszystkie wiadomości →</a>
           </div>
           {/* Pasek podkategorii — wzorzec identyczny z Wiadomościami.
               Klik prowadzi na stronę podkategorii (np. /samorzad/rada-miejska). */}

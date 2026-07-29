@@ -1,0 +1,1090 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for src/data-articles.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../index.html">All files</a> / <a href="index.html">src</a> data-articles.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">33.33% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>5/15</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/10</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/7</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">41.66% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>5/12</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a>
+<a name='L158'></a><a href='#L158'>158</a>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a>
+<a name='L164'></a><a href='#L164'>164</a>
+<a name='L165'></a><a href='#L165'>165</a>
+<a name='L166'></a><a href='#L166'>166</a>
+<a name='L167'></a><a href='#L167'>167</a>
+<a name='L168'></a><a href='#L168'>168</a>
+<a name='L169'></a><a href='#L169'>169</a>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a>
+<a name='L181'></a><a href='#L181'>181</a>
+<a name='L182'></a><a href='#L182'>182</a>
+<a name='L183'></a><a href='#L183'>183</a>
+<a name='L184'></a><a href='#L184'>184</a>
+<a name='L185'></a><a href='#L185'>185</a>
+<a name='L186'></a><a href='#L186'>186</a>
+<a name='L187'></a><a href='#L187'>187</a>
+<a name='L188'></a><a href='#L188'>188</a>
+<a name='L189'></a><a href='#L189'>189</a>
+<a name='L190'></a><a href='#L190'>190</a>
+<a name='L191'></a><a href='#L191'>191</a>
+<a name='L192'></a><a href='#L192'>192</a>
+<a name='L193'></a><a href='#L193'>193</a>
+<a name='L194'></a><a href='#L194'>194</a>
+<a name='L195'></a><a href='#L195'>195</a>
+<a name='L196'></a><a href='#L196'>196</a>
+<a name='L197'></a><a href='#L197'>197</a>
+<a name='L198'></a><a href='#L198'>198</a>
+<a name='L199'></a><a href='#L199'>199</a>
+<a name='L200'></a><a href='#L200'>200</a>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a>
+<a name='L204'></a><a href='#L204'>204</a>
+<a name='L205'></a><a href='#L205'>205</a>
+<a name='L206'></a><a href='#L206'>206</a>
+<a name='L207'></a><a href='#L207'>207</a>
+<a name='L208'></a><a href='#L208'>208</a>
+<a name='L209'></a><a href='#L209'>209</a>
+<a name='L210'></a><a href='#L210'>210</a>
+<a name='L211'></a><a href='#L211'>211</a>
+<a name='L212'></a><a href='#L212'>212</a>
+<a name='L213'></a><a href='#L213'>213</a>
+<a name='L214'></a><a href='#L214'>214</a>
+<a name='L215'></a><a href='#L215'>215</a>
+<a name='L216'></a><a href='#L216'>216</a>
+<a name='L217'></a><a href='#L217'>217</a>
+<a name='L218'></a><a href='#L218'>218</a>
+<a name='L219'></a><a href='#L219'>219</a>
+<a name='L220'></a><a href='#L220'>220</a>
+<a name='L221'></a><a href='#L221'>221</a>
+<a name='L222'></a><a href='#L222'>222</a>
+<a name='L223'></a><a href='#L223'>223</a>
+<a name='L224'></a><a href='#L224'>224</a>
+<a name='L225'></a><a href='#L225'>225</a>
+<a name='L226'></a><a href='#L226'>226</a>
+<a name='L227'></a><a href='#L227'>227</a>
+<a name='L228'></a><a href='#L228'>228</a>
+<a name='L229'></a><a href='#L229'>229</a>
+<a name='L230'></a><a href='#L230'>230</a>
+<a name='L231'></a><a href='#L231'>231</a>
+<a name='L232'></a><a href='#L232'>232</a>
+<a name='L233'></a><a href='#L233'>233</a>
+<a name='L234'></a><a href='#L234'>234</a>
+<a name='L235'></a><a href='#L235'>235</a>
+<a name='L236'></a><a href='#L236'>236</a>
+<a name='L237'></a><a href='#L237'>237</a>
+<a name='L238'></a><a href='#L238'>238</a>
+<a name='L239'></a><a href='#L239'>239</a>
+<a name='L240'></a><a href='#L240'>240</a>
+<a name='L241'></a><a href='#L241'>241</a>
+<a name='L242'></a><a href='#L242'>242</a>
+<a name='L243'></a><a href='#L243'>243</a>
+<a name='L244'></a><a href='#L244'>244</a>
+<a name='L245'></a><a href='#L245'>245</a>
+<a name='L246'></a><a href='#L246'>246</a>
+<a name='L247'></a><a href='#L247'>247</a>
+<a name='L248'></a><a href='#L248'>248</a>
+<a name='L249'></a><a href='#L249'>249</a>
+<a name='L250'></a><a href='#L250'>250</a>
+<a name='L251'></a><a href='#L251'>251</a>
+<a name='L252'></a><a href='#L252'>252</a>
+<a name='L253'></a><a href='#L253'>253</a>
+<a name='L254'></a><a href='#L254'>254</a>
+<a name='L255'></a><a href='#L255'>255</a>
+<a name='L256'></a><a href='#L256'>256</a>
+<a name='L257'></a><a href='#L257'>257</a>
+<a name='L258'></a><a href='#L258'>258</a>
+<a name='L259'></a><a href='#L259'>259</a>
+<a name='L260'></a><a href='#L260'>260</a>
+<a name='L261'></a><a href='#L261'>261</a>
+<a name='L262'></a><a href='#L262'>262</a>
+<a name='L263'></a><a href='#L263'>263</a>
+<a name='L264'></a><a href='#L264'>264</a>
+<a name='L265'></a><a href='#L265'>265</a>
+<a name='L266'></a><a href='#L266'>266</a>
+<a name='L267'></a><a href='#L267'>267</a>
+<a name='L268'></a><a href='#L268'>268</a>
+<a name='L269'></a><a href='#L269'>269</a>
+<a name='L270'></a><a href='#L270'>270</a>
+<a name='L271'></a><a href='#L271'>271</a>
+<a name='L272'></a><a href='#L272'>272</a>
+<a name='L273'></a><a href='#L273'>273</a>
+<a name='L274'></a><a href='#L274'>274</a>
+<a name='L275'></a><a href='#L275'>275</a>
+<a name='L276'></a><a href='#L276'>276</a>
+<a name='L277'></a><a href='#L277'>277</a>
+<a name='L278'></a><a href='#L278'>278</a>
+<a name='L279'></a><a href='#L279'>279</a>
+<a name='L280'></a><a href='#L280'>280</a>
+<a name='L281'></a><a href='#L281'>281</a>
+<a name='L282'></a><a href='#L282'>282</a>
+<a name='L283'></a><a href='#L283'>283</a>
+<a name='L284'></a><a href='#L284'>284</a>
+<a name='L285'></a><a href='#L285'>285</a>
+<a name='L286'></a><a href='#L286'>286</a>
+<a name='L287'></a><a href='#L287'>287</a>
+<a name='L288'></a><a href='#L288'>288</a>
+<a name='L289'></a><a href='#L289'>289</a>
+<a name='L290'></a><a href='#L290'>290</a>
+<a name='L291'></a><a href='#L291'>291</a>
+<a name='L292'></a><a href='#L292'>292</a>
+<a name='L293'></a><a href='#L293'>293</a>
+<a name='L294'></a><a href='#L294'>294</a>
+<a name='L295'></a><a href='#L295'>295</a>
+<a name='L296'></a><a href='#L296'>296</a>
+<a name='L297'></a><a href='#L297'>297</a>
+<a name='L298'></a><a href='#L298'>298</a>
+<a name='L299'></a><a href='#L299'>299</a>
+<a name='L300'></a><a href='#L300'>300</a>
+<a name='L301'></a><a href='#L301'>301</a>
+<a name='L302'></a><a href='#L302'>302</a>
+<a name='L303'></a><a href='#L303'>303</a>
+<a name='L304'></a><a href='#L304'>304</a>
+<a name='L305'></a><a href='#L305'>305</a>
+<a name='L306'></a><a href='#L306'>306</a>
+<a name='L307'></a><a href='#L307'>307</a>
+<a name='L308'></a><a href='#L308'>308</a>
+<a name='L309'></a><a href='#L309'>309</a>
+<a name='L310'></a><a href='#L310'>310</a>
+<a name='L311'></a><a href='#L311'>311</a>
+<a name='L312'></a><a href='#L312'>312</a>
+<a name='L313'></a><a href='#L313'>313</a>
+<a name='L314'></a><a href='#L314'>314</a>
+<a name='L315'></a><a href='#L315'>315</a>
+<a name='L316'></a><a href='#L316'>316</a>
+<a name='L317'></a><a href='#L317'>317</a>
+<a name='L318'></a><a href='#L318'>318</a>
+<a name='L319'></a><a href='#L319'>319</a>
+<a name='L320'></a><a href='#L320'>320</a>
+<a name='L321'></a><a href='#L321'>321</a>
+<a name='L322'></a><a href='#L322'>322</a>
+<a name='L323'></a><a href='#L323'>323</a>
+<a name='L324'></a><a href='#L324'>324</a>
+<a name='L325'></a><a href='#L325'>325</a>
+<a name='L326'></a><a href='#L326'>326</a>
+<a name='L327'></a><a href='#L327'>327</a>
+<a name='L328'></a><a href='#L328'>328</a>
+<a name='L329'></a><a href='#L329'>329</a>
+<a name='L330'></a><a href='#L330'>330</a>
+<a name='L331'></a><a href='#L331'>331</a>
+<a name='L332'></a><a href='#L332'>332</a>
+<a name='L333'></a><a href='#L333'>333</a>
+<a name='L334'></a><a href='#L334'>334</a>
+<a name='L335'></a><a href='#L335'>335</a>
+<a name='L336'></a><a href='#L336'>336</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SANDBOX B — task B1-B6: Mock article database with full-text content
+// 12 realistycznych artykułów Izbica Kujawska — gotowe do D1 migration
+&nbsp;
+import { ArticleData } from './components/article'
+&nbsp;
+export const ARTICLES: ArticleData[] = [
+  {
+    slug: 'remont-koscielnej-zakonczony',
+    category: 'inwestycje',
+    categoryColor: '#c0392b',
+    title: 'Remont ulicy Kościelnej zakończony przed terminem — droga oddana mieszkańcom',
+    lede: 'Po sześciu miesiącach prac modernizacyjnych ulica Kościelna w centrum Izbicy została w pełni przebudowana. Nowa nawierzchnia, chodniki, oświetlenie LED i odwodnienie kosztowały gminę 2,8 mln zł.',
+    body: [
+      'Po sześciu miesiącach intensywnych prac modernizacyjnych, ulica Kościelna w centrum Izbicy Kujawskiej została &lt;strong&gt;w pełni przebudowana&lt;/strong&gt; i oddana mieszkańcom. Nowa nawierzchnia bitumiczna, chodniki z kostki brukowej, energooszczędne oświetlenie LED oraz kompleksowy system odwodnienia kosztowały gminę 2,8 mln zł.',
+      '&lt;h2&gt;Inwestycja przed terminem&lt;/h2&gt;',
+      'Wykonawca, firma DROGBUD ze Włocławka, oddała inwestycję &lt;strong&gt;dwa tygodnie przed terminem umownym&lt;/strong&gt;. — „To duży sukces. Pogoda nam sprzyjała, a zespół wykonawcy zaplanował prace bardzo dokładnie" — komentuje burmistrz Marek Dorabiała.',
+      '&lt;h2&gt;Co zyskali mieszkańcy&lt;/h2&gt;',
+      'Ulica Kościelna to jedna z głównych arterii w centrum Izbicy. Codziennie przejeżdża nią ponad 1 200 pojazdów. Przed remontem nawierzchnia była w fatalnym stanie — pełna ubytków i kałuż.',
+      '&lt;ul&gt;&lt;li&gt;650 m nowej nawierzchni bitumicznej&lt;/li&gt;&lt;li&gt;1 200 m² chodników z kostki brukowej&lt;/li&gt;&lt;li&gt;32 lampy LED (oszczędność energii: 65%)&lt;/li&gt;&lt;li&gt;Nowy system odwodnienia (4 wpusty co 100 m)&lt;/li&gt;&lt;li&gt;Przejście dla pieszych przy ZS im. Kasprowicza&lt;/li&gt;&lt;/ul&gt;',
+      '&lt;blockquote&gt;To była najbardziej oczekiwana inwestycja drogowa ostatnich lat. Cieszę się, że udało nam się ją zrealizować pod budżet i przed terminem.&lt;/blockquote&gt;',
+      'Następna duża inwestycja drogowa — przebudowa ulicy Plac Wolności — ruszy w lipcu 2026 r.',
+    ],
+    author: 'Anna Kowalska',
+    authorRole: 'Redaktor naczelna',
+    authorAvatar: '/static/img/v4/03-sesja-rady-miejskiej.jpg',
+    publishedAt: '25 maja 2026, 09:30',
+    updatedAt: '25 maja 2026, 11:15',
+    readingMinutes: 4,
+    heroImage: '/static/img/inwestycje/02-kanalizacja.jpg',
+    heroCaption: 'Nowa nawierzchnia ulicy Kościelnej w centrum Izbicy Kujawskiej · fot. UMiG',
+    tags: ['Inwestycje', 'Drogi', 'Centrum', 'DROGBUD', 'Burmistrz'],
+    related: [
+      { slug: 'wodociag-sadlno', title: 'ZGKiW podpisał umowę na modernizację sieci wodociągowej', category: 'inwestycje', thumb: '/static/img/v4/03-sesja-rady-miejskiej.jpg' },
+      { slug: 'pge-wylaczenia-maj', title: 'PGE — planowane wyłączenia prądu 28 maja', category: 'komunikaty', thumb: '/static/img/v4/03-sesja-rady-miejskiej.jpg' },
+      { slug: 'kujawianka-wlocłavia', title: 'Kujawianka wygrywa 3:1 z Włocłavią', category: 'sport', thumb: '/static/img/v4/04-kujawianka-celebracja.jpg' },
+    ],
+  },
+  {
+    slug: 'wodociag-sadlno',
+    category: 'inwestycje',
+    categoryColor: '#c0392b',
+    title: 'Wielomilionowa inwestycja w sieć wodociągową — ZGKiW podpisał umowę z wykonawcą',
+    lede: 'Burmistrz Marek Dorabiała poinformował o podpisaniu umowy z firmą HYDROBUDOWA na modernizację 8,4 km sieci wodociągowej w sołectwach Sadłno, Bierzyn i Pasieka.',
+    body: [
+      'Burmistrz Marek Dorabiała wraz z kierownictwem ZGKiW podpisał umowę z firmą HYDROBUDOWA z Bydgoszczy na &lt;strong&gt;modernizację 8,4 km sieci wodociągowej&lt;/strong&gt;. Wartość kontraktu: 6,7 mln zł, z czego 4,2 mln to dofinansowanie z Rządowego Funduszu Polski Ład.',
+      '&lt;h2&gt;Trzy sołectwa pod modernizację&lt;/h2&gt;',
+      'Inwestycja obejmuje sołectwa Sadłno, Bierzyn i Pasieka. Stara sieć z lat 70. zostanie wymieniona na nowoczesne rury PE 100 RC, odporne na uszkodzenia mechaniczne.',
+      'Prace ruszą w czerwcu 2026 r. i potrwają do października 2027 r.',
+    ],
+    author: 'Redakcja izbica24.pl',
+    publishedAt: '24 maja 2026, 14:20',
+    readingMinutes: 3,
+    heroImage: '/static/img/inwestycje/03-swietlica.jpg',
+    tags: ['Inwestycje', 'ZGKiW', 'Wodociągi', 'Polski Ład'],
+  },
+  {
+    slug: 'sesja-rady-22-maja',
+    category: 'samorzad',
+    categoryColor: '#1a3a5c',
+    title: 'Sesja Rady Miejskiej — relacja z 22 maja: budżet, fundusz sołecki, sprawy bieżące',
+    lede: 'Radni przegłosowali zmiany w budżecie 2026 oraz przyjęli harmonogram funduszu sołeckiego. W obradach wzięło udział 14 z 15 radnych.',
+    body: [
+      'Sesja Rady Miejskiej w Izbicy Kujawskiej odbyła się 22 maja w sali konferencyjnej UMiG. W obradach wzięło udział 14 z 15 radnych. Najważniejszym punktem była zmiana w uchwale budżetowej.',
+      '&lt;h2&gt;Budżet 2026 — zmiany&lt;/h2&gt;',
+      'Radni przeznaczyli dodatkowe 480 tys. zł na remont szkoły w Sadłnie. Środki pochodzą z nadwyżki za 2025 r.',
+    ],
+    author: 'Marta S.',
+    publishedAt: '23 maja 2026, 12:00',
+    readingMinutes: 5,
+    heroImage: '/static/img/v4/03-sesja-rady-miejskiej.jpg',
+    tags: ['Rada Miejska', 'Budżet', 'Fundusz sołecki'],
+  },
+  {
+    slug: 'kujawianka-wloclavia',
+    category: 'sport',
+    categoryColor: '#1e7a4f',
+    title: 'Kujawianka wygrywa 3:1 z Włocłavią w wyjazdowym meczu klasy okręgowej',
+    lede: 'Po pasjonującym meczu w Włocławku, Kujawianka pokonała tamtejszą Włocłavię 3:1. Bramki dla naszych: Nowak (2) i Wiśniewski.',
+    body: [
+      'Mecz 26. kolejki klasy okręgowej grupy 2 dostarczył kibicom emocji do ostatniego gwizdka. &lt;strong&gt;Kujawianka Izbica Kujawska pokonała na wyjeździe Włocłavię 3:1&lt;/strong&gt;.',
+      '&lt;h2&gt;Skład Kujawianki&lt;/h2&gt;',
+      'Trener Marek Lewandowski wystawił optymalny skład: Kowalski — Nowak, Wiśniewski, Kubiak, Mazur — Pawlak, Wójcik, Lewandowski Jr — Kowalczyk, Adamski, Szymański.',
+    ],
+    author: 'Tomasz Lewandowski',
+    authorRole: 'Korespondent sportowy',
+    publishedAt: '24 maja 2026, 19:45',
+    readingMinutes: 3,
+    heroImage: '/static/img/v4/04-kujawianka-celebracja.jpg',
+    tags: ['Kujawianka', 'Mecz', 'Klasa okręgowa', 'Sport'],
+  },
+  {
+    slug: 'mgck-program-lata-2026',
+    category: 'kultura',
+    categoryColor: '#7b2d8b',
+    title: 'MGCK ogłasza program „Lata w Izbicy 2026" — wakacyjny pakiet wydarzeń kulturalnych',
+    lede: 'Miejsko-Gminne Centrum Kultury przygotowało bogaty program letni: kino plenerowe, warsztaty dla dzieci, koncerty na rynku i piknik historyczny.',
+    body: [
+      'MGCK w Izbicy Kujawskiej zaprezentowało w piątek &lt;strong&gt;program „Lata w Izbicy 2026"&lt;/strong&gt;. Wakacyjny pakiet wydarzeń ruszy 1 lipca i potrwa do końca sierpnia.',
+      '&lt;h2&gt;Co w programie&lt;/h2&gt;',
+      'Główne atrakcje: kino plenerowe w każdy czwartek, warsztaty plastyczne dla dzieci, koncerty plenerowe na rynku w środy, piknik historyczny 15 sierpnia.',
+    ],
+    author: 'Krystyna Nowak',
+    publishedAt: '24 maja 2026, 10:00',
+    readingMinutes: 2,
+    heroImage: '/static/img/kultura/02-mgck.jpg',
+    tags: ['MGCK', 'Kultura', 'Lato', 'Wydarzenia'],
+  },
+  {
+    slug: 'wietrzychowice-sezon',
+    category: 'historia',
+    categoryColor: '#b8860b',
+    title: 'Wietrzychowice — rusza letni sezon na "Polskich Piramidach" z nowymi przewodnikami',
+    lede: 'Muzeum Archeologiczne w Wietrzychowicach otwiera sezon turystyczny 1 czerwca. W tym roku siedmioro nowych przewodników oprowadzi po stanowisku.',
+    body: [
+      '„Polskie Piramidy" w Wietrzychowicach — neolityczne kurhany sprzed 5 500 lat — przyciągają rocznie ponad 18 tys. turystów.',
+      '&lt;h2&gt;Nowi przewodnicy&lt;/h2&gt;',
+      'W tym roku siedmioro studentów archeologii z UMK w Toruniu rozpocznie pracę jako przewodnicy.',
+    ],
+    author: 'dr Jan Maciejewski',
+    authorRole: 'Historyk regionalny',
+    publishedAt: '23 maja 2026, 16:30',
+    readingMinutes: 4,
+    heroImage: '/static/img/historia/03-spolecznosc.jpg',
+    tags: ['Wietrzychowice', 'Historia', 'Turystyka', 'Archeologia'],
+  },
+  {
+    slug: 'spzoz-pediatra-czerwiec',
+    category: 'zdrowie',
+    categoryColor: '#27ae60',
+    title: 'SPZOZ Izbica wprowadza nowe godziny przyjęć pediatry od czerwca',
+    lede: 'Od 1 czerwca pediatra w SPZOZ Izbica będzie przyjmował w wydłużonych godzinach — w piątki do 18:00, a w soboty rano od 8:00 do 12:00.',
+    body: [
+      'SPZOZ w Izbicy Kujawskiej ogłosił od czerwca &lt;strong&gt;nowe, wydłużone godziny przyjęć pediatrycznych&lt;/strong&gt;.',
+    ],
+    author: 'Redakcja izbica24.pl',
+    publishedAt: '24 maja 2026, 11:00',
+    readingMinutes: 2,
+    heroImage: '/static/img/zdrowie/02-spzoz.jpg',
+    tags: ['Zdrowie', 'SPZOZ', 'Pediatra'],
+  },
+  {
+    slug: 'caritas-lato-w-gminie',
+    category: 'spoleczne',
+    categoryColor: '#e67e22',
+    title: 'Caritas i MGOPS uruchamiają program „Lato w gminie" dla dzieci z rodzin potrzebujących',
+    lede: 'Caritas Diecezji Włocławskiej wraz z MGOPS przygotowały dwutygodniowy program letni dla 45 dzieci z rodzin objętych pomocą społeczną.',
+    body: [
+      'Program „Lato w gminie" ruszy 14 lipca i potrwa do 25 lipca. Dzieci spędzą czas na wycieczkach, warsztatach i zajęciach sportowych.',
+    ],
+    author: 'K. Nowak',
+    publishedAt: '24 maja 2026, 13:30',
+    readingMinutes: 2,
+    heroImage: '/static/img/v4/04-kujawianka-celebracja.jpg',
+    tags: ['Caritas', 'MGOPS', 'Dzieci', 'Społeczne'],
+  },
+  {
+    slug: 'pge-wylaczenia-28-maja',
+    category: 'komunikaty',
+    categoryColor: '#34495e',
+    title: 'PGE — planowane wyłączenia prądu w sołectwach Świętosławice i Mchówek 28 maja',
+    lede: 'Energa-Operator informuje o pracach konserwacyjnych. Wyłączenia w godz. 8:00–14:00.',
+    body: ['Lista adresów objętych wyłączeniem dostępna na stronie Energa-Operator.'],
+    author: 'Komunikat',
+    publishedAt: '23 maja 2026, 09:00',
+    readingMinutes: 1,
+    heroImage: '/static/img/wiadomosci/01.jpg',
+    tags: ['PGE', 'Wyłączenia', 'Komunikaty'],
+  },
+  {
+    slug: 'kanal-zglowiaczki',
+    category: 'srodowisko',
+    categoryColor: '#16a085',
+    title: 'Kanał Zgłowiączki — Gminna Spółka Wodna zakończyła wiosenne prace melioracyjne',
+    lede: 'Gminna Spółka Wodna w Izbicy zakończyła kwartalne prace przy konserwacji Kanału Zgłowiączki.',
+    body: ['Czyszczenie 14 km rowów i wymiana 6 przepustów kosztowała 145 tys. zł.'],
+    author: 'Redakcja izbica24.pl',
+    publishedAt: '22 maja 2026, 14:00',
+    readingMinutes: 2,
+    heroImage: '/static/img/wiadomosci/02-kujawianka.jpg',
+    tags: ['Środowisko', 'Spółka Wodna', 'Melioracja'],
+  },
+  {
+    slug: 'arimr-doplaty-2026',
+    category: 'rolnictwo',
+    categoryColor: '#d4ac0d',
+    title: 'ARiMR — ostatnie dni na składanie wniosków o dopłaty bezpośrednie 2026',
+    lede: 'Termin składania wniosków upływa 31 maja. Rolnicy z gminy mogą skorzystać z pomocy biura w Izbicy.',
+    body: ['Biuro ARiMR w Izbicy Kujawskiej dyżuruje w godz. 7:30–15:30. Po godzinie 14:30 wstęp tylko z numerem kolejkowym.'],
+    author: 'Redakcja izbica24.pl',
+    publishedAt: '22 maja 2026, 11:00',
+    readingMinutes: 2,
+    heroImage: '/static/img/v4/07-rolnictwo-rzepak.jpg',
+    tags: ['ARiMR', 'Rolnictwo', 'Dopłaty'],
+  },
+  {
+    slug: 'zs-kasprowicz-rekrutacja',
+    category: 'edukacja',
+    categoryColor: '#3498db',
+    title: 'Zespół Szkół im. Kasprowicza — rekrutacja 2026/2027 rusza w czerwcu',
+    lede: 'ZS im. Kasprowicza otwiera nabór na nowy rok szkolny 1 czerwca. W ofercie 4 kierunki kształcenia ogólnego i 3 zawodowe.',
+    body: ['Liceum ogólnokształcące, technikum informatyczne, technikum mechaniczne i szkoła branżowa I stopnia.'],
+    author: 'Maria S.',
+    publishedAt: '23 maja 2026, 08:00',
+    readingMinutes: 2,
+    heroImage: '/static/img/edukacja/04-matematyka.jpg',
+    tags: ['Edukacja', 'ZS Kasprowicz', 'Rekrutacja'],
+  },
+]
+&nbsp;
+// Build category index
+export const CATEGORIES_MAP: Record&lt;string, { title: string; description: string; color: string; subcategories: { slug: string; title: string }[] }&gt; = {
+  wiadomosci: {
+    title: 'Wiadomości',
+    description: 'Najnowsze wiadomości z gminy Izbica Kujawska — inwestycje, edukacja, zdrowie, środowisko.',
+    color: '#c0392b',
+    subcategories: [
+      { slug: 'inwestycje', title: 'Inwestycje' },
+      { slug: 'edukacja', title: 'Edukacja' },
+      { slug: 'zdrowie', title: 'Zdrowie' },
+      { slug: 'spoleczne', title: 'Społeczne' },
+      { slug: 'komunikaty', title: 'Komunikaty' },
+      { slug: 'srodowisko', title: 'Środowisko' },
+      { slug: 'rolnictwo', title: 'Rolnictwo' },
+    ],
+  },
+  samorzad: {
+    title: 'Samorząd',
+    description: 'Rada Miejska, Urząd Miejski, sołectwa, budżet i finanse publiczne.',
+    color: '#1a3a5c',
+    subcategories: [
+      { slug: 'rada', title: 'Rada Miejska' },
+      { slug: 'urzad', title: 'Urząd Miejski' },
+      { slug: 'budzet', title: 'Budżet' },
+      { slug: 'solectwa', title: 'Sołectwa' },
+    ],
+  },
+  kujawianka: {
+    title: 'Kujawianka',
+    description: 'Klub piłkarski Kujawianka Izbica Kujawska — wyniki, tabela, kadra, historia.',
+    color: '#1e7a4f',
+    subcategories: [
+      { slug: 'mecze', title: 'Mecze i wyniki' },
+      { slug: 'tabela', title: 'Tabela' },
+      { slug: 'kadra', title: 'Kadra' },
+      { slug: 'historia', title: 'Historia klubu' },
+    ],
+  },
+  kultura: {
+    title: 'Kultura',
+    description: 'MGCK, Biblioteka, koła gospodyń wiejskich, wydarzenia kulturalne.',
+    color: '#7b2d8b',
+    subcategories: [
+      { slug: 'mgck', title: 'MGCK' },
+      { slug: 'biblioteka', title: 'Biblioteka' },
+      { slug: 'kgw', title: 'KGW' },
+      { slug: 'wydarzenia', title: 'Wydarzenia' },
+    ],
+  },
+  historia: {
+    title: 'Historia',
+    description: 'Dzieje Izbicy Kujawskiej, Polskie Piramidy w Wietrzychowicach, dziedzictwo żydowskie.',
+    color: '#b8860b',
+    subcategories: [
+      { slug: 'dzieje', title: 'Dzieje Izbicy' },
+      { slug: 'wietrzychowice', title: 'Wietrzychowice' },
+      { slug: 'zydzi', title: 'Społeczność żydowska' },
+      { slug: 'zabytki', title: 'Zabytki' },
+    ],
+  },
+  sport: {
+    title: 'Sport',
+    description: 'Kujawianka, sport amatorski, młodzieżówka, hala sportowa.',
+    color: '#1e7a4f',
+    subcategories: [],
+  },
+  zdrowie: {
+    title: 'Zdrowie',
+    description: 'SPZOZ, apteki dyżurujące, profilaktyka zdrowotna.',
+    color: '#27ae60',
+    subcategories: [],
+  },
+  edukacja: {
+    title: 'Edukacja',
+    description: 'Szkoły podstawowe, ZS im. Kasprowicza, przedszkola, edukacja dorosłych.',
+    color: '#3498db',
+    subcategories: [],
+  },
+  inwestycje: {
+    title: 'Inwestycje',
+    description: 'Drogi, sieci, budynki publiczne, fundusze europejskie i krajowe.',
+    color: '#c0392b',
+    subcategories: [],
+  },
+  rolnictwo: {
+    title: 'Rolnictwo',
+    description: 'ARiMR, doradztwo, dopłaty, KGW, rolnictwo zrównoważone.',
+    color: '#d4ac0d',
+    subcategories: [],
+  },
+  srodowisko: {
+    title: 'Środowisko',
+    description: 'Ochrona środowiska, gospodarka odpadami, Spółka Wodna, OZE.',
+    color: '#16a085',
+    subcategories: [],
+  },
+  spoleczne: {
+    title: 'Społeczne',
+    description: 'MGOPS, Caritas, wolontariat, pomoc rodzinom.',
+    color: '#e67e22',
+    subcategories: [],
+  },
+  komunikaty: {
+    title: 'Komunikaty',
+    description: 'Oficjalne ogłoszenia urzędowe, wyłączenia mediów, sytuacje awaryjne.',
+    color: '#34495e',
+    subcategories: [],
+  },
+}
+&nbsp;
+export const findArticle = <span class="fstat-no" title="function not covered" >(s</span>lug: string): ArticleData | null =&gt;
+<span class="cstat-no" title="statement not covered" >  ARTICLES.find(<span class="fstat-no" title="function not covered" >a =&gt; <span class="cstat-no" title="statement not covered" >a</span>.slug === slug)</span> || null</span>
+&nbsp;
+export const articlesByCategory = <span class="fstat-no" title="function not covered" >(c</span>ategory: string): ArticleData[] =&gt;
+<span class="cstat-no" title="statement not covered" >  ARTICLES.filter(<span class="fstat-no" title="function not covered" >a =&gt; <span class="cstat-no" title="statement not covered" >a</span>.category === category)</span></span>
+&nbsp;
+export const searchArticles = <span class="fstat-no" title="function not covered" >(q</span>uery: string): ArticleData[] =&gt; {
+<span class="cstat-no" title="statement not covered" >  if (!query || query.trim().length &lt; 2) <span class="cstat-no" title="statement not covered" >return []</span></span>
+  const q = <span class="cstat-no" title="statement not covered" >query.toLowerCase().trim()</span>
+<span class="cstat-no" title="statement not covered" >  return ARTICLES.filter(<span class="fstat-no" title="function not covered" >a =&gt;</span></span>
+<span class="cstat-no" title="statement not covered" >    a.title.toLowerCase().includes(q) ||</span>
+    a.lede.toLowerCase().includes(q) ||
+    a.tags.some(t =&gt; t.toLowerCase().includes(q)) ||
+    a.body.some(<span class="fstat-no" title="function not covered" >p =&gt; <span class="cstat-no" title="statement not covered" >p</span>.toLowerCase().includes(q))</span>
+  )
+}
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-07-29T09:30:21.734Z
+            </div>
+        <script src="../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../sorter.js"></script>
+        <script src="../block-navigation.js"></script>
+    </body>
+</html>
+    

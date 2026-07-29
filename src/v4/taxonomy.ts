@@ -115,7 +115,7 @@ export const CATEGORIES: Category[] = [
       sub('samorzad', 'rada', 'Rada Miejska', 'Relacje z sesji, uchwały z komentarzem, interpelacje radnych, komisje.'),
       sub('samorzad', 'budzet', 'Budżet i finanse', 'Budżet gminy, dotacje UE, fundusze rządowe, zmiany budżetowe.'),
       sub('samorzad', 'solectwa', 'Sołectwa', 'Fundusz sołecki, zebrania wiejskie, inicjatywy, wybory sołtysów — wszystkie sołectwa gminy.'),
-      sub('samorzad', 'powiat', 'Powiat włocławski', 'Starostwo: drogi powiatowe, pozwolenia, edukacja ponadpodstawowa, PUP.'),
+      sub('samorzad', 'powiat', 'Powiat', 'Starostwo: drogi powiatowe, pozwolenia, edukacja ponadpodstawowa, PUP.'),
       sub('samorzad', 'wybory', 'Wybory i referenda', 'Kandydaci, programy, wyniki, frekwencja, okręgi i komisje wyborcze.'),
     ],
   },
