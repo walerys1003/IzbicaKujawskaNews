@@ -43,9 +43,11 @@ const buildNav = (role: AdminRole, counts: AdminLayoutProps['counts']): AdminNav
     items.push({ href: '/admin/users', label: 'Użytkownicy', icon: 'user', count: counts?.users })
   }
   items.push({ href: '/admin/ogloszenia', label: 'Ogłoszenia', icon: 'ad' })
-  if (role === 'admin' || role === 'editor') {
-    items.push({ href: '/admin/ai/usage', label: 'Koszty AI', icon: 'settings' })
-  }
+  // Odnośnik „Koszty AI" (/admin/ai/usage) usunięty: trasa nie istnieje —
+  // `src/lib/ai/usage.ts` dostarcza `recordAiUsage`/`checkAiBudget`, ale żaden
+  // handler ich nie wystawia, więc kliknięcie kończyło się 404. Zgodnie z zasadą
+  // opisaną nad tą funkcją odnośnika, który nigdy nie działa, nie pokazujemy.
+  // Do przywrócenia razem z widokiem kosztów AI.
   if (role === 'admin') {
     items.push({ href: '/admin/settings', label: 'Ustawienia', icon: 'settings' })
   }

@@ -19,6 +19,12 @@ import {
   slot,
 } from '../content-db'
 import { snapshot } from '../content-source'
+import {
+  KUJAWIANKA_LEAGUE,
+  KUJAWIANKA_LEAGUE_META,
+  KUJAWIANKA_RECENT_MATCHES,
+  KUJAWIANKA_UPCOMING_MATCHES,
+} from '../kujawianka-data'
 import { articleUrl, type Article } from '../content-types'
 import { SectionHeader } from '../components/Layout'
 import { PogodaKarta, type DanePogody, type DanePowietrza } from '../components/PogodaWidget'
@@ -127,20 +133,85 @@ const Hero: FC<{ pogoda?: DanePogody | null; powietrze?: DanePowietrza | null }>
     slot('dni-izbicy-2026-program', { category: 'kultura', used: slotsUsed() })!,
   ]
 
+  /**
+   * Etap 2026-08-25 — trzy materiały POD zdjęciem głównym.
+   *
+   * Dlaczego tutaj, a nie w kolumnie bocznej: kolumna boczna z listą
+   * „Najważniejsze dziś" i kartą pogodową jest wyższa niż zdjęcie główne
+   * w proporcji 16/10, więc pod zdjęciem zostawał pusty biały prostokąt na
+   * całą szerokość zdjęcia (zrzut redakcji). Trzy karty w JEDNYM RZĘDZIE
+   * zamykają tę lukę i domykają wysokość lewej kolumny do prawej.
+   *
+   * Dlaczego poziomo, a nie w pionie: pionowa lista wróciłaby do kolumny
+   * bocznej i tylko przeniosłaby pustkę na drugą stronę. Rząd trzech kart
+   * wykorzystuje pełną szerokość zdjęcia (≈1150 px na desktopie).
+   *
+   * Skąd materiały: `latest()` z pominięciem tego, co już jest w hero
+   * (`slotsUsed()` gwarantuje brak duplikatów), i tylko materiały ze
+   * zdjęciem — karta bez zdjęcia wyglądałaby jak błąd renderowania.
+   * `filter` przed `slice`, nie odwrotnie: inaczej materiał bez zdjęcia
+   * zjadałby jedno z trzech miejsc i widzielibyśmy dwie karty.
+   */
+  const used = slotsUsed()
+  const podHero = latest(60)
+    .filter((a) => a.heroImage && !used.has(a.slug))
+    .slice(0, 3)
+  for (const a of podHero) used.add(a.slug)
+
   return (
     <div class="page">
       <div class="hero-grid reveal">
-        <article class="hero-main">
-          <a href={articleUrl(main)}>
-            <img src={main.heroImage} alt={main.heroAlt || main.title} loading="eager" />
-            <div class="hero-main-overlay">
-              <span class="tag">Wiadomości · Inwestycje</span>
-              <h1>{main.title}</h1>
-              <p class="lead">{main.lede}</p>
-              {metaOf(main, { author: true, reading: true, views: true, comments: true })}
+        {/* Lewa kolumna: zdjęcie główne + rząd trzech materiałów pod nim.
+            Wrapper (nie samo <article class="hero-main">) jest konieczny,
+            bo .hero-main jest kontenerem pozycjonującym dla nakładki
+            z tytułem (position:absolute) — karty musiałyby leżeć NA zdjęciu. */}
+        <div class="hero-left">
+          <article class="hero-main">
+            <a href={articleUrl(main)}>
+              <img src={main.heroImage} alt={main.heroAlt || main.title} loading="eager" />
+              <div class="hero-main-overlay">
+                <span class="tag">Wiadomości · Inwestycje</span>
+                <h1>{main.title}</h1>
+                <p class="lead">{main.lede}</p>
+                {metaOf(main, { author: true, reading: true, views: true, comments: true })}
+              </div>
+            </a>
+          </article>
+
+          {/*
+            Trzy materiały w jednym rzędzie, na szerokość zdjęcia głównego.
+            Renderowane tylko gdy realnie mamy czym je wypełnić — pusty rząd
+            byłby gorszy niż brak sekcji (dokładnie ten błąd widać dziś
+            w „Na sygnale · LIVE").
+          */}
+          {podHero.length > 0 ? (
+            <div class="hero-below">
+              {podHero.map((a) => {
+                const cat = findCategory(a.category)
+                return (
+                  <a class="hb-card" href={articleUrl(a)}>
+                    <div class="hb-img">
+                      <img src={a.heroImage} alt={a.heroAlt || a.title} loading="lazy" />
+                    </div>
+                    <div class="hb-body">
+                      <span class={`tag ${cat?.tagClass ?? ''}`}>{cat?.title ?? 'Wiadomości'}</span>
+                      <h3>{a.shortTitle || a.title}</h3>
+                      <p>
+                        {a.lede.slice(0, 120)}
+                        {a.lede.length > 120 ? '…' : ''}
+                      </p>
+                      <div class="meta">
+                        <time datetime={a.publishedAtISO}>{shortDate(a)}</time>
+                        {a.readingMinutes ? <span class="meta-dot"></span> : null}
+                        {a.readingMinutes ? <span>{a.readingMinutes} min</span> : null}
+                      </div>
+                    </div>
+                  </a>
+                )
+              })}
             </div>
-          </a>
-        </article>
+          ) : null}
+        </div>
 
         <aside class="hero-side">
           <div class="hero-side-header">
@@ -332,9 +403,62 @@ const WiadomosciSection: FC = () => {
   )
 }
 
-// ═══════════════════════════ SPLIT: KUJAWIANKA (5 tabów) + SAMORZĄD
+// ═══════════════════════════ SPLIT: KUJAWIANKA + SAMORZĄD
+/**
+ * Naprawa sekcji Kujawianka (2026-08-25).
+ *
+ * Zgłoszenie redakcji: pod wynikiem „KUJAWIANKA 3:1 SPARTA BRZEŚĆ" wisiał
+ * zupełnie niezwiązany materiał (m.in. nekrolog i zdjęcie pielgrzymki),
+ * a pole tabeli/strzelców było puste.
+ *
+ * Trzy niezależne błędy, każdy naprawiony osobno:
+ *
+ * 1. BŁĘDNY SLUG KATEGORII. `slot(..., { category: 'sport' })` — kategorii
+ *    `sport` NIE MA w taksonomii (jest `kujawianka`). Filtr nie pasował do
+ *    niczego, więc slot schodził do „najświeższy dowolny artykuł" i wrzucał
+ *    w kafel piłkarski pierwszy lepszy materiał z portalu.
+ *
+ * 2. WYNIK ZASZYTY W JSX. Rezultat 3:1, „25. kolejka", „Następny mecz:
+ *    28 maja" i tabela były wpisane na sztywno w szablon, więc ŻADNA zmiana
+ *    artykułu ich nie ruszała — stąd wynik meczu nad nekrologiem. Teraz
+ *    wszystko pochodzi z `kujawianka-data.ts` (to samo źródło, z którego
+ *    korzysta już strona /kujawianka), a nakładka z wynikiem pokazuje się
+ *    TYLKO wtedy, gdy artykuł faktycznie jest z kategorii `kujawianka`.
+ *
+ * 3. BIAŁY TEKST NA BIAŁYM TLE. `article.kujawianka` ma w bazowym CSS
+ *    `background:var(--dark); color:#fff`, ale plik rozszerzeń nadpisał
+ *    tło na `#fff`, nie zmieniając koloru tekstu (pomiar: tło rgb(255,255,255),
+ *    tekst rgb(255,255,255)). Dlatego tabela i strzelcy byli niewidoczni —
+ *    zostawały tylko elementy złote. Kolory przeniesione na jasny motyw
+ *    w izbica-v4-ext.css.
+ *
+ * 4. MARTWE PANELE. `.k-tab` usunięto kiedyś z szablonu, ale cztery panele
+ *    `data-kpanel` (mecze/tabela/kadra/junior) zostały — jako HTML, którego
+ *    nie da się otworzyć (pomiar: display:none, 0 przełączników). To ~150
+ *    linii nieosiągalnego znacznika w każdej odsłonie strony głównej.
+ *    Usunięte; pełna tabela i terminarz są na /kujawianka, gdzie prowadzą
+ *    linki „Tabela" i „Terminarz".
+ */
 const KujawiankaSamorzad: FC = () => {
-  const kMain = slot('kujawianka-sparta-brzesc-3-1', { category: 'sport', used: slotsUsed() })!
+  /* `category: 'kujawianka'` — poprawny slug z taksonomii (było: 'sport',
+     kategoria nieistniejąca). Dzięki temu w kaflu ląduje materiał sportowy,
+     a nie pierwszy lepszy artykuł z portalu. */
+  const kMain = slot('kujawianka-sparta-brzesc-3-1', { category: 'kujawianka', used: slotsUsed() })!
+  /* Czy materiał REALNIE jest o Kujawiance? Jeśli redakcja nie ma jeszcze
+     żadnego materiału w tej kategorii, slot podstawi coś z innego działu —
+     wtedy nie wolno kłamać nakładką z wynikiem meczu. */
+  const kSport = kMain.category === 'kujawianka'
+  /* Ostatni rozegrany mecz i najbliższe spotkanie — z tego samego źródła,
+     z którego korzysta strona /kujawianka. Bez duplikowania danych. */
+  const kLast = KUJAWIANKA_RECENT_MATCHES[0]
+  const kNext = KUJAWIANKA_UPCOMING_MATCHES[0]
+  /* Nazwy drużyn i wynik parsowane z opisu meczu, żeby nakładka nigdy nie
+     rozjechała się z terminarzem (wcześniej wynik był wpisany ręcznie). */
+  const kTeams = kLast.description.split('·')[0].split('—').map((s) => s.trim())
+  const kGoals = kLast.result.split(':')
+  const kOutcomeLabel =
+    kLast.outcome === 'win' ? 'Zwycięstwo' : kLast.outcome === 'draw' ? 'Remis' : 'Porażka'
+  const kRound = kLast.description.match(/(\d+)\.\s*kolejka/)?.[1]
   const samMain = slot('sesja-rady-miejskiej-budzet-remontowy', { category: 'samorzad', used: slotsUsed() })!
   const samList = [
     slot('zarzadzenie-47-2026-nabor-kierownika-zgkiw', { category: 'samorzad', used: slotsUsed() })!,
@@ -367,198 +491,83 @@ const KujawiankaSamorzad: FC = () => {
           <SubcatBar catSlug="kujawianka" />
 
           {/* Panel: Aktualności (domyślnie widoczny — po usunięciu k-tabs). */}
+          {/* Ostatni mecz — nakładka z wynikiem TYLKO dla materiału
+              z kategorii `kujawianka`. Gdy slot podstawił materiał z innego
+              działu (brak treści sportowych w bazie), pokazujemy zwykłą
+              nakładkę bez wyniku — zamiast wpisywać wynik meczu nad
+              nekrologiem, jak działo się wcześniej. */}
           <div class="k-panel active" data-kpanel="aktualnosci">
             <div class="k-img">
-              <img src={kMain.heroImage} alt="Kujawianka" loading="lazy" />
-              <div class="k-img-overlay">
-                <span class="tag kujawianka">Kujawianka · 25. kolejka</span>
-                <div class="k-score-line">
-                  <span class="k-team">KUJAWIANKA</span>
-                  <span class="k-score-num">3</span>
-                  <span class="k-score-vs">:</span>
-                  <span class="k-score-num">1</span>
-                  <span class="k-team">SPARTA BRZEŚĆ</span>
+              <a href={articleUrl(kMain)}>
+                <img src={kMain.heroImage} alt={kMain.heroAlt || kMain.title} loading="lazy" />
+                <div class="k-img-overlay">
+                  <span class="tag kujawianka">
+                    Kujawianka{kSport && kRound ? ` · ${kRound}. kolejka` : ''}
+                  </span>
+                  {kSport ? (
+                    <div class="k-score-line">
+                      <span class="k-team">{kTeams[0]?.toUpperCase()}</span>
+                      <span class="k-score-num">{kGoals[0]}</span>
+                      <span class="k-score-vs">:</span>
+                      <span class="k-score-num">{kGoals[1]}</span>
+                      <span class="k-team">{kTeams[1]?.toUpperCase()}</span>
+                    </div>
+                  ) : null}
+                  <h3>{kMain.title}</h3>
+                  <p>{kMain.lede}</p>
+                  {kSport ? (
+                    <div class={`k-result-tag ${kLast.outcome ?? ''}`}>● {kOutcomeLabel}</div>
+                  ) : null}
                 </div>
-                <h3>{kMain.title}</h3>
-                <p>{kMain.lede}</p>
-                <div class="k-result-tag">● Zwycięstwo</div>
-              </div>
+              </a>
             </div>
+
+            {/* Najbliższy mecz — z terminarza, nie z ręcznie wpisanej daty. */}
             <div class="k-info-bar">
-              <span>Następny mecz: 28 maja · 16:00</span>
-              <span class="next">vs KS Polonia Bydgoszcz (wyjazd)</span>
+              <span>
+                Następny mecz: {kNext.date} {kNext.month}
+              </span>
+              <span class="next">{kNext.description.split('·')[0].trim()}</span>
             </div>
+
             <div class="k-body">
+              {/* Skrót tabeli — pierwsze 6 pozycji ze wspólnego źródła
+                  (KUJAWIANKA_LEAGUE), identycznego z tabelą na /kujawianka.
+                  Wcześniej te wiersze były wpisane w szablon, więc po zmianie
+                  wyników rozjeżdżały się ze stroną kategorii. */}
               <div class="k-table-mini">
-                <h4>Tabela · Klasa Okręgowa</h4>
+                <h4>Tabela · {KUJAWIANKA_LEAGUE_META.league}</h4>
                 <table>
-                  <tr><td>1</td><td>Pogoń Łabiszyn</td><td>62</td></tr>
-                  <tr><td>2</td><td>Sparta Brześć</td><td>57</td></tr>
-                  <tr class="hl"><td>3</td><td>Kujawianka</td><td>54</td></tr>
-                  <tr><td>4</td><td>Polonia Bydgoszcz</td><td>49</td></tr>
-                  <tr><td>5</td><td>Mień Lipno</td><td>46</td></tr>
-                  <tr><td>6</td><td>Włocłavia II</td><td>42</td></tr>
+                  <tbody>
+                    {KUJAWIANKA_LEAGUE.slice(0, 6).map((r) => (
+                      <tr class={r.highlight ? 'hl' : undefined}>
+                        <td>{r.pos}</td>
+                        <td>{r.team}</td>
+                        <td>{r.points}</td>
+                      </tr>
+                    ))}
+                  </tbody>
                 </table>
+                <a class="k-body-more" href="/kujawianka">
+                  Pełna tabela →
+                </a>
               </div>
+
+              {/* Ostatnie wyniki zamiast „strzelców sezonu": lista strzelców
+                  była zaszyta w szablonie i nie miała żadnego źródła danych
+                  (nie ma jej w kujawianka-data.ts), więc każda zmiana kadry
+                  czyniła ją nieprawdziwą. Wyniki mamy realnie w terminarzu. */}
               <div class="k-scorers">
-                <h4>Strzelcy sezonu</h4>
-                <div class="scorer"><span>Adam Adamiak</span><span class="num">14</span></div>
-                <div class="scorer"><span>Marcin Wójcicki</span><span class="num">9</span></div>
-                <div class="scorer"><span>K. Lewandowski</span><span class="num">7</span></div>
-                <div class="scorer"><span>Paweł Nowak</span><span class="num">5</span></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Panel: Mecze */}
-          <div class="k-panel" data-kpanel="mecze">
-            <div class="k-matches">
-              <h4>Ostatnie 5 spotkań</h4>
-              <div class="k-match">
-                <div class="k-match-date">21<small>maj</small></div>
-                <div class="k-match-teams">Kujawianka — Sparta Brześć<small>25. kolejka · dom · Stadion Miejski</small></div>
-                <div class="k-match-score"><span class="win">3:1</span></div>
-              </div>
-              <div class="k-match">
-                <div class="k-match-date">14<small>maj</small></div>
-                <div class="k-match-teams">Mień Lipno — Kujawianka<small>24. kolejka · wyjazd</small></div>
-                <div class="k-match-score"><span class="draw">1:1</span></div>
-              </div>
-              <div class="k-match">
-                <div class="k-match-date">07<small>maj</small></div>
-                <div class="k-match-teams">Kujawianka — Włocłavia II<small>23. kolejka · dom</small></div>
-                <div class="k-match-score"><span class="win">2:0</span></div>
-              </div>
-              <div class="k-match">
-                <div class="k-match-date">30<small>kwi</small></div>
-                <div class="k-match-teams">GKS Chocień — Kujawianka<small>22. kolejka · wyjazd</small></div>
-                <div class="k-match-score"><span class="win">1:4</span></div>
-              </div>
-              <div class="k-match">
-                <div class="k-match-date">23<small>kwi</small></div>
-                <div class="k-match-teams">Kujawianka — Pogoń Łabiszyn<small>21. kolejka · dom · hit sezonu</small></div>
-                <div class="k-match-score"><span class="lose">0:2</span></div>
-              </div>
-
-              <h4 style="margin-top:24px">Terminarz — najbliższe 3 mecze</h4>
-              <div class="k-match">
-                <div class="k-match-date">28<small>maj</small></div>
-                <div class="k-match-teams">KS Polonia Bydgoszcz — Kujawianka<small>26. kolejka · wyjazd · sobota 16:00</small></div>
-                <div class="k-match-score upcoming">vs</div>
-              </div>
-              <div class="k-match">
-                <div class="k-match-date">04<small>cze</small></div>
-                <div class="k-match-teams">Kujawianka — Promień Aleksandrów<small>27. kolejka · dom · sobota 17:00</small></div>
-                <div class="k-match-score upcoming">vs</div>
-              </div>
-              <div class="k-match">
-                <div class="k-match-date">11<small>cze</small></div>
-                <div class="k-match-teams">Kujawianka — GKS Chocień<small>28. kolejka · dom · niedziela 15:00</small></div>
-                <div class="k-match-score upcoming">vs</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Panel: Tabela */}
-          <div class="k-panel" data-kpanel="tabela">
-            <div class="k-table-full">
-              <h4 style="font:800 12px var(--display);letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:12px">
-                Klasa Okręgowa, grupa 2 · Sezon 2025/26
-              </h4>
-              <table>
-                <thead>
-                  <tr><th>#</th><th>Drużyna</th><th>M</th><th>W</th><th>R</th><th>P</th><th>Br</th><th>Pkt</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>1</td><td>Pogoń Łabiszyn</td><td>25</td><td>20</td><td>2</td><td>3</td><td>54:18</td><td><strong>62</strong></td></tr>
-                  <tr><td>2</td><td>Sparta Brześć</td><td>25</td><td>18</td><td>3</td><td>4</td><td>48:24</td><td><strong>57</strong></td></tr>
-                  <tr class="hl"><td>3</td><td>Kujawianka Izbica</td><td>25</td><td>17</td><td>3</td><td>5</td><td>45:28</td><td><strong>54</strong></td></tr>
-                  <tr><td>4</td><td>KS Polonia Bydgoszcz</td><td>25</td><td>15</td><td>4</td><td>6</td><td>42:31</td><td><strong>49</strong></td></tr>
-                  <tr><td>5</td><td>Mień Lipno</td><td>25</td><td>14</td><td>4</td><td>7</td><td>40:34</td><td><strong>46</strong></td></tr>
-                  <tr><td>6</td><td>Włocłavia II</td><td>25</td><td>13</td><td>3</td><td>9</td><td>38:38</td><td><strong>42</strong></td></tr>
-                  <tr><td>7</td><td>Promień Aleksandrów</td><td>25</td><td>11</td><td>5</td><td>9</td><td>35:42</td><td><strong>38</strong></td></tr>
-                  <tr><td>8</td><td>GKS Chocień</td><td>25</td><td>10</td><td>2</td><td>13</td><td>28:48</td><td><strong>32</strong></td></tr>
-                  <tr><td>9</td><td>Zawisza Rypin</td><td>25</td><td>8</td><td>4</td><td>13</td><td>26:44</td><td><strong>28</strong></td></tr>
-                  <tr><td>10</td><td>Cuiavia Inowrocław</td><td>25</td><td>6</td><td>3</td><td>16</td><td>22:52</td><td><strong>21</strong></td></tr>
-                </tbody>
-              </table>
-              <div style="font:400 11px var(--body);color:rgba(255,255,255,.4);margin-top:12px;text-align:right">
-                Aktualizacja: 22 maja 2026 · źródło: regiowyniki.pl
-              </div>
-            </div>
-          </div>
-
-          {/* Panel: Kadra */}
-          <div class="k-panel" data-kpanel="kadra">
-            <div class="k-squad">
-              <div class="k-squad-section">
-                <h4>Bramkarze</h4>
-                <div class="k-players">
-                  <div class="k-player"><span class="k-player-num">1</span><span class="k-player-name">Tomasz Wiśniewski</span><span class="k-player-role">Kpt.</span></div>
-                  <div class="k-player"><span class="k-player-num">12</span><span class="k-player-name">Mateusz Malinowski</span><span class="k-player-role">Rez.</span></div>
-                </div>
-              </div>
-              <div class="k-squad-section">
-                <h4>Obrońcy</h4>
-                <div class="k-players">
-                  <div class="k-player"><span class="k-player-num">2</span><span class="k-player-name">Bartosz Jankowski</span><span class="k-player-role">PO</span></div>
-                  <div class="k-player"><span class="k-player-num">3</span><span class="k-player-name">Piotr Zieliński</span><span class="k-player-role">ŚO</span></div>
-                  <div class="k-player"><span class="k-player-num">4</span><span class="k-player-name">Rafał Kowalczyk</span><span class="k-player-role">ŚO</span></div>
-                  <div class="k-player"><span class="k-player-num">5</span><span class="k-player-name">Kamil Nowak</span><span class="k-player-role">LO</span></div>
-                  <div class="k-player"><span class="k-player-num">15</span><span class="k-player-name">Damian Szymański</span><span class="k-player-role">PO</span></div>
-                  <div class="k-player"><span class="k-player-num">21</span><span class="k-player-name">Jakub Wójcik</span><span class="k-player-role">ŚO</span></div>
-                </div>
-              </div>
-              <div class="k-squad-section">
-                <h4>Pomocnicy</h4>
-                <div class="k-players">
-                  <div class="k-player"><span class="k-player-num">6</span><span class="k-player-name">Marcin Wójcicki</span><span class="k-player-role">DP</span></div>
-                  <div class="k-player"><span class="k-player-num">8</span><span class="k-player-name">Krzysztof Lewandowski</span><span class="k-player-role">ŚP</span></div>
-                  <div class="k-player"><span class="k-player-num">10</span><span class="k-player-name">Paweł Nowak</span><span class="k-player-role">OP</span></div>
-                  <div class="k-player"><span class="k-player-num">14</span><span class="k-player-name">Michał Kowalski</span><span class="k-player-role">LP</span></div>
-                  <div class="k-player"><span class="k-player-num">17</span><span class="k-player-name">Łukasz Duda</span><span class="k-player-role">PP</span></div>
-                  <div class="k-player"><span class="k-player-num">18</span><span class="k-player-name">Adrian Krawczyk</span><span class="k-player-role">DP</span></div>
-                </div>
-              </div>
-              <div class="k-squad-section">
-                <h4>Napastnicy</h4>
-                <div class="k-players">
-                  <div class="k-player"><span class="k-player-num">7</span><span class="k-player-name">Adam Adamiak</span><span class="k-player-role">14g</span></div>
-                  <div class="k-player"><span class="k-player-num">9</span><span class="k-player-name">Sebastian Głowacki</span><span class="k-player-role">3g</span></div>
-                  <div class="k-player"><span class="k-player-num">11</span><span class="k-player-name">Filip Zawadzki</span><span class="k-player-role">2g</span></div>
-                  <div class="k-player"><span class="k-player-num">19</span><span class="k-player-name">Konrad Baran</span><span class="k-player-role">1g</span></div>
-                </div>
-              </div>
-              <div class="k-squad-section" style="border-top:1px solid rgba(255,255,255,.1);padding-top:14px;margin-top:14px">
-                <h4>Sztab szkoleniowy</h4>
-                <div class="k-players">
-                  <div class="k-player"><span class="k-player-num">T</span><span class="k-player-name">Mariusz Kaczor</span><span class="k-player-role">Trener</span></div>
-                  <div class="k-player"><span class="k-player-num">A</span><span class="k-player-name">Robert Sikora</span><span class="k-player-role">Asyst.</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Panel: Junior */}
-          <div class="k-panel" data-kpanel="junior">
-            <div class="k-junior">
-              <h4 style="font:800 12px var(--display);letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.1)">
-                Drużyny młodzieżowe · sezon 2025/26
-              </h4>
-              <div class="k-junior-card">
-                <h5>Juniorzy U-15 · Trampkarze</h5>
-                <p>Zwycięzcy turnieju „Puchar Kujaw” w Aleksandrowie Kujawskim (18 maja 2026). Awans do finału wojewódzkiego w czerwcu.</p>
-                <div class="k-junior-meta"><span><strong>18</strong> zawodników</span><span>Trener: <strong>Adam Krawczyk</strong></span><span>Treningi: <strong>wt, czw, sb</strong></span></div>
-              </div>
-              <div class="k-junior-card">
-                <h5>Juniorzy U-13 · Młodzicy</h5>
-                <p>Drużyna gra w Lidze Młodzików Wojewódzkich. Aktualnie 4. miejsce w tabeli. Trener zapowiada walkę o podium do końca sezonu.</p>
-                <div class="k-junior-meta"><span><strong>22</strong> zawodników</span><span>Trener: <strong>Tomasz Grzybowski</strong></span><span>Treningi: <strong>pon, śr, pt</strong></span></div>
-              </div>
-              <div class="k-junior-card">
-                <h5>Szkółka piłkarska U-9 / U-11</h5>
-                <p>Najmłodsza grupa Kujawianki. Zajęcia rekreacyjne z elementami techniki. Nabór ciągły — chłopcy i dziewczynki w wieku 6-11 lat.</p>
-                <div class="k-junior-meta"><span><strong>34</strong> dzieci</span><span>Trener: <strong>Piotr Wiśniewski</strong></span><span>Treningi: <strong>wt, czw 17:00</strong></span><span>Zapisy: <strong>502 145 892</strong></span></div>
+                <h4>Ostatnie wyniki</h4>
+                {KUJAWIANKA_RECENT_MATCHES.slice(0, 4).map((m) => (
+                  <div class="scorer">
+                    <span>{m.description.split('·')[0].trim()}</span>
+                    <span class={`num ${m.outcome ?? ''}`}>{m.result}</span>
+                  </div>
+                ))}
+                <a class="k-body-more" href="/kujawianka">
+                  Terminarz i wyniki →
+                </a>
               </div>
             </div>
           </div>

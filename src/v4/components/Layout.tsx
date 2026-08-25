@@ -36,6 +36,32 @@ const IconMail = () => (
   </svg>
 )
 
+/*
+ * Ikony kontaktu w stopce.
+ *
+ * Wcześniej były to emoji 📧 📞 📍 wpisane w treść. Emoji renderuje się
+ * czcionką systemową w KOLORZE (Apple/Google/Windows dają trzy różne
+ * palety), więc w monochromatycznej stopce pojawiały się trzy przypadkowe
+ * kolorowe plamki niezależne od naszych tokenów — i wyglądały inaczej na
+ * każdym systemie. Dodatkowo czytnik ekranu odczytuje je jako „koperta",
+ * „telefon", „znacznik", zaśmiecając adres.
+ *
+ * SVG z `currentColor` przyjmuje kolor tekstu stopki i jest niewidoczne
+ * dla technologii asystujących (aria-hidden), bo etykietą jest sama treść.
+ */
+const IconPhone = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z" />
+  </svg>
+)
+
+const IconPin = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+    <circle cx="12" cy="10" r="3" />
+  </svg>
+)
+
 // ─────────────────────────────────────────────────────────────────── TOPBAR
 
 /**
@@ -383,15 +409,24 @@ export const Footer: FC = () => (
             <br />
             Redaktor naczelny
           </p>
-          <p>
-            📧 redakcja@izbica24.pl
-            <br />
-            📞 +48 502 124 567
-            <br />
-            📍 ul. Marszałka Piłsudskiego 26
-            <br />
-            87-865 Izbica Kujawska
-          </p>
+          <ul class="footer-contact-list">
+            <li>
+              <IconMail />
+              <a href="mailto:redakcja@izbica24.pl">redakcja@izbica24.pl</a>
+            </li>
+            <li>
+              <IconPhone />
+              <a href="tel:+48502124567">+48 502 124 567</a>
+            </li>
+            <li>
+              <IconPin />
+              <span>
+                ul. Marszałka Piłsudskiego 26
+                <br />
+                87-865 Izbica Kujawska
+              </span>
+            </li>
+          </ul>
         </div>
         <div class="footer-redakcja">
           <a href="/o-portalu">O portalu</a>

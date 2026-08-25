@@ -1,0 +1,69 @@
+# =============================================================================
+# .dev.vars.example — wzorzec sekretow dla pracy lokalnej
+# =============================================================================
+#
+# CO TO ZA PLIK
+# -------------
+# `wrangler pages dev` czyta zmienne srodowiskowe z pliku `.dev.vars` w katalogu
+# projektu i udostepnia je jako `c.env.*` w kodzie Workera. Ten plik jest
+# WZORCEM — sam nie jest wczytywany. Skopiuj go albo uruchom generator:
+#
+#   npm run dev:secrets        # generuje .dev.vars z losowymi sekretami
+#   cp .dev.vars.example .dev.vars   # wariant reczny
+#
+# DLACZEGO WZORZEC JEST W REPOZYTORIUM, A `.dev.vars` NIE
+# -------------------------------------------------------
+# `.dev.vars` jest w `.gitignore`, bo trzyma sekrety. Bez wzorca nowa osoba
+# w projekcie nie ma jak sie dowiedziec, ktore zmienne sa wymagane — a brak
+# `JWT_SECRET` objawia sie jako HTTP 503 na `/admin` bez wskazania przyczyny.
+# Wzorzec zawiera WYLACZNIE atrapy: zadna wartosc ponizej nie jest prawdziwym
+# sekretem i zadnej nie wolno uzyc na produkcji.
+#
+# PRODUKCJA
+# ---------
+# Na produkcji sekrety NIE pochodza z pliku — ustawia sie je poleceniem:
+#   npx wrangler pages secret put JWT_SECRET --project-name izbica24-portal
+# =============================================================================
+
+
+# --- WYMAGANE: bez tego panel redakcyjny zwraca 503 ---------------------------
+
+# Podpis tokenow sesji panelu (`src/lib/auth/panel-session.ts`).
+# Minimum 32 znaki. Brak tej zmiennej celowo blokuje `/admin` (fail-closed) —
+# wczesniejsza wersja kodu przydzielala wtedy role 'admin' kazdemu zadaniu,
+# wiec `curl /admin` zwracal 200 z calym panelem.
+# Wygenerowanie: openssl rand -hex 32
+JWT_SECRET=dev-only-zmien-mnie-openssl-rand-hex-32-0000000000000000
+
+# Sol do haszowania adresow IP w logach i limitach zadan.
+# Bez niej adresy zapisywalyby sie jawnie albo z przewidywalnym haszem.
+# Wygenerowanie: openssl rand -hex 16
+IP_HASH_SALT=dev-only-zmien-mnie-0000000000000000
+
+# Nazwa srodowiska. Wartosc 'development' wlacza podpowiedzi diagnostyczne
+# na stronie bledu panelu — na produkcji MUSI byc 'production', inaczej
+# komunikaty o konfiguracji trafia do osoby postronnej.
+ENVIRONMENT=development
+
+
+# --- OPCJONALNE: funkcje dzialaja bez nich, ale w trybie ograniczonym --------
+
+# Modele jezykowe (src/ai/client.ts). Bez kluczy trasy AI zwracaja 503.
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+
+# Wysylka poczty — newsletter, weryfikacja adresu, odzyskiwanie hasla.
+# Bez klucza wiadomosci nie sa wysylane; lokalnie i tak nie ma jak ich odebrac.
+RESEND_API_KEY=
+
+# Powiadomienia web push (src/routes/push/). Para kluczy VAPID.
+# Wygenerowanie: npx web-push generate-vapid-keys
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+
+# Cloudflare Turnstile — ochrona formularzy przed automatami.
+TURNSTILE_SECRET_KEY=
+
+# Szyfrowanie kopii zapasowych bazy (src/routes/admin/backup-*.ts).
+# Wygenerowanie: openssl rand -hex 32
+BACKUP_ENCRYPTION_KEY=
