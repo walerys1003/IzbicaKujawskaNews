@@ -19,31 +19,59 @@
 .nav-item.has-mega { position: static; }
 .nav-item .nav-item-link { color: inherit; }
 
+/* PELNA SZEROKOSC (zmiana redakcyjna 2026-08-25).
+   BYLO: width:min(1100px, calc(100vw - 32px)) + left:50% + translateX(-50%)
+   — panel byl wysrodkowanym „okienkiem", wiec przy szerokich ekranach po
+   lewej i prawej zostawal pusty pas tla strony (zrzut redakcji).
+   JEST: left:0/right:0 rozpiete na CALY containing block, ktorym jest
+   .nav-bar (element blokowy o szerokosci viewportu) — panel jest
+   full-bleed, bez wolnego miejsca po bokach, identycznie dla WSZYSTKICH
+   kategorii (jeden selektor obsluguje wszystkie 12 paneli).
+   Tresc panelu pozostaje wyrownana do siatki portalu przez .mega-inner
+   (max-width:var(--max-w)), zeby karty nie „odjezdzaly" od kolumn strony. */
 .mega-panel{
-  position:absolute; top:100%; left:50%;
-  width:min(1100px, calc(100vw - 32px));
+  position:absolute; top:100%; left:0; right:0; width:auto;
   background:#fff; border-top:3px solid var(--cat);
   box-shadow:0 18px 48px rgba(0,0,0,.28);
-  opacity:0; visibility:hidden; transform:translate(-50%,-8px);
+  opacity:0; visibility:hidden; transform:translateY(-8px);
   transition:opacity var(--t-mid), transform var(--t-mid) var(--ease), visibility var(--t-mid);
   z-index:600;
-  /* Bezpiecznik: nic z wnetrza panelu nie ma prawa wyjsc poza biale tlo. */
-  overflow:hidden;
+  /* Przewijanie: panel nigdy nie jest wyzszy niz widoczna czesc ekranu pod
+     naglowkiem. Gdy podkategorii jest duzo (do 8 pozycji + karty), zawartosc
+     przewija sie WEWNATRZ panelu, a strona pod nim nadal przewija sie
+     normalnie — dlatego overflow-y:auto zamiast hidden i BRAK
+     overscroll-behavior:contain. */
+  max-height:calc(100vh - 132px);
+  overflow-x:hidden; overflow-y:auto;
+  overscroll-behavior-y:auto;
   /* Reset dziedziczenia: panel siedzi w .nav-item{white-space:nowrap}
      (etykiety menu nie moga sie lamac), ale tekst KART musi sie zawijac —
      bez tego tytuly/opisy uciekaly w prawo i byly uciete w pol slowa
      (pomiar: p.scrollWidth 470px przy karcie 228px). */
   white-space:normal;
 }
+/* Delikatny pasek przewijania — panel jest jasny, wiec ciemny scrollbar
+   systemowy rozbijal jego spokojna kolorystyke. */
+.mega-panel{ scrollbar-width:thin; scrollbar-color:var(--ink-8) transparent; }
+.mega-panel::-webkit-scrollbar{ width:8px; }
+.mega-panel::-webkit-scrollbar-thumb{ background:var(--ink-8); }
+.mega-panel::-webkit-scrollbar-track{ background:transparent; }
 .nav-item.has-mega:hover .mega-panel,
-.nav-item.has-mega.is-open .mega-panel{ opacity:1; visibility:visible; transform:translate(-50%,0); }
+.nav-item.has-mega.is-open .mega-panel{ opacity:1; visibility:visible; transform:translateY(0); }
 
 /* minmax(0,1fr), NIE 1fr: kolumna `1fr` ma automatyczne minimum rowne
    min-content, a min-content karty z <img> to NATYWNA szerokosc zdjecia
    (np. 1200px). Zdjecia demo rozpychaly grid poza biale tlo panelu —
    karty „wystawaly" na tresc strony (zrzut redakcji 2026-07-28). Wczesniej
    maskowal to overflow .nav-inner, ktory caly panel przycinal. */
-.mega-inner{ display:grid; grid-template-columns:264px minmax(0,1fr); min-height:340px; }
+/* Panel jest full-bleed, ale jego TRESC trzyma siatke portalu: ta sama
+   max-width i ten sam gutter co .page / .nav-inner. Bez tego przy 2560px
+   karty rozjezdzalyby sie na cala szerokosc monitora i nie pokrywalyby sie
+   z kolumnami strony pod menu. */
+.mega-inner{
+  display:grid; grid-template-columns:280px minmax(0,1fr); min-height:340px;
+  max-width:var(--max-w); margin:0 auto; padding:0 var(--gutter);
+}
 
 /* Kolumna podkategorii */
 .mega-subs{ background:var(--bg); border-right:1px solid var(--rule); padding:10px 0 12px; display:flex; flex-direction:column; }
@@ -82,7 +110,10 @@
 .mega-slate-desc{ font:400 12.5px/1.5 var(--serif); color:var(--ink-4); margin-top:4px; }
 
 /* Rotator: pokazujemy 1 dużą + 3 małe, aktywna karta podmieniana skryptem */
-.mega-cards{ display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr); gap:14px; }
+/* Po przejsciu na panel full-bleed prawa kolumna jest znacznie szersza,
+   wiec wszystkie 4 karty mieszcza sie w JEDNYM rzedzie (wczesniej 3 kolumny
+   lamaly czwarta kartê do drugiego rzedu i panel byl niepotrzebnie wysoki). */
+.mega-cards{ display:grid; grid-template-columns:minmax(0,1.5fr) repeat(3, minmax(0,1fr)); gap:16px; }
 .mega-card{ display:flex; flex-direction:column; background:#fff; cursor:pointer; transition:transform var(--t-fast), box-shadow var(--t-mid); }
 .mega-card:hover{ transform:translateY(-2px); box-shadow:var(--sh-2); }
 .mega-card-img{ aspect-ratio:16/10; overflow:hidden; background:#0a0a0a; }
@@ -437,8 +468,8 @@
 
 /* ============ 12. RESPONSIVE ROZSZERZEŃ ============ */
 @media (max-width:1280px){
-  .mega-panel{ width:min(940px, calc(100vw - 32px)); }
-  .mega-cards{ grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); }
+  /* Panel zostaje full-bleed (left:0/right:0) — zwezamy tylko siatke kart. */
+  .mega-cards{ grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr); }
   .mega-cards .mega-card:nth-child(4){ display:none; }
   .subcat-tiles{ grid-template-columns:repeat(3,1fr); }
   .sol-page-grid{ grid-template-columns:repeat(3,1fr); }
@@ -460,9 +491,12 @@
   .nav-bar.is-open{ display:block; }
   .nav-inner{ flex-direction:column; height:auto; align-items:stretch; overflow:visible; padding-bottom:10px; }
   .nav-item{ border-bottom:1px solid var(--nav-border); padding:12px 14px; height:auto; }
-  .mega-panel{ position:static; width:100%; opacity:1; visibility:visible; transform:none; box-shadow:none; border-top:2px solid var(--cat); display:none; }
+  /* Mobile: panel wchodzi w normalny przeplyw menu (position:static), wiec
+     nie potrzebuje ani rozpiecia left/right, ani wlasnego przewijania —
+     przewija sie razem ze strona. */
+  .mega-panel{ position:static; width:100%; left:auto; right:auto; max-height:none; overflow:visible; opacity:1; visibility:visible; transform:none; box-shadow:none; border-top:2px solid var(--cat); display:none; }
   .nav-item.is-open .mega-panel{ display:block; }
-  .mega-inner{ grid-template-columns:1fr; min-height:0; }
+  .mega-inner{ grid-template-columns:1fr; min-height:0; padding:0; max-width:none; }
   .mega-subs{ border-right:none; border-bottom:1px solid var(--rule); }
   .mega-stage{ padding:14px 0 8px; }
   .mega-cards{ grid-template-columns:1fr; }
@@ -755,6 +789,118 @@
    dwa różne rodzaje treści: wiadomości i dane użytkowe. */
 .hero-side-pogoda{ margin-top:14px; padding-top:14px; border-top:2px solid var(--rule); }
 
+/* ─────────────────────────── Trzy materiały POD zdjęciem głównym
+   Zmiana 2026-08-25. Pod zdjęciem głównym zostawał pusty biały prostokąt na
+   całą jego szerokość, bo kolumna boczna (lista + pogoda) jest wyższa niż
+   zdjęcie w proporcji 16/10. Wstawiamy tu rząd trzech materiałów ze
+   zdjęciem i zajawką — POZIOMO, na szerokość zdjęcia.
+
+   Dlaczego wrapper .hero-left, a nie karty wprost w .hero-grid: .hero-main
+   ma nakładkę z tytułem (position:absolute; inset), więc karty wstawione do
+   .hero-main leżałyby NA zdjęciu. Wrapper daje osobny wiersz pod zdjęciem
+   i pozwala kolumnie dociągnąć wysokość do prawej strony. */
+.hero-left{ display:flex; flex-direction:column; min-width:0; }
+/* Zdjecie glowne ZACHOWUJE oryginalne proporcje 16/10 z szaty literalnej.
+   Zadnego rozciagania na wysokosc kolumny bocznej: zdjecie ulicy Koscielnej
+   robilo sie wtedy nieproporcjonalnie wysokie i wypychalo reszte strony
+   ponizej krawedzi ekranu. Wolne miejsce pod zdjeciem wypelnia rzad trzech
+   MALYCH kart, a nie powiekszone zdjecie. */
+
+/* Rzad trzech kart pod zdjeciem hero — DOCIAGNIETY DO DOLNEJ KRAWEDZI
+   WIDGETU POGODY (zgloszenie 2026-08-25: „rozszerz na taka sama wysokosc
+   jak ma sekcja pogody, do jej dolnej krawedzi").
+
+   Na czym polegal problem: .hero-left (lewa kolumna) juz siegal tej samej
+   dolnej krawedzi co .hero-side — pomiar dawal 1209,1 px dla OBU kolumn.
+   Ale same karty konczyly sie na 1082,8 px, czyli 126 px wyzej, bo
+   .hero-below mial wysokosc wynikajaca z tresci i nie przejmowal wolnej
+   przestrzeni wrappera. Rozciagniecie wrappera bylo wiec niewidoczne.
+
+   Rozwiazanie w dwoch krokach, oba konieczne:
+   1. .hero-below dostaje `flex:1` — przejmuje CALA reszte wysokosci lewej
+      kolumny, wiec jego dolna krawedz = dolna krawedz widgetu pogody.
+   2. Karta zmienia sie z ukladu obok-siebie (miniatura 118 px + tekst) na
+      PIONOWY: zdjecie u gory, tekst pod nim. Zdjecie dostaje `flex:1`
+      i `aspect-ratio:auto`, czyli pochlania nadwyzke wysokosci. Dzieki
+      temu karty domykaja luke ZDJECIEM, a nie pustym bialym polem ani
+      rozstrzelonym tekstem — i nie trzeba zgadywac zadnej wysokosci
+      w pikselach: dziala przy kazdej wysokosci kolumny bocznej. */
+.hero-below{
+  display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
+  gap:14px; margin-top:14px;
+  flex:1 1 auto; min-height:0;
+}
+.hb-card{
+  display:flex; flex-direction:column; min-width:0; height:100%;
+  background:#fff; border-top:2px solid var(--red);
+  padding-top:10px;
+  transition:background var(--t-fast);
+}
+.hb-card:hover{ background:var(--bg); }
+/* flex:1 + min-height:0 — zdjecie rosnie do wysokosci, jaka zostaje po
+   tekscie. min-height:0 jest tu obowiazkowe: bez niego element flex nie
+   zmniejszy sie ponizej rozmiaru tresci i karta rozpychalaby kolumne. */
+.hb-img{
+  width:100%; flex:1 1 auto; min-height:96px; aspect-ratio:auto;
+  overflow:hidden; background:#0a0a0a;
+}
+.hb-img img{ width:100%; height:100%; object-fit:cover; transition:transform 400ms var(--ease); }
+.hb-card:hover .hb-img img{ transform:scale(1.05); }
+.hb-body{ display:flex; flex-direction:column; gap:5px; min-width:0; flex:none; padding-top:9px; }
+.hb-body .tag{ align-self:flex-start; font-size:9px; padding:2px 6px; }
+/* min-height = dokladnie 2 wiersze (2 x line-height).
+   Bez tego blok tekstu ma wysokosc zalezna od dlugosci tytulu, a poniewaz
+   zdjecie pochlania reszte wysokosci (flex:1), karta z krotszym tytulem
+   dostawala WYZSZE zdjecie — pomiar przy 1280 px dawal 341 px w pierwszej
+   karcie i 323 px w pozostalych, wiec dolne krawedzie zdjec nie tworzyly
+   jednej linii. Rezerwacja miejsca na 2 wiersze wyrownuje je co do piksela
+   i jednoczesnie zapobiega skakaniu ukladu przy zmianie tresci. */
+.hb-body h3{
+  font:700 15px/1.22 var(--display); color:var(--ink); letter-spacing:-.005em;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  min-height:2.44em;
+}
+.hb-card:hover .hb-body h3{ color:var(--red); }
+.hb-body p{
+  font:400 12px/1.45 var(--serif); color:var(--ink-4);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  min-height:2.9em;
+}
+.hb-body .meta{ font-size:10.5px; color:var(--ink-5); }
+
+/* Ponizej 1100 px kolumny hero i tak ustawiaja sie jedna pod druga, wiec
+   nie ma juz zadnej luki do domkniecia — wracamy do zwartej listy
+   z miniatura obok tekstu i ZDEJMUJEMY rozciaganie (flex:1 + height:100%),
+   bo bez kolumny bocznej rozciagalyby zdjecia w pionowe pasy. */
+@media (max-width:1100px){
+  .hero-below{ grid-template-columns:1fr; gap:0; flex:none; }
+  .hb-card{
+    display:grid; grid-template-columns:118px minmax(0,1fr); gap:11px;
+    height:auto; align-items:start;
+    border-top:1px solid var(--rule); padding:10px 0;
+  }
+  .hb-card:first-child{ border-top:2px solid var(--red); }
+  .hb-img{ width:118px; flex:none; min-height:0; aspect-ratio:16/10; }
+  .hb-body{ padding-top:0; }
+  /* Rezerwacja 2 wierszy sluzy tylko wyrownaniu zdjec w rzedzie — w ukladzie
+     pionowym nie ma czego wyrownywac, a zostawiona robilaby puste luki. */
+  .hb-body h3{ font-size:14px; min-height:0; }
+  .hb-body p{ font-size:11.5px; min-height:0; }
+}
+
+/* ─────────────────────────── Kompaktacja kolumny bocznej hero
+   Po dołożeniu karty pogodowej (431 px) do kolumny „Najważniejsze dziś"
+   oryginalne odstępy 14 px robiły z niej bardzo długi pas, znacznie wyższy
+   od zdjęcia głównego. Mniejsze miniatury i padding + zajawka obcięta do
+   dwóch linii trzymają obie kolumny w podobnej wysokości. */
+.hero-side-item{ padding:11px 16px; grid-template-columns:92px minmax(0,1fr); gap:11px; }
+.hero-side-item img{ width:92px; height:69px; }
+.hero-side-item h3{ font-size:14.5px; }
+.hero-side-item p{
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.hero-side-pogoda{ margin-top:10px; padding-top:10px; }
+
 /* ============ F3 / WCAG 2.1 AA — DOSTĘPNOŚĆ ============
    Naprawy z audytu 27.07.2026. Zmiany dotyczą wyłącznie stanu fokusu
    i elementu ukrytego do momentu jego otrzymania, więc wygląd strony
@@ -914,17 +1060,21 @@ summary:focus-visible{
    przeglądarki.") zawijałby się do drugiej linii i przesuwał stopkę,
    psując CLS wyprowadzony w etapie F4 do 0,0022 na desktopie.
    ========================================================================== */
-.footer-push{margin-top:16px;padding-top:14px;border-top:1px solid #1a1a1a}
-.footer-push-btn{width:100%;min-height:42px;background:transparent;color:#fff;border:1px solid #333;padding:12px;font:800 12px var(--display);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:border-color var(--t-fast),background var(--t-fast),color var(--t-fast)}
+/* Kolory tych elementów pochodziły jeszcze z czasów CZARNEJ stopki
+   (#1a1a1a / #333 / #666) i po przejściu stopki na paletę --foot-*
+   odcinały się od otoczenia. Teraz korzystają z tych samych tokenów
+   co reszta stopki, więc zmiana motywu w jednym miejscu obejmuje je też. */
+.footer-push{margin-top:14px;padding-top:13px;border-top:1px solid var(--foot-border)}
+.footer-push-btn{width:100%;min-height:42px;background:transparent;color:#fff;border:1px solid var(--foot-border);padding:12px;font:800 12px var(--display);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:border-color var(--t-fast),background var(--t-fast),color var(--t-fast)}
 .footer-push-btn:hover:not([disabled]){border-color:var(--red);background:var(--red);color:#fff}
 .footer-push-btn:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 /* Stan aktywny: przycisk jest wyłączony, więc musi WYGLĄDAĆ na nieaktywny —
    inaczej czytelnik klika w coś, co nie reaguje, i uznaje stronę za zepsutą. */
 .footer-push-btn[data-push-stan="aktywne"]{border-color:#2f6b3f;color:#8fd0a3;cursor:default}
 .footer-push-btn[data-push-stan="blad"]{border-color:#6b2f2f;color:#e08f8f;font-size:11px;text-transform:none;letter-spacing:0}
-.footer-push-btn[data-push-stan="oczekiwanie"]{color:#888;cursor:progress}
+.footer-push-btn[data-push-stan="oczekiwanie"]{color:var(--foot-text-2);cursor:progress}
 .footer-push-btn[disabled]{opacity:1}
-.footer-push-note{margin-top:8px;font:400 10px var(--body);color:#666;line-height:1.5}
+.footer-push-note{margin-top:8px;font:400 10px/1.5 var(--body);color:var(--foot-text-2)}
 
 
 /* ─────────────────────────────────────── split-grid: Kujawianka + Samorząd
@@ -961,6 +1111,70 @@ summary:focus-visible{
   margin-bottom:0;
   border-bottom:1px solid var(--rule, #e6e6e6);
 }
+
+/* ─────────────────────── Kujawianka na jasnym tle — naprawa kontrastu
+   BŁĄD (zgłoszenie redakcji 2026-08-25): obszar tabeli i wyników na stronie
+   głównej był PUSTY. Przyczyna: `article.kujawianka` ma w szacie bazowej
+   `background:var(--dark); color:#fff`, a ten plik nadpisał tylko TŁO na
+   białe. Kolor tekstu został biały — pomiar wykazał tło rgb(255,255,255)
+   i tekst rgb(255,255,255). Widoczne pozostawały wyłącznie elementy złote.
+   Poniżej wszystkie kolory z ciemnego motywu przeniesione na jasny. */
+.kujawianka{ color:var(--ink); }
+.kujawianka .k-body h4,
+.kujawianka .k-matches h4{
+  color:var(--ink-5);
+  border-bottom-color:var(--rule, #e6e6e6);
+}
+.kujawianka .k-table-mini td{ color:var(--ink-3); }
+.kujawianka .k-table-mini tr{ border-bottom-color:var(--rule, #e6e6e6); }
+.kujawianka .k-table-mini td:nth-child(2){ color:var(--ink); }
+.kujawianka .k-table-mini td:first-child{ color:var(--ink-5); }
+/* Wyróżnienie Kujawianki: złoto #f0c040 na białym tle ma kontrast 1.7:1
+   (poniżej progu WCAG AA 4.5:1) — używamy zieleni klubowej. */
+.kujawianka .k-table-mini tr.hl td{
+  background:rgba(13,122,62,.08);
+  color:var(--c-kujawianka);
+  font-weight:700;
+}
+.kujawianka .k-scorers .scorer{
+  color:var(--ink-3);
+  border-bottom-color:var(--rule, #e6e6e6);
+  gap:12px;
+}
+.kujawianka .k-scorers .scorer > span:first-child{
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.kujawianka .k-scorers .num{ color:var(--c-kujawianka); flex-shrink:0; }
+/* Wyniki meczów: kolor niesie znaczenie, więc obok koloru zostaje sam wynik
+   liczbowy (3:1) — informacja nie jest przekazywana WYŁĄCZNIE kolorem. */
+.kujawianka .k-scorers .num.win{ color:var(--c-kujawianka); }
+.kujawianka .k-scorers .num.draw{ color:#a07000; }
+.kujawianka .k-scorers .num.loss{ color:var(--red); }
+
+/* Odnośniki do pełnych danych na /kujawianka — skrót na stronie głównej
+   musi prowadzić do kompletu, bo panele „mecze/tabela/kadra" zostały
+   usunięte jako nieosiągalne (brak przełączników .k-tab w szablonie). */
+.kujawianka .k-body-more{
+  display:inline-block; margin-top:10px;
+  font:700 10.5px var(--display); letter-spacing:.06em; text-transform:uppercase;
+  color:var(--c-kujawianka);
+}
+.kujawianka .k-body-more:hover{ text-decoration:underline; }
+
+/* Nakładka na zdjęciu pozostaje na ciemnym gradiencie, więc tam biały tekst
+   jest prawidłowy — przywracamy go po `.kujawianka{color:var(--ink)}`. */
+.kujawianka .k-img-overlay,
+.kujawianka .k-img-overlay h3,
+.kujawianka .k-img-overlay p{ color:#fff; }
+.kujawianka .k-img-overlay p{ color:rgba(255,255,255,.82); }
+/* Nakładka bez wyniku (materiał nie z kategorii kujawianka) nie ma dużej
+   linii z rezultatem, więc gradient może być niższy — inaczej przy krótkim
+   tytule powstawał nieproporcjonalnie duży czarny obszar. */
+.kujawianka .k-img-overlay{
+  background:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.35) 35%,rgba(0,0,0,.9) 100%);
+}
+.kujawianka .k-result-tag.draw{ background:#a07000; }
+.kujawianka .k-result-tag.loss{ background:var(--red); }
 
 
 /* ─────────────────────────────────────── Tabela ligowa (variant v4)

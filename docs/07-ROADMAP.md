@@ -431,7 +431,7 @@ FAZA 5  44. F2  responsywność                           3–4 d
 
 2. **Utworzyć bazę D1 i dodać binding.** Jedna komenda i 6 linii w `wrangler.jsonc` odblokowuje ~6 000 LOC już napisanego backendu.
 
-3. **Zamknąć panel admina.** Obecnie `curl /admin` zwraca 200 bez żadnego tokena, bo `requireAdmin` przy braku `JWT_SECRET` przydziela rolę `admin`. To musi zostać naprawione, zanim projekt trafi na jakikolwiek publiczny adres.
+3. ~~**Zamknąć panel admina.**~~ **ZROBIONE.** Kontrola dostępu w `src/routes/admin.tsx` działa fail-closed: brak `JWT_SECRET` powoduje odmowę (503), nie przydzielenie roli `admin`. Lokalnie sekret dostarcza `npm run dev:secrets` → `.dev.vars`. Zweryfikowane: bez ciasteczka `/admin` → 302 na logowanie, złe hasło → 401, podrobione ciasteczko → 302, poprawne logowanie → 200. **Na produkcji pozostaje** ustawić `wrangler pages secret put JWT_SECRET`.
 
 ---
 

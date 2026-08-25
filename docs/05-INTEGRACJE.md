@@ -151,18 +151,32 @@ Czyli: **galerie zapisują się do namespace'u, który nie istnieje w konfigurac
 
 W `wrangler.jsonc` nie ma sekcji `vectorize`. Cały RAG (wyszukiwanie semantyczne, `/api/rag/*` — 16 tras) nie ma indeksu wektorowego. Szczegóły w [`06-AI.md`](./06-AI.md).
 
-### ⛔ B4. Brak pliku `.dev.vars` — zero sekretów lokalnie
+### ✅ B4. Brak pliku `.dev.vars` — ROZWIĄZANE lokalnie *(pozostaje do zrobienia na produkcji)*
 
-```bash
-$ cat .dev.vars
-BRAK PLIKU .dev.vars
-```
+**Stan pierwotny:** pliku `.dev.vars` nie było, więc `JWT_SECRET` był niezdefiniowany.
+Po naprawie fail-open (patrz niżej) objawiało się to jako **HTTP 503 na `/admin`**
+z komunikatem „Panel jest niedostępny: brak konfiguracji uwierzytelniania" —
+panel poprawnie odmawiał dostępu, bo nie miał czym podpisać sesji.
 
-Kod oczekuje 6 sekretów, żaden nie jest dostępny ani lokalnie, ani na produkcji:
+**Naprawa:**
+- `.dev.vars.example` — wzorzec w repozytorium z opisem skutku braku każdej zmiennej
+- `scripts/d7-generuj-dev-vars.mjs` + `npm run dev:secrets` — losuje `JWT_SECRET`
+  i `IP_HASH_SALT` (`crypto.randomBytes`), zapisuje z prawami `0600`, nie nadpisuje
+  istniejącego pliku bez `--force`
+- Sekrety są losowane, a nie zaszyte w repozytorium: znany `JWT_SECRET` pozwalałby
+  podrobić token sesji panelu, więc byłby gorszy od jego braku — brak jest widoczny
+  (503), słaby sekret wygląda jak działające zabezpieczenie
+
+**Zweryfikowane:** `/admin` 302 → `/admin/login` 200 → POST 303 → panel **200**;
+bez ciasteczka 302, złe hasło 401, podrobione ciasteczko 302.
+
+**Na produkcji** nadal wymagane: `npx wrangler pages secret put JWT_SECRET`.
+
+Kod oczekuje 6 sekretów; poniżej skutki braku każdego z nich:
 
 | Sekret | Używany w | Skutek braku |
 |---|---|---|
-| `JWT_SECRET` | `routes/admin.tsx`, auth | **panel admina otwarty dla wszystkich** (fail-open) |
+| `JWT_SECRET` | `routes/admin.tsx`, auth | panel odmawia dostępu (503, fail-closed) |
 | `OPENAI_API_KEY` | `ai/client.ts`, `ai/rag/embedder.ts` | AI zwraca `{"mock":true}` |
 | `ANTHROPIC_API_KEY` | `ai/client.ts` | j.w. |
 | `RESEND_API_KEY` | `lib/email/provider.ts` | newsletter nie wysyła |

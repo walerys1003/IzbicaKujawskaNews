@@ -136,6 +136,12 @@ const requireAdmin = async (c: any, next: any) => {
 
 Potwierdzone testem: `curl /admin` bez żadnego tokenu → **HTTP 200**. Po wdrożeniu bez ustawionego `JWT_SECRET` panel redakcji będzie publicznie dostępny. To luka bezpieczeństwa, nie tylko brak funkcji.
 
+> **AKTUALIZACJA — naprawione.** Kontrola dostępu działa teraz fail-closed:
+> brak `JWT_SECRET` powoduje odmowę (503) zamiast przydzielenia roli `admin`.
+> Sekret lokalny generuje `npm run dev:secrets` (plik `.dev.vars`, prawa `0600`).
+> Pomiar po naprawie: bez ciasteczka `/admin` → **302** na `/admin/login`,
+> złe hasło → **401**, podrobione ciasteczko → **302**, poprawne logowanie → **200**.
+
 ### 🔴 K5. Brak bindingów R2 — media nie mają gdzie się zapisać
 
 Kod w `src/lib/media/r2-upload.ts` odwołuje się do `env.R2_ARTICLES_IMAGES`, `env.R2_ARTICLES_VIDEOS`, `env.R2_PODCAST_AUDIO`. **Żaden z tych bucketów nie jest zadeklarowany** w `wrangler.jsonc`. Upload zdjęć, audio i wideo jest niemożliwy.
